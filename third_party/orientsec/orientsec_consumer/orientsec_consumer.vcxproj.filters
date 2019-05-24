@@ -1,0 +1,111 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{4133d229-3b76-4247-abe4-ecf6c1930d0c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{833b54ce-f1cf-43e4-b738-cf4bf80e8fa3}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="condition_router.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="consistent_hash.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="consistent_hash_lb.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="failover_utils.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="md5.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="orientsec_consumer_intf.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="orientsec_grpc_consumer_control_deprecated.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="orientsec_grpc_consumer_control_requests.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="orientsec_grpc_consumer_control_version.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="orientsec_grpc_consumer_utils.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="pickfirst_lb.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="requests_controller_utils.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="round_robin_lb.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="weight_round_robin_lb.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="condition_router.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="consistent_hash.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="consistent_hash_lb.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="failover_utils.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="md5.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="orientsec_consumer_intf.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="orientsec_grpc_consumer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="orientsec_grpc_consumer_contants.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="orientsec_grpc_consumer_control_deprecated.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="orientsec_grpc_consumer_control_requests.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="orientsec_grpc_consumer_control_version.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="orientsec_grpc_consumer_utils.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="orientsec_loadbalance.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="orientsec_router.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="pickfirst_lb.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="requests_controller_utils.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="round_robin_lb.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="weight_round_robin_lb.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,443 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="MinSizeRel|x64">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{FD09D451-5249-3215-A7E3-58931B673150}</ProjectGuid>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <Keyword>Win32Proj</Keyword>
+    <Platform>x64</Platform>
+    <ProjectName>grpc++</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)IntDir\$(MSBuildProjectName)\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">grpc++</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\Release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">grpc++.dir\Release\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">grpc++</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\MinSizeRel\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">grpc++.dir\MinSizeRel\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">grpc++</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\RelWithDebInfo\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">grpc++.dir\RelWithDebInfo\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">grpc++</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.lib</TargetExt>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\third_party\zlib;$(SolutionDir)\..\include;$(SolutionDir)\..;$(SolutionDir)\..\third_party\boringssl\include;$(SolutionDir)\..\third_party\protobuf;$(SolutionDir)\..\vsprojects\third_party\zlib;$(SolutionDir)\..\third_party\benchmark\include;$(SolutionDir)\..\third_party\cares\cares;$(SolutionDir)\..\vsprojects\third_party\cares\cares;$(SolutionDir)\..\vsprojects\third_party\gflags\include;$(SolutionDir)\..\third_party\address_sorting\include;$(SolutionDir)\..\third_party\nanopb;$(SolutionDir)\..\vsprojects\gens;$(SolutionDir)\..\third_party\protobuf\src;$(SolutionDir)\..\third_party\abseil-cpp;$(SolutionDir)\..\third_party\orientsec\orientsec_common;$(SolutionDir)\..\third_party\orientsec\orientsec_consumer;$(SolutionDir)\..\third_party\orientsec\orientsec_registry;$(SolutionDir)\..\third_party\orientsec\orientsec_provider;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4065;4506;4200;4291;4244;4267;4987;4774;4819;4996;4619</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;PB_FIELD_16BIT;_WIN32_WINNT=0x600;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;CARES_STATICLIB;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>$(IntDir)$(ProjectName).pdb</ProgramDataBaseFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;PB_FIELD_16BIT;_WIN32_WINNT=0x600;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;CARES_STATICLIB;CMAKE_INTDIR=\"Debug\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\boringssl\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\benchmark\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\gflags\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\address_sorting\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\nanopb;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\gens;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\boringssl\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\benchmark\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\gflags\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\address_sorting\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\nanopb;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\gens;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <AdditionalDependencies>orientsec_provider.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\boringssl\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\benchmark\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\gflags\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\address_sorting\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\nanopb;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\gens;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>Release/</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DisableSpecificWarnings>4065;4506;4200;4291;4244;4267;4987;4774;4819;4996;4619</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;PB_FIELD_16BIT;_WIN32_WINNT=0x600;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;CARES_STATICLIB;CMAKE_INTDIR="Release";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <ProgramDataBaseFileName>D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\Release\grpc++.pdb</ProgramDataBaseFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;PB_FIELD_16BIT;_WIN32_WINNT=0x600;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;CARES_STATICLIB;CMAKE_INTDIR=\"Release\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\boringssl\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\benchmark\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\gflags\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\address_sorting\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\nanopb;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\gens;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\boringssl\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\benchmark\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\gflags\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\address_sorting\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\nanopb;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\gens;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\boringssl\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\benchmark\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\gflags\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\address_sorting\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\nanopb;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\gens;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>MinSizeRel/</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DisableSpecificWarnings>4065;4506;4200;4291;4244;4267;4987;4774;4819;4996;4619</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <Optimization>MinSpace</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;PB_FIELD_16BIT;_WIN32_WINNT=0x600;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;CARES_STATICLIB;CMAKE_INTDIR="MinSizeRel";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <ProgramDataBaseFileName>D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\MinSizeRel\grpc++.pdb</ProgramDataBaseFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;PB_FIELD_16BIT;_WIN32_WINNT=0x600;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;CARES_STATICLIB;CMAKE_INTDIR=\"MinSizeRel\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\boringssl\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\benchmark\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\gflags\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\address_sorting\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\nanopb;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\gens;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\boringssl\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\benchmark\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\gflags\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\address_sorting\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\nanopb;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\gens;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\boringssl\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\benchmark\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\gflags\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\address_sorting\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\nanopb;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\gens;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>RelWithDebInfo/</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4065;4506;4200;4291;4244;4267;4987;4774;4819;4996;4619</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;PB_FIELD_16BIT;_WIN32_WINNT=0x600;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;CARES_STATICLIB;CMAKE_INTDIR="RelWithDebInfo";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\RelWithDebInfo\grpc++.pdb</ProgramDataBaseFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;PB_FIELD_16BIT;_WIN32_WINNT=0x600;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;CARES_STATICLIB;CMAKE_INTDIR=\"RelWithDebInfo\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\boringssl\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\benchmark\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\gflags\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\address_sorting\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\nanopb;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\gens;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\boringssl\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\benchmark\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\gflags\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\address_sorting\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\nanopb;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\gens;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\grpcpp\alarm.h" />
+    <ClInclude Include="..\include\grpcpp\channel.h" />
+    <ClInclude Include="..\include\grpcpp\client_context.h" />
+    <ClInclude Include="..\include\grpcpp\completion_queue.h" />
+    <ClInclude Include="..\include\grpcpp\create_channel.h" />
+    <ClInclude Include="..\include\grpcpp\create_channel_posix.h" />
+    <ClInclude Include="..\include\grpcpp\ext\channelz_service_plugin.h" />
+    <ClInclude Include="..\include\grpcpp\ext\health_check_service_server_builder_option.h" />
+    <ClInclude Include="..\include\grpcpp\ext\proto_server_reflection_plugin.h" />
+    <ClInclude Include="..\include\grpcpp\ext\server_load_reporting.h" />
+    <ClInclude Include="..\include\grpcpp\generic\async_generic_service.h" />
+    <ClInclude Include="..\include\grpcpp\generic\generic_stub.h" />
+    <ClInclude Include="..\include\grpcpp\grpcpp.h" />
+    <ClInclude Include="..\include\grpcpp\health_check_service_interface.h" />
+    <ClInclude Include="..\include\grpcpp\impl\call.h" />
+    <ClInclude Include="..\include\grpcpp\impl\channel_argument_option.h" />
+    <ClInclude Include="..\include\grpcpp\impl\client_unary_call.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\async_generic_service.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\async_stream.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\async_unary_call.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\byte_buffer.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\call.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\callback_common.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\call_hook.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\call_op_set.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\call_op_set_interface.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\channel_interface.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\client_callback.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\client_context.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\client_interceptor.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\client_unary_call.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\completion_queue.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\completion_queue_tag.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\config.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\config_protobuf.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\core_codegen.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\core_codegen_interface.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\create_auth_context.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\grpc_library.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\intercepted_channel.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\interceptor.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\interceptor_common.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\metadata_map.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\method_handler_impl.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\proto_buffer_reader.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\proto_buffer_writer.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\proto_utils.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\rpc_method.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\rpc_service_method.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\security\auth_context.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\serialization_traits.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\server_callback.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\server_context.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\server_interceptor.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\server_interface.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\service_type.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\slice.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\status.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\status_code_enum.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\string_ref.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\stub_options.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\sync_stream.h" />
+    <ClInclude Include="..\include\grpcpp\impl\codegen\time.h" />
+    <ClInclude Include="..\include\grpcpp\impl\grpc_library.h" />
+    <ClInclude Include="..\include\grpcpp\impl\method_handler_impl.h" />
+    <ClInclude Include="..\include\grpcpp\impl\rpc_method.h" />
+    <ClInclude Include="..\include\grpcpp\impl\rpc_service_method.h" />
+    <ClInclude Include="..\include\grpcpp\impl\serialization_traits.h" />
+    <ClInclude Include="..\include\grpcpp\impl\server_builder_option.h" />
+    <ClInclude Include="..\include\grpcpp\impl\server_builder_plugin.h" />
+    <ClInclude Include="..\include\grpcpp\impl\server_initializer.h" />
+    <ClInclude Include="..\include\grpcpp\impl\service_type.h" />
+    <ClInclude Include="..\include\grpcpp\impl\sync_cxx11.h" />
+    <ClInclude Include="..\include\grpcpp\impl\sync_no_cxx11.h" />
+    <ClInclude Include="..\include\grpcpp\opencensus.h" />
+    <ClInclude Include="..\include\grpcpp\resource_quota.h" />
+    <ClInclude Include="..\include\grpcpp\security\auth_context.h" />
+    <ClInclude Include="..\include\grpcpp\security\auth_metadata_processor.h" />
+    <ClInclude Include="..\include\grpcpp\security\credentials.h" />
+    <ClInclude Include="..\include\grpcpp\security\server_credentials.h" />
+    <ClInclude Include="..\include\grpcpp\server.h" />
+    <ClInclude Include="..\include\grpcpp\server_builder.h" />
+    <ClInclude Include="..\include\grpcpp\server_context.h" />
+    <ClInclude Include="..\include\grpcpp\server_posix.h" />
+    <ClInclude Include="..\include\grpcpp\support\async_stream.h" />
+    <ClInclude Include="..\include\grpcpp\support\async_unary_call.h" />
+    <ClInclude Include="..\include\grpcpp\support\byte_buffer.h" />
+    <ClInclude Include="..\include\grpcpp\support\channel_arguments.h" />
+    <ClInclude Include="..\include\grpcpp\support\client_callback.h" />
+    <ClInclude Include="..\include\grpcpp\support\config.h" />
+    <ClInclude Include="..\include\grpcpp\support\error_details.h" />
+    <ClInclude Include="..\include\grpcpp\support\proto_buffer_reader.h" />
+    <ClInclude Include="..\include\grpcpp\support\proto_buffer_writer.h" />
+    <ClInclude Include="..\include\grpcpp\support\server_callback.h" />
+    <ClInclude Include="..\include\grpcpp\support\slice.h" />
+    <ClInclude Include="..\include\grpcpp\support\status.h" />
+    <ClInclude Include="..\include\grpcpp\support\status_code_enum.h" />
+    <ClInclude Include="..\include\grpcpp\support\string_ref.h" />
+    <ClInclude Include="..\include\grpcpp\support\stub_options.h" />
+    <ClInclude Include="..\include\grpcpp\support\sync_stream.h" />
+    <ClInclude Include="..\include\grpcpp\support\time.h" />
+    <ClInclude Include="..\include\grpcpp\test\mock_stream.h" />
+    <ClInclude Include="..\include\grpcpp\test\server_context_test_spouse.h" />
+    <ClInclude Include="..\include\grpc\byte_buffer.h" />
+    <ClInclude Include="..\include\grpc\byte_buffer_reader.h" />
+    <ClInclude Include="..\include\grpc\census.h" />
+    <ClInclude Include="..\include\grpc\compression.h" />
+    <ClInclude Include="..\include\grpc\fork.h" />
+    <ClInclude Include="..\include\grpc\grpc.h" />
+    <ClInclude Include="..\include\grpc\grpc_cronet.h" />
+    <ClInclude Include="..\include\grpc\grpc_posix.h" />
+    <ClInclude Include="..\include\grpc\grpc_security.h" />
+    <ClInclude Include="..\include\grpc\grpc_security_constants.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\atm.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\atm_gcc_atomic.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\atm_gcc_sync.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\atm_windows.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\byte_buffer.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\byte_buffer_reader.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\compression_types.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\connectivity_state.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\fork.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\gpr_slice.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\gpr_types.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\grpc_types.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\log.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\port_platform.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\propagation_bits.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\slice.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\status.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\sync.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\sync_custom.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\sync_generic.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\sync_posix.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\sync_windows.h" />
+    <ClInclude Include="..\include\grpc\load_reporting.h" />
+    <ClInclude Include="..\include\grpc\slice.h" />
+    <ClInclude Include="..\include\grpc\slice_buffer.h" />
+    <ClInclude Include="..\include\grpc\status.h" />
+    <ClInclude Include="..\include\grpc\support\alloc.h" />
+    <ClInclude Include="..\include\grpc\support\atm.h" />
+    <ClInclude Include="..\include\grpc\support\atm_gcc_atomic.h" />
+    <ClInclude Include="..\include\grpc\support\atm_gcc_sync.h" />
+    <ClInclude Include="..\include\grpc\support\atm_windows.h" />
+    <ClInclude Include="..\include\grpc\support\cpu.h" />
+    <ClInclude Include="..\include\grpc\support\log.h" />
+    <ClInclude Include="..\include\grpc\support\log_windows.h" />
+    <ClInclude Include="..\include\grpc\support\port_platform.h" />
+    <ClInclude Include="..\include\grpc\support\string_util.h" />
+    <ClInclude Include="..\include\grpc\support\sync.h" />
+    <ClInclude Include="..\include\grpc\support\sync_custom.h" />
+    <ClInclude Include="..\include\grpc\support\sync_generic.h" />
+    <ClInclude Include="..\include\grpc\support\sync_posix.h" />
+    <ClInclude Include="..\include\grpc\support\sync_windows.h" />
+    <ClInclude Include="..\include\grpc\support\thd_id.h" />
+    <ClInclude Include="..\include\grpc\support\time.h" />
+    <ClInclude Include="..\include\grpc\support\workaround_list.h" />
+    <ClInclude Include="..\src\cpp\client\create_channel_internal.h" />
+    <ClInclude Include="..\src\cpp\client\secure_credentials.h" />
+    <ClInclude Include="..\src\cpp\common\channel_filter.h" />
+    <ClInclude Include="..\src\cpp\common\secure_auth_context.h" />
+    <ClInclude Include="..\src\cpp\server\dynamic_thread_pool.h" />
+    <ClInclude Include="..\src\cpp\server\health\default_health_check_service.h" />
+    <ClInclude Include="..\src\cpp\server\secure_server_credentials.h" />
+    <ClInclude Include="..\src\cpp\server\thread_pool_interface.h" />
+    <ClInclude Include="..\src\cpp\thread_manager\thread_manager.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\include\grpcpp\impl\README.md" />
+    <None Include="..\include\grpc\module.modulemap" />
+    <None Include="..\src\cpp\README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\cpp\client\channel_cc.cc" />
+    <ClCompile Include="..\src\cpp\client\client_context.cc" />
+    <ClCompile Include="..\src\cpp\client\client_interceptor.cc" />
+    <ClCompile Include="..\src\cpp\client\create_channel.cc" />
+    <ClCompile Include="..\src\cpp\client\create_channel_internal.cc" />
+    <ClCompile Include="..\src\cpp\client\create_channel_posix.cc" />
+    <ClCompile Include="..\src\cpp\client\credentials_cc.cc" />
+    <ClCompile Include="..\src\cpp\client\cronet_credentials.cc" />
+    <ClCompile Include="..\src\cpp\client\generic_stub.cc" />
+    <ClCompile Include="..\src\cpp\client\insecure_credentials.cc" />
+    <ClCompile Include="..\src\cpp\client\secure_credentials.cc" />
+    <ClCompile Include="..\src\cpp\codegen\codegen_init.cc" />
+    <ClCompile Include="..\src\cpp\common\alarm.cc" />
+    <ClCompile Include="..\src\cpp\common\auth_property_iterator.cc" />
+    <ClCompile Include="..\src\cpp\common\channel_arguments.cc" />
+    <ClCompile Include="..\src\cpp\common\channel_filter.cc" />
+    <ClCompile Include="..\src\cpp\common\completion_queue_cc.cc" />
+    <ClCompile Include="..\src\cpp\common\core_codegen.cc" />
+    <ClCompile Include="..\src\cpp\common\insecure_create_auth_context.cc" />
+    <ClCompile Include="..\src\cpp\common\resource_quota_cc.cc" />
+    <ClCompile Include="..\src\cpp\common\rpc_method.cc" />
+    <ClCompile Include="..\src\cpp\common\secure_auth_context.cc" />
+    <ClCompile Include="..\src\cpp\common\secure_channel_arguments.cc" />
+    <ClCompile Include="..\src\cpp\common\secure_create_auth_context.cc" />
+    <ClCompile Include="..\src\cpp\common\version_cc.cc" />
+    <ClCompile Include="..\src\cpp\server\async_generic_service.cc" />
+    <ClCompile Include="..\src\cpp\server\channel_argument_option.cc" />
+    <ClCompile Include="..\src\cpp\server\create_default_thread_pool.cc" />
+    <ClCompile Include="..\src\cpp\server\dynamic_thread_pool.cc" />
+    <ClCompile Include="..\src\cpp\server\health\default_health_check_service.cc" />
+    <ClCompile Include="..\src\cpp\server\health\health_check_service.cc" />
+    <ClCompile Include="..\src\cpp\server\health\health_check_service_server_builder_option.cc" />
+    <ClCompile Include="..\src\cpp\server\insecure_server_credentials.cc" />
+    <ClCompile Include="..\src\cpp\server\secure_server_credentials.cc" />
+    <ClCompile Include="..\src\cpp\server\server_builder.cc" />
+    <ClCompile Include="..\src\cpp\server\server_cc.cc" />
+    <ClCompile Include="..\src\cpp\server\server_context.cc" />
+    <ClCompile Include="..\src\cpp\server\server_credentials.cc" />
+    <ClCompile Include="..\src\cpp\server\server_posix.cc" />
+    <ClCompile Include="..\src\cpp\thread_manager\thread_manager.cc" />
+    <ClCompile Include="..\src\cpp\util\byte_buffer_cc.cc" />
+    <ClCompile Include="..\src\cpp\util\status.cc" />
+    <ClCompile Include="..\src\cpp\util\string_ref.cc" />
+    <ClCompile Include="..\src\cpp\util\time_cc.cc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

@@ -1,0 +1,942 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="MinSizeRel|x64">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{189312EB-D132-3BC4-B8E5-8DC52B31814B}</ProjectGuid>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <Keyword>Win32Proj</Keyword>
+    <Platform>x64</Platform>
+    <ProjectName>grpc</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)IntDir\$(MSBuildProjectName)\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">grpc</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\Release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">grpc.dir\Release\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">grpc</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\MinSizeRel\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">grpc.dir\MinSizeRel\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">grpc</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\RelWithDebInfo\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">grpc.dir\RelWithDebInfo\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">grpc</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.lib</TargetExt>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\third_party\zlib;$(SolutionDir)\..\include;$(SolutionDir)\..;$(SolutionDir)\..\third_party\boringssl\include;$(SolutionDir)\..\third_party\protobuf;$(SolutionDir)\..\vsprojects\third_party\zlib;$(SolutionDir)\..\third_party\benchmark\include;$(SolutionDir)\..\third_party\cares\cares;$(SolutionDir)\..\vsprojects\third_party\cares\cares;$(SolutionDir)\..\vsprojects\third_party\gflags\include;$(SolutionDir)\..\third_party\address_sorting\include;$(SolutionDir)\..\third_party\nanopb;$(SolutionDir)\..\third_party\orientsec\orientsec_consumer;$(SolutionDir)\..\third_party\orientsec\orientsec_common;$(SolutionDir)\..\third_party\orientsec\orientsec_registry;$(SolutionDir)\..\third_party\orientsec\orientsec_provider;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4065;4506;4200;4291;4244;4267;4987;4774;4819;4996;4619</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <PreprocessorDefinitions>NDEBUG;WIN32;_WINDOWS;PB_FIELD_16BIT;_WIN32_WINNT=0x600;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;CARES_STATICLIB;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>$(IntDir)$(ProjectName).pdb</ProgramDataBaseFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;PB_FIELD_16BIT;_WIN32_WINNT=0x600;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;CARES_STATICLIB;CMAKE_INTDIR=\"Debug\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\boringssl\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\benchmark\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\gflags\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\address_sorting\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\nanopb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\boringssl\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\benchmark\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\gflags\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\address_sorting\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\nanopb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <AdditionalDependencies>orientsec_registry.lib;orientsec_common.lib;orientsec_consumer.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\boringssl\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\benchmark\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\gflags\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\address_sorting\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\nanopb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>Release/</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DisableSpecificWarnings>4065;4506;4200;4291;4244;4267;4987;4774;4819;4996;4619</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;PB_FIELD_16BIT;_WIN32_WINNT=0x600;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;CARES_STATICLIB;CMAKE_INTDIR="Release";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <ProgramDataBaseFileName>D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\Release\grpc.pdb</ProgramDataBaseFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;PB_FIELD_16BIT;_WIN32_WINNT=0x600;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;CARES_STATICLIB;CMAKE_INTDIR=\"Release\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\boringssl\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\benchmark\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\gflags\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\address_sorting\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\nanopb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\boringssl\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\benchmark\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\gflags\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\address_sorting\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\nanopb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\boringssl\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\benchmark\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\gflags\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\address_sorting\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\nanopb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>MinSizeRel/</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DisableSpecificWarnings>4065;4506;4200;4291;4244;4267;4987;4774;4819;4996;4619</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <Optimization>MinSpace</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;PB_FIELD_16BIT;_WIN32_WINNT=0x600;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;CARES_STATICLIB;CMAKE_INTDIR="MinSizeRel";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <ProgramDataBaseFileName>D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\MinSizeRel\grpc.pdb</ProgramDataBaseFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;PB_FIELD_16BIT;_WIN32_WINNT=0x600;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;CARES_STATICLIB;CMAKE_INTDIR=\"MinSizeRel\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\boringssl\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\benchmark\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\gflags\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\address_sorting\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\nanopb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\boringssl\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\benchmark\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\gflags\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\address_sorting\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\nanopb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\boringssl\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\benchmark\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\gflags\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\address_sorting\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\nanopb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>RelWithDebInfo/</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4065;4506;4200;4291;4244;4267;4987;4774;4819;4996;4619</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;PB_FIELD_16BIT;_WIN32_WINNT=0x600;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;CARES_STATICLIB;CMAKE_INTDIR="RelWithDebInfo";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\RelWithDebInfo\grpc.pdb</ProgramDataBaseFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;PB_FIELD_16BIT;_WIN32_WINNT=0x600;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;CARES_STATICLIB;CMAKE_INTDIR=\"RelWithDebInfo\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\boringssl\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\benchmark\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\gflags\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\address_sorting\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\nanopb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\boringssl\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\protobuf;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\zlib;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\benchmark\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\cares\cares;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\vsprojects\third_party\gflags\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\address_sorting\include;D:\Bocloud--OpenGrpc\code\grpc-1.17.2-vs2017\grpc\third_party\nanopb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\core\ext\filters\census\grpc_context.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\backup_poller.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\channel_connectivity.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\client_channel.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\client_channel_channelz.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\client_channel_factory.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\client_channel_plugin.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\connector.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\health\health.pb.c" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\health\health_check_client.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\http_connect_handshaker.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\http_proxy.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\lb_policy.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\lb_policy\grpclb\client_load_reporting_filter.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\lb_policy\grpclb\grpclb.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\lb_policy\grpclb\grpclb_channel.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\lb_policy\grpclb\grpclb_channel_secure.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\lb_policy\grpclb\grpclb_client_stats.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\lb_policy\grpclb\load_balancer_api.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\lb_policy\grpclb\proto\grpc\lb\v1\google\protobuf\duration.pb.c" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\lb_policy\grpclb\proto\grpc\lb\v1\google\protobuf\timestamp.pb.c" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\lb_policy\grpclb\proto\grpc\lb\v1\load_balancer.pb.c" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\lb_policy\pick_first\pick_first.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\lb_policy\round_robin\round_robin.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\lb_policy\xds\xds.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\lb_policy\xds\xds_channel.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\lb_policy\xds\xds_channel_secure.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\lb_policy\xds\xds_client_stats.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\lb_policy\xds\xds_load_balancer_api.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\lb_policy_factory.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\lb_policy_registry.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\parse_address.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\proxy_mapper.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\proxy_mapper_registry.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\resolver.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\resolver\dns\c_ares\dns_resolver_ares.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\resolver\dns\c_ares\grpc_ares_ev_driver.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\resolver\dns\c_ares\grpc_ares_ev_driver_posix.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\resolver\dns\c_ares\grpc_ares_ev_driver_windows.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\resolver\dns\c_ares\grpc_ares_wrapper.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\resolver\dns\c_ares\grpc_ares_wrapper_fallback.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\resolver\dns\c_ares\grpc_ares_wrapper_posix.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\resolver\dns\c_ares\grpc_ares_wrapper_windows.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\resolver\dns\native\dns_resolver.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\resolver\fake\fake_resolver.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\resolver\sockaddr\sockaddr_resolver.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\resolver\zookeeper\zookeeper_resolver.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\resolver_registry.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\resolver_result_parsing.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\retry_throttle.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\subchannel.cc" />
+    <ClCompile Include="..\src\core\ext\filters\client_channel\subchannel_index.cc" />
+    <ClCompile Include="..\src\core\ext\filters\deadline\deadline_filter.cc" />
+    <ClCompile Include="..\src\core\ext\filters\http\client\http_client_filter.cc" />
+    <ClCompile Include="..\src\core\ext\filters\http\client_authority_filter.cc" />
+    <ClCompile Include="..\src\core\ext\filters\http\http_filters_plugin.cc" />
+    <ClCompile Include="..\src\core\ext\filters\http\message_compress\message_compress_filter.cc" />
+    <ClCompile Include="..\src\core\ext\filters\http\server\http_server_filter.cc" />
+    <ClCompile Include="..\src\core\ext\filters\max_age\max_age_filter.cc" />
+    <ClCompile Include="..\src\core\ext\filters\message_size\message_size_filter.cc" />
+    <ClCompile Include="..\src\core\ext\filters\workarounds\workaround_cronet_compression_filter.cc" />
+    <ClCompile Include="..\src\core\ext\filters\workarounds\workaround_utils.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\alpn\alpn.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\client\authority.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\client\chttp2_connector.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\client\insecure\channel_create.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\client\insecure\channel_create_posix.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\client\secure\secure_channel_create.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\server\chttp2_server.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\server\insecure\server_chttp2.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\server\insecure\server_chttp2_posix.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\server\secure\server_secure_chttp2.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\transport\bin_decoder.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\transport\bin_encoder.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\transport\chttp2_plugin.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\transport\chttp2_transport.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\transport\flow_control.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\transport\frame_data.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\transport\frame_goaway.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\transport\frame_ping.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\transport\frame_rst_stream.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\transport\frame_settings.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\transport\frame_window_update.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\transport\hpack_encoder.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\transport\hpack_parser.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\transport\hpack_table.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\transport\http2_settings.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\transport\huffsyms.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\transport\incoming_metadata.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\transport\parsing.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\transport\stream_lists.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\transport\stream_map.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\transport\varint.cc" />
+    <ClCompile Include="..\src\core\ext\transport\chttp2\transport\writing.cc" />
+    <ClCompile Include="..\src\core\ext\transport\cronet\client\secure\cronet_channel_create.cc" />
+    <ClCompile Include="..\src\core\ext\transport\cronet\transport\cronet_api_dummy.cc" />
+    <ClCompile Include="..\src\core\ext\transport\cronet\transport\cronet_transport.cc" />
+    <ClCompile Include="..\src\core\ext\transport\inproc\inproc_plugin.cc" />
+    <ClCompile Include="..\src\core\ext\transport\inproc\inproc_transport.cc" />
+    <ClCompile Include="..\src\core\lib\avl\avl.cc" />
+    <ClCompile Include="..\src\core\lib\backoff\backoff.cc" />
+    <ClCompile Include="..\src\core\lib\channel\channelz.cc" />
+    <ClCompile Include="..\src\core\lib\channel\channelz_registry.cc" />
+    <ClCompile Include="..\src\core\lib\channel\channel_args.cc" />
+    <ClCompile Include="..\src\core\lib\channel\channel_stack.cc" />
+    <ClCompile Include="..\src\core\lib\channel\channel_stack_builder.cc" />
+    <ClCompile Include="..\src\core\lib\channel\channel_trace.cc" />
+    <ClCompile Include="..\src\core\lib\channel\connected_channel.cc" />
+    <ClCompile Include="..\src\core\lib\channel\handshaker.cc" />
+    <ClCompile Include="..\src\core\lib\channel\handshaker_factory.cc" />
+    <ClCompile Include="..\src\core\lib\channel\handshaker_registry.cc" />
+    <ClCompile Include="..\src\core\lib\channel\status_util.cc" />
+    <ClCompile Include="..\src\core\lib\compression\compression.cc" />
+    <ClCompile Include="..\src\core\lib\compression\compression_internal.cc" />
+    <ClCompile Include="..\src\core\lib\compression\message_compress.cc" />
+    <ClCompile Include="..\src\core\lib\compression\stream_compression.cc" />
+    <ClCompile Include="..\src\core\lib\compression\stream_compression_gzip.cc" />
+    <ClCompile Include="..\src\core\lib\compression\stream_compression_identity.cc" />
+    <ClCompile Include="..\src\core\lib\debug\stats.cc" />
+    <ClCompile Include="..\src\core\lib\debug\stats_data.cc" />
+    <ClCompile Include="..\src\core\lib\debug\trace.cc" />
+    <ClCompile Include="..\src\core\lib\extend\orientsec_grpc_extend_init.c" />
+    <ClCompile Include="..\src\core\lib\gprpp\fork.cc" />
+    <ClCompile Include="..\src\core\lib\gprpp\thd_posix.cc" />
+    <ClCompile Include="..\src\core\lib\gprpp\thd_windows.cc" />
+    <ClCompile Include="..\src\core\lib\http\format_request.cc" />
+    <ClCompile Include="..\src\core\lib\http\httpcli.cc" />
+    <ClCompile Include="..\src\core\lib\http\httpcli_security_connector.cc" />
+    <ClCompile Include="..\src\core\lib\http\parser.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\buffer_list.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\call_combiner.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\cfstream_handle.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\combiner.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\endpoint.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\endpoint_cfstream.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\endpoint_pair_posix.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\endpoint_pair_uv.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\endpoint_pair_windows.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\error.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\error_cfstream.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\ev_epoll1_linux.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\ev_epollex_linux.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\ev_poll_posix.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\ev_posix.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\ev_windows.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\executor.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\exec_ctx.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\fork_posix.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\fork_windows.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\gethostname_fallback.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\gethostname_host_name_max.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\gethostname_sysconf.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\internal_errqueue.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\iocp_windows.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\iomgr.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\iomgr_custom.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\iomgr_internal.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\iomgr_posix.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\iomgr_posix_cfstream.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\iomgr_uv.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\iomgr_windows.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\is_epollexclusive_available.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\load_file.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\lockfree_event.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\network_status_tracker.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\polling_entity.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\pollset.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\pollset_custom.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\pollset_set.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\pollset_set_custom.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\pollset_set_windows.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\pollset_uv.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\pollset_windows.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\resolve_address.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\resolve_address_custom.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\resolve_address_posix.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\resolve_address_windows.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\resource_quota.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\sockaddr_utils.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\socket_factory_posix.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\socket_mutator.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\socket_utils_common_posix.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\socket_utils_linux.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\socket_utils_posix.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\socket_utils_uv.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\socket_utils_windows.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\socket_windows.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\tcp_client.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\tcp_client_cfstream.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\tcp_client_custom.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\tcp_client_posix.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\tcp_client_windows.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\tcp_custom.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\tcp_posix.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\tcp_server.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\tcp_server_custom.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\tcp_server_posix.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\tcp_server_utils_posix_common.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\tcp_server_utils_posix_ifaddrs.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\tcp_server_utils_posix_noifaddrs.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\tcp_server_windows.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\tcp_uv.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\tcp_windows.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\timer.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\timer_custom.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\timer_generic.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\timer_heap.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\timer_manager.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\timer_uv.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\time_averaged_stats.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\udp_server.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\unix_sockets_posix.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\unix_sockets_posix_noop.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\wakeup_fd_cv.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\wakeup_fd_eventfd.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\wakeup_fd_nospecial.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\wakeup_fd_pipe.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\wakeup_fd_posix.cc" />
+    <ClCompile Include="..\src\core\lib\iomgr\zk_resolve_address.cc" />
+    <ClCompile Include="..\src\core\lib\json\json.cc" />
+    <ClCompile Include="..\src\core\lib\json\json_reader.cc" />
+    <ClCompile Include="..\src\core\lib\json\json_string.cc" />
+    <ClCompile Include="..\src\core\lib\json\json_writer.cc" />
+    <ClCompile Include="..\src\core\lib\security\context\security_context.cc" />
+    <ClCompile Include="..\src\core\lib\security\credentials\alts\alts_credentials.cc" />
+    <ClCompile Include="..\src\core\lib\security\credentials\alts\check_gcp_environment.cc" />
+    <ClCompile Include="..\src\core\lib\security\credentials\alts\check_gcp_environment_linux.cc" />
+    <ClCompile Include="..\src\core\lib\security\credentials\alts\check_gcp_environment_no_op.cc" />
+    <ClCompile Include="..\src\core\lib\security\credentials\alts\check_gcp_environment_windows.cc" />
+    <ClCompile Include="..\src\core\lib\security\credentials\alts\grpc_alts_credentials_client_options.cc" />
+    <ClCompile Include="..\src\core\lib\security\credentials\alts\grpc_alts_credentials_options.cc" />
+    <ClCompile Include="..\src\core\lib\security\credentials\alts\grpc_alts_credentials_server_options.cc" />
+    <ClCompile Include="..\src\core\lib\security\credentials\composite\composite_credentials.cc" />
+    <ClCompile Include="..\src\core\lib\security\credentials\credentials.cc" />
+    <ClCompile Include="..\src\core\lib\security\credentials\credentials_metadata.cc" />
+    <ClCompile Include="..\src\core\lib\security\credentials\fake\fake_credentials.cc" />
+    <ClCompile Include="..\src\core\lib\security\credentials\google_default\credentials_generic.cc" />
+    <ClCompile Include="..\src\core\lib\security\credentials\google_default\google_default_credentials.cc" />
+    <ClCompile Include="..\src\core\lib\security\credentials\iam\iam_credentials.cc" />
+    <ClCompile Include="..\src\core\lib\security\credentials\jwt\json_token.cc" />
+    <ClCompile Include="..\src\core\lib\security\credentials\jwt\jwt_credentials.cc" />
+    <ClCompile Include="..\src\core\lib\security\credentials\jwt\jwt_verifier.cc" />
+    <ClCompile Include="..\src\core\lib\security\credentials\local\local_credentials.cc" />
+    <ClCompile Include="..\src\core\lib\security\credentials\oauth2\oauth2_credentials.cc" />
+    <ClCompile Include="..\src\core\lib\security\credentials\plugin\plugin_credentials.cc" />
+    <ClCompile Include="..\src\core\lib\security\credentials\ssl\ssl_credentials.cc" />
+    <ClCompile Include="..\src\core\lib\security\security_connector\alts\alts_security_connector.cc" />
+    <ClCompile Include="..\src\core\lib\security\security_connector\fake\fake_security_connector.cc" />
+    <ClCompile Include="..\src\core\lib\security\security_connector\load_system_roots_fallback.cc" />
+    <ClCompile Include="..\src\core\lib\security\security_connector\load_system_roots_linux.cc" />
+    <ClCompile Include="..\src\core\lib\security\security_connector\local\local_security_connector.cc" />
+    <ClCompile Include="..\src\core\lib\security\security_connector\security_connector.cc" />
+    <ClCompile Include="..\src\core\lib\security\security_connector\ssl\ssl_security_connector.cc" />
+    <ClCompile Include="..\src\core\lib\security\security_connector\ssl_utils.cc" />
+    <ClCompile Include="..\src\core\lib\security\transport\client_auth_filter.cc" />
+    <ClCompile Include="..\src\core\lib\security\transport\secure_endpoint.cc" />
+    <ClCompile Include="..\src\core\lib\security\transport\security_handshaker.cc" />
+    <ClCompile Include="..\src\core\lib\security\transport\server_auth_filter.cc" />
+    <ClCompile Include="..\src\core\lib\security\transport\target_authority_table.cc" />
+    <ClCompile Include="..\src\core\lib\security\transport\tsi_error.cc" />
+    <ClCompile Include="..\src\core\lib\security\util\json_util.cc" />
+    <ClCompile Include="..\src\core\lib\slice\b64.cc" />
+    <ClCompile Include="..\src\core\lib\slice\percent_encoding.cc" />
+    <ClCompile Include="..\src\core\lib\slice\slice.cc" />
+    <ClCompile Include="..\src\core\lib\slice\slice_buffer.cc" />
+    <ClCompile Include="..\src\core\lib\slice\slice_intern.cc" />
+    <ClCompile Include="..\src\core\lib\slice\slice_string_helpers.cc" />
+    <ClCompile Include="..\src\core\lib\surface\api_trace.cc" />
+    <ClCompile Include="..\src\core\lib\surface\byte_buffer.cc" />
+    <ClCompile Include="..\src\core\lib\surface\byte_buffer_reader.cc" />
+    <ClCompile Include="..\src\core\lib\surface\call.cc" />
+    <ClCompile Include="..\src\core\lib\surface\call_details.cc" />
+    <ClCompile Include="..\src\core\lib\surface\call_log_batch.cc" />
+    <ClCompile Include="..\src\core\lib\surface\channel.cc" />
+    <ClCompile Include="..\src\core\lib\surface\channel_init.cc" />
+    <ClCompile Include="..\src\core\lib\surface\channel_ping.cc" />
+    <ClCompile Include="..\src\core\lib\surface\channel_stack_type.cc" />
+    <ClCompile Include="..\src\core\lib\surface\completion_queue.cc" />
+    <ClCompile Include="..\src\core\lib\surface\completion_queue_factory.cc" />
+    <ClCompile Include="..\src\core\lib\surface\event_string.cc" />
+    <ClCompile Include="..\src\core\lib\surface\init.cc" />
+    <ClCompile Include="..\src\core\lib\surface\init_secure.cc" />
+    <ClCompile Include="..\src\core\lib\surface\init_unsecure.cc" />
+    <ClCompile Include="..\src\core\lib\surface\lame_client.cc" />
+    <ClCompile Include="..\src\core\lib\surface\metadata_array.cc" />
+    <ClCompile Include="..\src\core\lib\surface\server.cc" />
+    <ClCompile Include="..\src\core\lib\surface\validate_metadata.cc" />
+    <ClCompile Include="..\src\core\lib\surface\version.cc" />
+    <ClCompile Include="..\src\core\lib\transport\bdp_estimator.cc" />
+    <ClCompile Include="..\src\core\lib\transport\byte_stream.cc" />
+    <ClCompile Include="..\src\core\lib\transport\connectivity_state.cc" />
+    <ClCompile Include="..\src\core\lib\transport\error_utils.cc" />
+    <ClCompile Include="..\src\core\lib\transport\metadata.cc" />
+    <ClCompile Include="..\src\core\lib\transport\metadata_batch.cc" />
+    <ClCompile Include="..\src\core\lib\transport\pid_controller.cc" />
+    <ClCompile Include="..\src\core\lib\transport\service_config.cc" />
+    <ClCompile Include="..\src\core\lib\transport\static_metadata.cc" />
+    <ClCompile Include="..\src\core\lib\transport\status_conversion.cc" />
+    <ClCompile Include="..\src\core\lib\transport\status_metadata.cc" />
+    <ClCompile Include="..\src\core\lib\transport\timeout_encoding.cc" />
+    <ClCompile Include="..\src\core\lib\transport\transport.cc" />
+    <ClCompile Include="..\src\core\lib\transport\transport_op_string.cc" />
+    <ClCompile Include="..\src\core\lib\uri\uri_parser.cc" />
+    <ClCompile Include="..\src\core\plugin_registry\grpc_cronet_plugin_registry.cc" />
+    <ClCompile Include="..\src\core\plugin_registry\grpc_plugin_registry.cc" />
+    <ClCompile Include="..\src\core\plugin_registry\grpc_unsecure_plugin_registry.cc" />
+    <ClCompile Include="..\src\core\tsi\alts\crypt\aes_gcm.cc" />
+    <ClCompile Include="..\src\core\tsi\alts\crypt\gsec.cc" />
+    <ClCompile Include="..\src\core\tsi\alts\frame_protector\alts_counter.cc" />
+    <ClCompile Include="..\src\core\tsi\alts\frame_protector\alts_crypter.cc" />
+    <ClCompile Include="..\src\core\tsi\alts\frame_protector\alts_frame_protector.cc" />
+    <ClCompile Include="..\src\core\tsi\alts\frame_protector\alts_record_protocol_crypter_common.cc" />
+    <ClCompile Include="..\src\core\tsi\alts\frame_protector\alts_seal_privacy_integrity_crypter.cc" />
+    <ClCompile Include="..\src\core\tsi\alts\frame_protector\alts_unseal_privacy_integrity_crypter.cc" />
+    <ClCompile Include="..\src\core\tsi\alts\frame_protector\frame_handler.cc" />
+    <ClCompile Include="..\src\core\tsi\alts\handshaker\altscontext.pb.c" />
+    <ClCompile Include="..\src\core\tsi\alts\handshaker\alts_handshaker_client.cc" />
+    <ClCompile Include="..\src\core\tsi\alts\handshaker\alts_handshaker_service_api.cc" />
+    <ClCompile Include="..\src\core\tsi\alts\handshaker\alts_handshaker_service_api_util.cc" />
+    <ClCompile Include="..\src\core\tsi\alts\handshaker\alts_shared_resource.cc" />
+    <ClCompile Include="..\src\core\tsi\alts\handshaker\alts_tsi_handshaker.cc" />
+    <ClCompile Include="..\src\core\tsi\alts\handshaker\alts_tsi_utils.cc" />
+    <ClCompile Include="..\src\core\tsi\alts\handshaker\handshaker.pb.c" />
+    <ClCompile Include="..\src\core\tsi\alts\handshaker\transport_security_common.pb.c" />
+    <ClCompile Include="..\src\core\tsi\alts\handshaker\transport_security_common_api.cc" />
+    <ClCompile Include="..\src\core\tsi\alts\zero_copy_frame_protector\alts_grpc_integrity_only_record_protocol.cc" />
+    <ClCompile Include="..\src\core\tsi\alts\zero_copy_frame_protector\alts_grpc_privacy_integrity_record_protocol.cc" />
+    <ClCompile Include="..\src\core\tsi\alts\zero_copy_frame_protector\alts_grpc_record_protocol_common.cc" />
+    <ClCompile Include="..\src\core\tsi\alts\zero_copy_frame_protector\alts_iovec_record_protocol.cc" />
+    <ClCompile Include="..\src\core\tsi\alts\zero_copy_frame_protector\alts_zero_copy_grpc_protector.cc" />
+    <ClCompile Include="..\src\core\tsi\fake_transport_security.cc" />
+    <ClCompile Include="..\src\core\tsi\local_transport_security.cc" />
+    <ClCompile Include="..\src\core\tsi\ssl\session_cache\ssl_session_boringssl.cc" />
+    <ClCompile Include="..\src\core\tsi\ssl\session_cache\ssl_session_cache.cc" />
+    <ClCompile Include="..\src\core\tsi\ssl\session_cache\ssl_session_openssl.cc" />
+    <ClCompile Include="..\src\core\tsi\ssl_transport_security.cc" />
+    <ClCompile Include="..\src\core\tsi\transport_security.cc" />
+    <ClCompile Include="..\src\core\tsi\transport_security_grpc.cc" />
+    <ClCompile Include="..\third_party\nanopb\pb_common.c" />
+    <ClCompile Include="..\third_party\nanopb\pb_decode.c" />
+    <ClCompile Include="..\third_party\nanopb\pb_encode.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\grpc\byte_buffer.h" />
+    <ClInclude Include="..\include\grpc\byte_buffer_reader.h" />
+    <ClInclude Include="..\include\grpc\census.h" />
+    <ClInclude Include="..\include\grpc\compression.h" />
+    <ClInclude Include="..\include\grpc\fork.h" />
+    <ClInclude Include="..\include\grpc\grpc.h" />
+    <ClInclude Include="..\include\grpc\grpc_cronet.h" />
+    <ClInclude Include="..\include\grpc\grpc_posix.h" />
+    <ClInclude Include="..\include\grpc\grpc_security.h" />
+    <ClInclude Include="..\include\grpc\grpc_security_constants.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\atm.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\atm_gcc_atomic.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\atm_gcc_sync.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\atm_windows.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\byte_buffer.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\byte_buffer_reader.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\compression_types.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\connectivity_state.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\fork.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\gpr_slice.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\gpr_types.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\grpc_types.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\log.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\port_platform.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\propagation_bits.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\slice.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\status.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\sync.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\sync_custom.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\sync_generic.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\sync_posix.h" />
+    <ClInclude Include="..\include\grpc\impl\codegen\sync_windows.h" />
+    <ClInclude Include="..\include\grpc\load_reporting.h" />
+    <ClInclude Include="..\include\grpc\slice.h" />
+    <ClInclude Include="..\include\grpc\slice_buffer.h" />
+    <ClInclude Include="..\include\grpc\status.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\backup_poller.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\client_channel.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\client_channel_channelz.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\client_channel_factory.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\connector.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\health\health.pb.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\health\health_check_client.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\http_connect_handshaker.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\http_proxy.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\lb_policy.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\lb_policy\grpclb\client_load_reporting_filter.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\lb_policy\grpclb\grpclb.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\lb_policy\grpclb\grpclb_channel.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\lb_policy\grpclb\grpclb_client_stats.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\lb_policy\grpclb\load_balancer_api.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\lb_policy\grpclb\proto\grpc\lb\v1\google\protobuf\duration.pb.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\lb_policy\grpclb\proto\grpc\lb\v1\google\protobuf\timestamp.pb.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\lb_policy\grpclb\proto\grpc\lb\v1\load_balancer.pb.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\lb_policy\subchannel_list.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\lb_policy\xds\xds.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\lb_policy\xds\xds_channel.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\lb_policy\xds\xds_client_stats.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\lb_policy\xds\xds_load_balancer_api.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\lb_policy_factory.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\lb_policy_registry.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\parse_address.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\proxy_mapper.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\proxy_mapper_registry.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\resolver.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\resolver\dns\c_ares\grpc_ares_ev_driver.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\resolver\dns\c_ares\grpc_ares_wrapper.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\resolver\fake\fake_resolver.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\resolver_factory.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\resolver_registry.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\resolver_result_parsing.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\retry_throttle.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\subchannel.h" />
+    <ClInclude Include="..\src\core\ext\filters\client_channel\subchannel_index.h" />
+    <ClInclude Include="..\src\core\ext\filters\deadline\deadline_filter.h" />
+    <ClInclude Include="..\src\core\ext\filters\http\client\http_client_filter.h" />
+    <ClInclude Include="..\src\core\ext\filters\http\client_authority_filter.h" />
+    <ClInclude Include="..\src\core\ext\filters\http\message_compress\message_compress_filter.h" />
+    <ClInclude Include="..\src\core\ext\filters\http\server\http_server_filter.h" />
+    <ClInclude Include="..\src\core\ext\filters\max_age\max_age_filter.h" />
+    <ClInclude Include="..\src\core\ext\filters\message_size\message_size_filter.h" />
+    <ClInclude Include="..\src\core\ext\filters\workarounds\workaround_cronet_compression_filter.h" />
+    <ClInclude Include="..\src\core\ext\filters\workarounds\workaround_utils.h" />
+    <ClInclude Include="..\src\core\ext\transport\chttp2\alpn\alpn.h" />
+    <ClInclude Include="..\src\core\ext\transport\chttp2\client\authority.h" />
+    <ClInclude Include="..\src\core\ext\transport\chttp2\client\chttp2_connector.h" />
+    <ClInclude Include="..\src\core\ext\transport\chttp2\server\chttp2_server.h" />
+    <ClInclude Include="..\src\core\ext\transport\chttp2\transport\bin_decoder.h" />
+    <ClInclude Include="..\src\core\ext\transport\chttp2\transport\bin_encoder.h" />
+    <ClInclude Include="..\src\core\ext\transport\chttp2\transport\chttp2_transport.h" />
+    <ClInclude Include="..\src\core\ext\transport\chttp2\transport\flow_control.h" />
+    <ClInclude Include="..\src\core\ext\transport\chttp2\transport\frame.h" />
+    <ClInclude Include="..\src\core\ext\transport\chttp2\transport\frame_data.h" />
+    <ClInclude Include="..\src\core\ext\transport\chttp2\transport\frame_goaway.h" />
+    <ClInclude Include="..\src\core\ext\transport\chttp2\transport\frame_ping.h" />
+    <ClInclude Include="..\src\core\ext\transport\chttp2\transport\frame_rst_stream.h" />
+    <ClInclude Include="..\src\core\ext\transport\chttp2\transport\frame_settings.h" />
+    <ClInclude Include="..\src\core\ext\transport\chttp2\transport\frame_window_update.h" />
+    <ClInclude Include="..\src\core\ext\transport\chttp2\transport\hpack_encoder.h" />
+    <ClInclude Include="..\src\core\ext\transport\chttp2\transport\hpack_parser.h" />
+    <ClInclude Include="..\src\core\ext\transport\chttp2\transport\hpack_table.h" />
+    <ClInclude Include="..\src\core\ext\transport\chttp2\transport\http2_settings.h" />
+    <ClInclude Include="..\src\core\ext\transport\chttp2\transport\huffsyms.h" />
+    <ClInclude Include="..\src\core\ext\transport\chttp2\transport\incoming_metadata.h" />
+    <ClInclude Include="..\src\core\ext\transport\chttp2\transport\internal.h" />
+    <ClInclude Include="..\src\core\ext\transport\chttp2\transport\stream_map.h" />
+    <ClInclude Include="..\src\core\ext\transport\chttp2\transport\varint.h" />
+    <ClInclude Include="..\src\core\ext\transport\cronet\transport\cronet_transport.h" />
+    <ClInclude Include="..\src\core\ext\transport\inproc\inproc_transport.h" />
+    <ClInclude Include="..\src\core\lib\avl\avl.h" />
+    <ClInclude Include="..\src\core\lib\backoff\backoff.h" />
+    <ClInclude Include="..\src\core\lib\channel\channelz.h" />
+    <ClInclude Include="..\src\core\lib\channel\channelz_registry.h" />
+    <ClInclude Include="..\src\core\lib\channel\channel_args.h" />
+    <ClInclude Include="..\src\core\lib\channel\channel_stack.h" />
+    <ClInclude Include="..\src\core\lib\channel\channel_stack_builder.h" />
+    <ClInclude Include="..\src\core\lib\channel\channel_trace.h" />
+    <ClInclude Include="..\src\core\lib\channel\connected_channel.h" />
+    <ClInclude Include="..\src\core\lib\channel\context.h" />
+    <ClInclude Include="..\src\core\lib\channel\handshaker.h" />
+    <ClInclude Include="..\src\core\lib\channel\handshaker_factory.h" />
+    <ClInclude Include="..\src\core\lib\channel\handshaker_registry.h" />
+    <ClInclude Include="..\src\core\lib\channel\status_util.h" />
+    <ClInclude Include="..\src\core\lib\compression\algorithm_metadata.h" />
+    <ClInclude Include="..\src\core\lib\compression\compression_internal.h" />
+    <ClInclude Include="..\src\core\lib\compression\message_compress.h" />
+    <ClInclude Include="..\src\core\lib\compression\stream_compression.h" />
+    <ClInclude Include="..\src\core\lib\compression\stream_compression_gzip.h" />
+    <ClInclude Include="..\src\core\lib\compression\stream_compression_identity.h" />
+    <ClInclude Include="..\src\core\lib\debug\stats.h" />
+    <ClInclude Include="..\src\core\lib\debug\stats_data.h" />
+    <ClInclude Include="..\src\core\lib\debug\trace.h" />
+    <ClInclude Include="..\src\core\lib\extend\orientsec_grpc_extend_init.h" />
+    <ClInclude Include="..\src\core\lib\gprpp\abstract.h" />
+    <ClInclude Include="..\src\core\lib\gprpp\atomic.h" />
+    <ClInclude Include="..\src\core\lib\gprpp\atomic_with_atm.h" />
+    <ClInclude Include="..\src\core\lib\gprpp\atomic_with_std.h" />
+    <ClInclude Include="..\src\core\lib\gprpp\debug_location.h" />
+    <ClInclude Include="..\src\core\lib\gprpp\fork.h" />
+    <ClInclude Include="..\src\core\lib\gprpp\inlined_vector.h" />
+    <ClInclude Include="..\src\core\lib\gprpp\manual_constructor.h" />
+    <ClInclude Include="..\src\core\lib\gprpp\memory.h" />
+    <ClInclude Include="..\src\core\lib\gprpp\mutex_lock.h" />
+    <ClInclude Include="..\src\core\lib\gprpp\orphanable.h" />
+    <ClInclude Include="..\src\core\lib\gprpp\ref_counted.h" />
+    <ClInclude Include="..\src\core\lib\gprpp\ref_counted_ptr.h" />
+    <ClInclude Include="..\src\core\lib\gprpp\thd.h" />
+    <ClInclude Include="..\src\core\lib\http\format_request.h" />
+    <ClInclude Include="..\src\core\lib\http\httpcli.h" />
+    <ClInclude Include="..\src\core\lib\http\parser.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\block_annotate.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\buffer_list.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\call_combiner.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\cfstream_handle.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\closure.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\combiner.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\endpoint.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\endpoint_cfstream.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\endpoint_pair.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\error.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\error_cfstream.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\error_internal.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\ev_epoll1_linux.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\ev_epollex_linux.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\ev_poll_posix.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\ev_posix.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\executor.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\exec_ctx.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\gethostname.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\gevent_util.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\internal_errqueue.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\iocp_windows.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\iomgr.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\iomgr_custom.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\iomgr_internal.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\iomgr_posix.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\is_epollexclusive_available.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\load_file.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\lockfree_event.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\nameser.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\network_status_tracker.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\polling_entity.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\pollset.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\pollset_custom.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\pollset_set.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\pollset_set_custom.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\pollset_set_windows.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\pollset_uv.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\pollset_windows.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\port.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\resolve_address.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\resolve_address_custom.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\resource_quota.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\sockaddr.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\sockaddr_custom.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\sockaddr_posix.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\sockaddr_utils.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\sockaddr_windows.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\socket_factory_posix.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\socket_mutator.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\socket_utils.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\socket_utils_posix.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\socket_windows.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\sys_epoll_wrapper.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\tcp_client.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\tcp_client_posix.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\tcp_custom.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\tcp_posix.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\tcp_server.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\tcp_server_utils_posix.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\tcp_windows.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\timer.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\timer_custom.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\timer_generic.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\timer_heap.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\timer_manager.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\time_averaged_stats.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\udp_server.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\unix_sockets_posix.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\wakeup_fd_cv.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\wakeup_fd_pipe.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\wakeup_fd_posix.h" />
+    <ClInclude Include="..\src\core\lib\iomgr\zk_resolve_address.h" />
+    <ClInclude Include="..\src\core\lib\json\json.h" />
+    <ClInclude Include="..\src\core\lib\json\json_common.h" />
+    <ClInclude Include="..\src\core\lib\json\json_reader.h" />
+    <ClInclude Include="..\src\core\lib\json\json_writer.h" />
+    <ClInclude Include="..\src\core\lib\security\context\security_context.h" />
+    <ClInclude Include="..\src\core\lib\security\credentials\alts\alts_credentials.h" />
+    <ClInclude Include="..\src\core\lib\security\credentials\alts\check_gcp_environment.h" />
+    <ClInclude Include="..\src\core\lib\security\credentials\alts\grpc_alts_credentials_options.h" />
+    <ClInclude Include="..\src\core\lib\security\credentials\composite\composite_credentials.h" />
+    <ClInclude Include="..\src\core\lib\security\credentials\credentials.h" />
+    <ClInclude Include="..\src\core\lib\security\credentials\fake\fake_credentials.h" />
+    <ClInclude Include="..\src\core\lib\security\credentials\google_default\google_default_credentials.h" />
+    <ClInclude Include="..\src\core\lib\security\credentials\iam\iam_credentials.h" />
+    <ClInclude Include="..\src\core\lib\security\credentials\jwt\json_token.h" />
+    <ClInclude Include="..\src\core\lib\security\credentials\jwt\jwt_credentials.h" />
+    <ClInclude Include="..\src\core\lib\security\credentials\jwt\jwt_verifier.h" />
+    <ClInclude Include="..\src\core\lib\security\credentials\local\local_credentials.h" />
+    <ClInclude Include="..\src\core\lib\security\credentials\oauth2\oauth2_credentials.h" />
+    <ClInclude Include="..\src\core\lib\security\credentials\plugin\plugin_credentials.h" />
+    <ClInclude Include="..\src\core\lib\security\credentials\ssl\ssl_credentials.h" />
+    <ClInclude Include="..\src\core\lib\security\security_connector\alts\alts_security_connector.h" />
+    <ClInclude Include="..\src\core\lib\security\security_connector\fake\fake_security_connector.h" />
+    <ClInclude Include="..\src\core\lib\security\security_connector\load_system_roots.h" />
+    <ClInclude Include="..\src\core\lib\security\security_connector\load_system_roots_linux.h" />
+    <ClInclude Include="..\src\core\lib\security\security_connector\local\local_security_connector.h" />
+    <ClInclude Include="..\src\core\lib\security\security_connector\security_connector.h" />
+    <ClInclude Include="..\src\core\lib\security\security_connector\ssl\ssl_security_connector.h" />
+    <ClInclude Include="..\src\core\lib\security\security_connector\ssl_utils.h" />
+    <ClInclude Include="..\src\core\lib\security\transport\auth_filters.h" />
+    <ClInclude Include="..\src\core\lib\security\transport\secure_endpoint.h" />
+    <ClInclude Include="..\src\core\lib\security\transport\security_handshaker.h" />
+    <ClInclude Include="..\src\core\lib\security\transport\target_authority_table.h" />
+    <ClInclude Include="..\src\core\lib\security\transport\tsi_error.h" />
+    <ClInclude Include="..\src\core\lib\security\util\json_util.h" />
+    <ClInclude Include="..\src\core\lib\slice\b64.h" />
+    <ClInclude Include="..\src\core\lib\slice\percent_encoding.h" />
+    <ClInclude Include="..\src\core\lib\slice\slice_hash_table.h" />
+    <ClInclude Include="..\src\core\lib\slice\slice_internal.h" />
+    <ClInclude Include="..\src\core\lib\slice\slice_string_helpers.h" />
+    <ClInclude Include="..\src\core\lib\slice\slice_traits.h" />
+    <ClInclude Include="..\src\core\lib\slice\slice_weak_hash_table.h" />
+    <ClInclude Include="..\src\core\lib\surface\api_trace.h" />
+    <ClInclude Include="..\src\core\lib\surface\call.h" />
+    <ClInclude Include="..\src\core\lib\surface\call_test_only.h" />
+    <ClInclude Include="..\src\core\lib\surface\channel.h" />
+    <ClInclude Include="..\src\core\lib\surface\channel_init.h" />
+    <ClInclude Include="..\src\core\lib\surface\channel_stack_type.h" />
+    <ClInclude Include="..\src\core\lib\surface\completion_queue.h" />
+    <ClInclude Include="..\src\core\lib\surface\completion_queue_factory.h" />
+    <ClInclude Include="..\src\core\lib\surface\event_string.h" />
+    <ClInclude Include="..\src\core\lib\surface\init.h" />
+    <ClInclude Include="..\src\core\lib\surface\lame_client.h" />
+    <ClInclude Include="..\src\core\lib\surface\server.h" />
+    <ClInclude Include="..\src\core\lib\surface\validate_metadata.h" />
+    <ClInclude Include="..\src\core\lib\transport\bdp_estimator.h" />
+    <ClInclude Include="..\src\core\lib\transport\byte_stream.h" />
+    <ClInclude Include="..\src\core\lib\transport\connectivity_state.h" />
+    <ClInclude Include="..\src\core\lib\transport\error_utils.h" />
+    <ClInclude Include="..\src\core\lib\transport\http2_errors.h" />
+    <ClInclude Include="..\src\core\lib\transport\metadata.h" />
+    <ClInclude Include="..\src\core\lib\transport\metadata_batch.h" />
+    <ClInclude Include="..\src\core\lib\transport\pid_controller.h" />
+    <ClInclude Include="..\src\core\lib\transport\service_config.h" />
+    <ClInclude Include="..\src\core\lib\transport\static_metadata.h" />
+    <ClInclude Include="..\src\core\lib\transport\status_conversion.h" />
+    <ClInclude Include="..\src\core\lib\transport\status_metadata.h" />
+    <ClInclude Include="..\src\core\lib\transport\timeout_encoding.h" />
+    <ClInclude Include="..\src\core\lib\transport\transport.h" />
+    <ClInclude Include="..\src\core\lib\transport\transport_impl.h" />
+    <ClInclude Include="..\src\core\lib\uri\uri_parser.h" />
+    <ClInclude Include="..\src\core\tsi\alts\crypt\gsec.h" />
+    <ClInclude Include="..\src\core\tsi\alts\frame_protector\alts_counter.h" />
+    <ClInclude Include="..\src\core\tsi\alts\frame_protector\alts_crypter.h" />
+    <ClInclude Include="..\src\core\tsi\alts\frame_protector\alts_frame_protector.h" />
+    <ClInclude Include="..\src\core\tsi\alts\frame_protector\alts_record_protocol_crypter_common.h" />
+    <ClInclude Include="..\src\core\tsi\alts\frame_protector\frame_handler.h" />
+    <ClInclude Include="..\src\core\tsi\alts\handshaker\altscontext.pb.h" />
+    <ClInclude Include="..\src\core\tsi\alts\handshaker\alts_handshaker_client.h" />
+    <ClInclude Include="..\src\core\tsi\alts\handshaker\alts_handshaker_service_api.h" />
+    <ClInclude Include="..\src\core\tsi\alts\handshaker\alts_handshaker_service_api_util.h" />
+    <ClInclude Include="..\src\core\tsi\alts\handshaker\alts_shared_resource.h" />
+    <ClInclude Include="..\src\core\tsi\alts\handshaker\alts_tsi_handshaker.h" />
+    <ClInclude Include="..\src\core\tsi\alts\handshaker\alts_tsi_handshaker_private.h" />
+    <ClInclude Include="..\src\core\tsi\alts\handshaker\alts_tsi_utils.h" />
+    <ClInclude Include="..\src\core\tsi\alts\handshaker\handshaker.pb.h" />
+    <ClInclude Include="..\src\core\tsi\alts\handshaker\transport_security_common.pb.h" />
+    <ClInclude Include="..\src\core\tsi\alts\handshaker\transport_security_common_api.h" />
+    <ClInclude Include="..\src\core\tsi\alts\zero_copy_frame_protector\alts_grpc_integrity_only_record_protocol.h" />
+    <ClInclude Include="..\src\core\tsi\alts\zero_copy_frame_protector\alts_grpc_privacy_integrity_record_protocol.h" />
+    <ClInclude Include="..\src\core\tsi\alts\zero_copy_frame_protector\alts_grpc_record_protocol.h" />
+    <ClInclude Include="..\src\core\tsi\alts\zero_copy_frame_protector\alts_grpc_record_protocol_common.h" />
+    <ClInclude Include="..\src\core\tsi\alts\zero_copy_frame_protector\alts_iovec_record_protocol.h" />
+    <ClInclude Include="..\src\core\tsi\alts\zero_copy_frame_protector\alts_zero_copy_grpc_protector.h" />
+    <ClInclude Include="..\src\core\tsi\fake_transport_security.h" />
+    <ClInclude Include="..\src\core\tsi\grpc_shadow_boringssl.h" />
+    <ClInclude Include="..\src\core\tsi\local_transport_security.h" />
+    <ClInclude Include="..\src\core\tsi\ssl\session_cache\ssl_session.h" />
+    <ClInclude Include="..\src\core\tsi\ssl\session_cache\ssl_session_cache.h" />
+    <ClInclude Include="..\src\core\tsi\ssl_transport_security.h" />
+    <ClInclude Include="..\src\core\tsi\ssl_types.h" />
+    <ClInclude Include="..\src\core\tsi\transport_security.h" />
+    <ClInclude Include="..\src\core\tsi\transport_security_grpc.h" />
+    <ClInclude Include="..\src\core\tsi\transport_security_interface.h" />
+    <ClInclude Include="..\third_party\nanopb\pb_common.h" />
+    <ClInclude Include="..\third_party\nanopb\pb_decode.h" />
+    <ClInclude Include="..\third_party\nanopb\pb_encode.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\include\grpc\module.modulemap" />
+    <None Include="..\src\core\ext\filters\client_channel\OWNERS" />
+    <None Include="..\src\core\ext\filters\client_channel\README.md" />
+    <None Include="..\src\core\ext\transport\chttp2\client\insecure\README.md" />
+    <None Include="..\src\core\ext\transport\chttp2\client\secure\README.md" />
+    <None Include="..\src\core\ext\transport\chttp2\README.md" />
+    <None Include="..\src\core\ext\transport\chttp2\server\insecure\README.md" />
+    <None Include="..\src\core\ext\transport\chttp2\server\secure\README.md" />
+    <None Include="..\src\core\ext\transport\chttp2\transport\README.md" />
+    <None Include="..\src\core\ext\transport\README.md" />
+    <None Include="..\src\core\lib\channel\README.md" />
+    <None Include="..\src\core\lib\debug\stats_data.yaml" />
+    <None Include="..\src\core\lib\debug\stats_data_bq_schema.sql" />
+    <None Include="..\src\core\lib\gprpp\README.md" />
+    <None Include="..\src\core\lib\iomgr\README.md" />
+    <None Include="..\src\core\lib\surface\README.md" />
+    <None Include="..\src\core\lib\transport\README.md" />
+    <None Include="..\src\core\README.md" />
+    <None Include="..\src\core\tsi\alts\handshaker\proto\altscontext.proto" />
+    <None Include="..\src\core\tsi\alts\handshaker\proto\handshaker.options" />
+    <None Include="..\src\core\tsi\alts\handshaker\proto\handshaker.proto" />
+    <None Include="..\src\core\tsi\alts\handshaker\proto\transport_security_common.proto" />
+    <None Include="..\src\core\tsi\README.md" />
+    <None Include="..\src\core\tsi\test_creds\badclient.key" />
+    <None Include="..\src\core\tsi\test_creds\badclient.pem" />
+    <None Include="..\src\core\tsi\test_creds\badserver.key" />
+    <None Include="..\src\core\tsi\test_creds\badserver.pem" />
+    <None Include="..\src\core\tsi\test_creds\BUILD" />
+    <None Include="..\src\core\tsi\test_creds\ca-openssl.cnf" />
+    <None Include="..\src\core\tsi\test_creds\ca.key" />
+    <None Include="..\src\core\tsi\test_creds\ca.pem" />
+    <None Include="..\src\core\tsi\test_creds\client.key" />
+    <None Include="..\src\core\tsi\test_creds\client.pem" />
+    <None Include="..\src\core\tsi\test_creds\README" />
+    <None Include="..\src\core\tsi\test_creds\server0.key" />
+    <None Include="..\src\core\tsi\test_creds\server0.pem" />
+    <None Include="..\src\core\tsi\test_creds\server1-openssl.cnf" />
+    <None Include="..\src\core\tsi\test_creds\server1.key" />
+    <None Include="..\src\core\tsi\test_creds\server1.pem" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\src\core\ext\transport\chttp2\transport\hpack_tables.txt" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

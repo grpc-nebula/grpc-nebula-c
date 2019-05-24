@@ -1,0 +1,323 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\src\core\lib\gpr\alloc.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\arena.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\atm.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\cpu_iphone.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\cpu_linux.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\cpu_posix.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\cpu_windows.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\env_linux.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\env_posix.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\env_windows.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\host_port.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\log.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\log_android.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\log_linux.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\log_posix.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\log_windows.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\mpscq.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\murmur_hash.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\string.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\string_posix.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\string_util_windows.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\string_windows.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\sync.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\sync_posix.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\sync_windows.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\time.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\time_posix.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\time_precise.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\time_windows.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\tls_pthread.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\tmpfile_msys.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\tmpfile_posix.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\tmpfile_windows.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\gpr\wrap_memcpy.cc">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\profiling\basic_timers.cc">
+      <Filter>src\core\lib\profiling</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lib\profiling\stap_timers.cc">
+      <Filter>src\core\lib\profiling</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="include">
+      <UniqueIdentifier>{91aec61c-64fe-479a-8cf9-f4656d7094ec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\grpc">
+      <UniqueIdentifier>{33135a22-208b-4d35-9de1-bfb5e3b7d8ad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\grpc\impl">
+      <UniqueIdentifier>{5d87ec2b-ecaa-4a30-aae6-cd20ee6512a0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\grpc\support">
+      <UniqueIdentifier>{d60ea73c-d190-438c-9da7-c8f9e7c3c6a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\grpc\impl\codegen">
+      <UniqueIdentifier>{a5f535cc-f312-4b53-a340-e1ea4ceae65f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{3f9e3a14-073d-485d-9807-22bfcf51eee0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\core">
+      <UniqueIdentifier>{2d2b54d5-1104-460a-9b6e-69221481f1a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\core\lib">
+      <UniqueIdentifier>{d0963162-b18c-49ce-9355-b463fed6c5e0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\core\lib\profiling">
+      <UniqueIdentifier>{294bb125-68c9-4d9d-afa3-bc5082bb21ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\core\lib\gpr">
+      <UniqueIdentifier>{93dfa76b-03f2-4057-bf75-6cdfa2b29a58}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\grpc\impl\codegen\atm.h">
+      <Filter>include\grpc\impl\codegen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\impl\codegen\atm_gcc_atomic.h">
+      <Filter>include\grpc\impl\codegen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\impl\codegen\atm_gcc_sync.h">
+      <Filter>include\grpc\impl\codegen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\impl\codegen\atm_windows.h">
+      <Filter>include\grpc\impl\codegen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\impl\codegen\byte_buffer.h">
+      <Filter>include\grpc\impl\codegen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\impl\codegen\byte_buffer_reader.h">
+      <Filter>include\grpc\impl\codegen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\impl\codegen\compression_types.h">
+      <Filter>include\grpc\impl\codegen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\impl\codegen\connectivity_state.h">
+      <Filter>include\grpc\impl\codegen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\impl\codegen\fork.h">
+      <Filter>include\grpc\impl\codegen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\impl\codegen\gpr_slice.h">
+      <Filter>include\grpc\impl\codegen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\impl\codegen\gpr_types.h">
+      <Filter>include\grpc\impl\codegen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\impl\codegen\grpc_types.h">
+      <Filter>include\grpc\impl\codegen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\impl\codegen\log.h">
+      <Filter>include\grpc\impl\codegen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\impl\codegen\port_platform.h">
+      <Filter>include\grpc\impl\codegen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\impl\codegen\propagation_bits.h">
+      <Filter>include\grpc\impl\codegen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\impl\codegen\slice.h">
+      <Filter>include\grpc\impl\codegen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\impl\codegen\status.h">
+      <Filter>include\grpc\impl\codegen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\impl\codegen\sync.h">
+      <Filter>include\grpc\impl\codegen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\impl\codegen\sync_custom.h">
+      <Filter>include\grpc\impl\codegen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\impl\codegen\sync_generic.h">
+      <Filter>include\grpc\impl\codegen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\impl\codegen\sync_posix.h">
+      <Filter>include\grpc\impl\codegen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\impl\codegen\sync_windows.h">
+      <Filter>include\grpc\impl\codegen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\support\alloc.h">
+      <Filter>include\grpc\support</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\support\atm.h">
+      <Filter>include\grpc\support</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\support\atm_gcc_atomic.h">
+      <Filter>include\grpc\support</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\support\atm_gcc_sync.h">
+      <Filter>include\grpc\support</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\support\atm_windows.h">
+      <Filter>include\grpc\support</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\support\cpu.h">
+      <Filter>include\grpc\support</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\support\log.h">
+      <Filter>include\grpc\support</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\support\log_windows.h">
+      <Filter>include\grpc\support</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\support\port_platform.h">
+      <Filter>include\grpc\support</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\support\string_util.h">
+      <Filter>include\grpc\support</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\support\sync.h">
+      <Filter>include\grpc\support</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\support\sync_custom.h">
+      <Filter>include\grpc\support</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\support\sync_generic.h">
+      <Filter>include\grpc\support</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\support\sync_posix.h">
+      <Filter>include\grpc\support</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\support\sync_windows.h">
+      <Filter>include\grpc\support</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\support\thd_id.h">
+      <Filter>include\grpc\support</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\support\time.h">
+      <Filter>include\grpc\support</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\grpc\support\workaround_list.h">
+      <Filter>include\grpc\support</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\lib\gpr\alloc.h">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\lib\gpr\arena.h">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\lib\gpr\env.h">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\lib\gpr\host_port.h">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\lib\gpr\mpscq.h">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\lib\gpr\murmur_hash.h">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\lib\gpr\spinlock.h">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\lib\gpr\string.h">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\lib\gpr\string_windows.h">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\lib\gpr\time_precise.h">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\lib\gpr\tls.h">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\lib\gpr\tls_gcc.h">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\lib\gpr\tls_msvc.h">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\lib\gpr\tls_pthread.h">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\lib\gpr\tmpfile.h">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\lib\gpr\useful.h">
+      <Filter>src\core\lib\gpr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\lib\profiling\timers.h">
+      <Filter>src\core\lib\profiling</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\src\core\lib\profiling\stap_probes.d">
+      <Filter>src\core\lib\profiling</Filter>
+    </None>
+  </ItemGroup>
+</Project>
