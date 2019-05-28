@@ -11,7 +11,7 @@ gRPC 提供了一种简单的方法来定义服务，同时客户端可以充分
 
 （2）客户端：客户端本地有一个实现了服务端一样方法的对象，gRPC中称为桩或者存根，其他语言中更习惯称为客户端。客户调用本地存根的方法，将参数按照合适的协议封装并将请求发送给服务端，并接收服务端的响应。
 
-![通信模型图](https://raw.githubusercontent.com/msgf/msgf/master/images/grpc_transport.png)
+![通信模型图](https://raw.githubusercontent.com/grpc-nebula/grpc-nebula/master/images/grpc_transport.png)
  
 通信模型示意图  
 # 服务端
@@ -105,7 +105,7 @@ gRPC 提供了一种简单的方法来定义服务，同时客户端可以充分
 
 - 2.4示意图
 
-![注册示意图](https://raw.githubusercontent.com/msgf/msgf/master/images/zk.png)
+![注册示意图](https://raw.githubusercontent.com/grpc-nebula/grpc-nebula/master/images/zk.png)
 
 - 2.5代码修改思路  
 与原生代码耦合处：
@@ -335,7 +335,7 @@ D，测试是否可以完成NameResolver全过程并完成调用。
 ## 12. 实现客户端对路由规则的解析方法，用来过滤服务端列表
 - 12.1原理分析
 
- ![workflow](https://raw.githubusercontent.com/msgf/msgf/master/images/workflow.png "consumer workflow")
+ ![workflow](https://raw.githubusercontent.com/grpc-nebula/grpc-nebula/master/images/workflow.png "consumer workflow")
   
 - 12.2实现思路  
 在grpc-core模块中，首先注册一个监听路由规则的目录订阅函数 consumer_routers_callback，然后新增一个路由规则解析器ConditionRouter，然后在获取服务端列表的模块 ZookeeperNameResolver调用路由规则解析器，实现服务端列表的过滤。
@@ -748,7 +748,7 @@ Note： 根据经验或者服务器性能对所有服务器进行权重估算，
 •	编码：接收到服务端响应之后，使用Protobuf 做反序列化；  
 •	回调：回调 GrpcFuture 的 set(Response) 方法，唤醒阻塞的客户端调用线程，获取 RPC 响应。  
 - 23.3 流程示意图  
- ![HTTP/2 workflow](https://raw.githubusercontent.com/msgf/msgf/master/images/index.png "HTTP/2 workflow")
+ ![HTTP/2 workflow](https://raw.githubusercontent.com/grpc-nebula/grpc-nebula/master/images/index.png "HTTP/2 workflow")
 
 ## 24. 支持Zookeeper开启ACL
 - 24.1原理分析  
