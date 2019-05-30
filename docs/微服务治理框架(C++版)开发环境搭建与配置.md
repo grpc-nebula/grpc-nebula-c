@@ -71,7 +71,7 @@ OR
 	└── zookeeper
 
 
-## 4.1依赖库配置
+## 4.1 依赖库配置
 ### 4.1.1 原生库
 
 	-rw-r--r-- 1 root root    46770 Mar 29 10:30 libaddress_sorting.a
@@ -154,4 +154,24 @@ OR
 
 ## 4.2 开发目录
   在demo目录下，进行client 和 server端的应用程序开发。
+
+
+## 4.3 编译与运行
+
+### 4.3.1 编译
+   本篇主要是linux下的开发，采用编写CMakeLists.txt，经cmake生成Makefile，再make编译的步骤。  
+  以客户端为例，linux下C++编译命令如下：
+
+	[root@zabbixserver demo-sync-client]# mkdir cmake
+	[root@zabbixserver demo-sync-client]# cd cmake
+	[root@zabbixserver cmake]# cmake ..
+	[root@zabbixserver cmake]# make
+	[root@zabbixserver cmake]# cd ..
+	[root@zabbixserver cmake]# ls -l demo*
+
+### 4.3.2 运行
+  linux下C++运行命令如下：
+
+	[root@zabbixserver demo-sync-client]#./demo-sync-client
+
 
