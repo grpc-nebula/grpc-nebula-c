@@ -127,24 +127,72 @@ grpc是一个多语言、高性能、开源的通用远程过程调用(RPC)框�
 	
 	# 必填,类型string,说明:服务的版本信息，一般表示服务接口的版本号
 	provider.version=1.0.0
-	
+
+	# 必填,类型String,固定值provider,说明:provider表示服务提供端，consumer表示服务消费端
+	provider.side=provider
+	# 可选,类型boolean,缺省值false,说明:服务是否过时，如果为true则应用该服务时日志error告警
+	provider.deprecated=false
+	# 可选,类型int,缺省值100,说明:服务provider权重，是服务provider的容量，在负载均衡基于权重的选择算法中用到
+	provider.weight=1
+	# 可选, 类型boolean, 缺省值false, 说明:服务是否处于访问保护状态
+	# 属性的可选值为false 、true ，分别表示不受保护、受保护，缺省值为false （不受保护）
+	provider.access.protected=false
+
 	# ------------ end of provider config ------------
 	
 	
-	# ------------ begin of consumer config ------------	
+	# ------------ begin of consumer config ------------
 	
+	# 必填,类型String,固定值consumer,说明:provider表示服务提供端，consumer表示服务消费端
+	consumer.side=consumer
+	# --------------------------
+	# 可选,类型string,说明:服务提供者的版本号
+	# 指定了服务提供者的版本号之后，程序会优先选择具有指定版本的服务；如果注册中心没有该版本的服务，则不限制版本重新选择服务提供者。
+	# 使用场景为：注册中心上同一个服务多版本共存，并且服务的高版本与低版本不兼容，而当前应用由于特殊原因只能调用低版本的服务
+	# 如果当前应用只调用一个服务，属性值直接配置版本号，例如1.0.0
+	# 如果当前应用需要调用多个服务，属性值按照冒号逗号的方式分隔，例如com.dfzq.examples.Greeter:1.0.0,com.dfzq.examples.Hello:1.2.1
+	# 如果当前应用需要调用多个服务，建议在服务治理平台维护该属性，只有一个版本的服务可以不维护
+	#consumer.service.version=com.dfzq.grpc.helloworld.Greeter:1.0.1,com.dfzq.grpc.helloworld.Greeters:1.0.2,com.dfzq.grpc.helloworld.Greeters:1.0.3
+	consumer.service.version=com.dfzq.grpc.helloworld.Hello:1.0.1,com.dfzq.grpc.helloworld.Bye:1.0.2,com.dfzq.grpc.helloworld.Echo:1.0.3
+
+	# 可选,类型string,缺省值 connection ,说明：负载均衡模式
+	# 可选值为 connection 和 request,分别表示“连接负载均衡”、“请求负载均衡”
+	# “连接负载均衡”适用于大部分业务场景，服务端和客户端消耗的资源较小。
+	# “请求负载均衡”适用于服务端业务逻辑复杂、并有多台服务器提供相同服务的场景。
+	consumer.loadbalance.mode=request
+	#consumer.loadbalance.mode=connection
+	# 可选,类型string,缺省值round_robin,说明:调度策略，可选范围： pick_first 、 round_robin 、 weight_round_robin , consistent_hash
+	consumer.default.loadbalance=pick_first
+	# 可选,类型string,负载均衡策略选择是consistent_hash(一致性Hash)，配置进行hash运算的参数名称的列表
+	# 多个参数之间使用英文逗号分隔，例如 id,name
+	# 如果负载均衡策略选择是consistent_hash，但是该参数未配置参数值、或者参数值列表不正确，则随机取一个值来做散列运算
+
+	#consumer.consistent.hash.arguments=name,no
+	# 可选,类型integer,缺省值5,说明：连续多少次请求出错，自动切换到提供相同服务的新服务器
+	consumer.switchover.threshold=5
+
+	# 可选,类型为long,单位为秒,缺省值为60,说明：服务提供者不可用时的惩罚时间，即多次请求出错的服务提供者一段时间内不再去请求
+	# 属性值大于或等于0，等于0表示没有惩罚时间，如果客户端只剩下一个服务提供者，即使服务提供者不可用，也不做剔除操作。
+	consumer.unavailable.provider.punish.time=60
 	
 	# ------------ end of consumer config ------------
-	
-
 	
 	# ------------ begin of zookeeper config ------------
 	
 	# zookeeper主机列表
-	# zookeeper.host.server=168.61.2.23:2181,168.61.2.24:2181,168.61.2.25:2181
-	# zookeeper.host.server=192.168.207.4:2181,192.168.207.6:2181
 	zookeeper.host.server=127.0.0.1:2181
+	#重试次数
+	zookeeper.retryNum=5
 
+	#连接超时时间
+	zookeeper.connectiontimeout=5000
+	# 可选,类型string,访问控制用户名
+	zookeeper.acl.username=admin
+
+	# 可选,类型string,访问控制密码
+	# 这里的密码配置的是密文，使用com.orientsec.grpc.common.util.DesEncryptUtils#encrypt(String plaintext)进行加密
+	
+	zookeeper.acl.password=9883c580ae8226f0dd8200620e4bc899
 	
 	# ------------ end of zookeeper config ------------
 
@@ -197,15 +245,20 @@ Protocol Buffers文件用来定义服务名称、方法、入参、出参。项�
 		string message = 1;
 		}
 - PB生成
- - 编辑gen_cpp_demo.bat 文件：  
+ - 将PB生成写在CMakeLists.txt中自动生成，运行命令如下：  
  
 			protoc.exe -I=. --grpc_out=. --plugin=protoc-gen-grpc=.\grpc_cpp_plugin.exe helloworld.proto
 			protoc.exe -I=. --cpp_out=. helloworld.proto
  
- - 步骤：  
-	1.protoc.exe、helloworld.proto、gen_cpp_demo.bat放在同一文件夹  
-	2.执行gen_cpp_demo.bat      //windows批处理程序  
-	3.检查生成四个文件：  
+ - CMakeLists.txt片段：
+
+			#设置proto工具目录
+			get_filename_component(proto_tool "${PROJECT_SOURCE_DIR}/../../libs/protobuf" ABSOLUTE)
+			#生成PB
+			execute_process(COMMAND ${proto_tool}/protoc -I ${PROJECT_SOURCE_DIR} --cpp_out=${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/helloworld.proto)
+			execute_process(COMMAND ${proto_tool}/protoc -I ${PROJECT_SOURCE_DIR} --grpc_out=${PROJECT_SOURCE_DIR} --plugin=protoc-gen-grpc=${proto_tool}/grpc_cpp_plugin ${PROJECT_SOURCE_DIR}/helloworld.proto)                                  
+
+ - 生成四个文件简要说明：  
 
 			helloworld.grpc.pb.cc         //包含服务类的实现
 			helloworld.grpc.pb.h          //声明你生成的服务类的头文件
@@ -322,6 +375,14 @@ Protocol Buffers文件用来定义服务名称、方法、入参、出参。项�
 	set (Demo_VERSION_MAJOR 1)
 	set (Demo_VERSION_MINOR 0)
 
+	set (EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR})
+	#设置proto工具目录
+	get_filename_component(proto_tool "${PROJECT_SOURCE_DIR}/../../libs/protobuf" ABSOLUTE)
+	#生成PB
+	execute_process(COMMAND ${proto_tool}/protoc -I ${PROJECT_SOURCE_DIR} --cpp_out=${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/helloworld.proto)
+	execute_process(COMMAND ${proto_tool}/protoc -I ${PROJECT_SOURCE_DIR} --grpc_out=${PROJECT_SOURCE_DIR}
+	--plugin=protoc-gen-grpc=${proto_tool}/grpc_cpp_plugin ${PROJECT_SOURCE_DIR}/helloworld.proto)
+
 	# 编译参数
 	set (CMAKE_BUILE_TYPE RELEASE) 
 	add_definitions(-DRELEASE)
@@ -333,13 +394,6 @@ Protocol Buffers文件用来定义服务名称、方法、入参、出参。项�
 	aux_source_directory(. DIR_LIB_SRCS)
 	#aux_source_directory(model DIR_LIB_SRCS)
 
-	set (EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR})
-	#设置proto工具目录
-	get_filename_component(proto_tool "${PROJECT_SOURCE_DIR}/../../libs/protobuf" ABSOLUTE)
-	#生成PB
-	execute_process(COMMAND ${proto_tool}/protoc -I ${PROJECT_SOURCE_DIR} --cpp_out=${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/helloworld.proto)
-	execute_process(COMMAND ${proto_tool}/protoc -I ${PROJECT_SOURCE_DIR} --grpc_out=${PROJECT_SOURCE_DIR}
-	--plugin=protoc-gen-grpc=${proto_tool}/grpc_cpp_plugin ${PROJECT_SOURCE_DIR}/helloworld.proto)
 
 	# 链接库目录
 	link_directories ("${PROJECT_SOURCE_DIR}/../../libs/opt"
@@ -374,13 +428,19 @@ Protocol Buffers文件用来定义服务名称、方法、入参、出参。项�
 1）在cmake目录中运行cmake .. 生成Makefile  
 2）运行make,在 /home/appadmin/redhat/demo/demo-sync-client 目录下生成demo-sync-client.
 
+	[root@zabbixserver demo-sync-client]# cd cmake
+	[root@zabbixserver cmake]# cmake ..
+	[root@zabbixserver cmake]# make
+	[root@zabbixserver cmake]# cd ..
+	[root@zabbixserver demo-sync-client]#./demo-sync-client
+
 服务端方法同上。
 
 ### 9.运行程序：  
 客户端：  
-./demo-sync-client 测试的次数，如1000000  
+./demo-sync-client  
 服务端:   
-./demo-sync-server ip 端口
+./demo-sync-server
 
 ### 10. 测试
 服务调用成功
