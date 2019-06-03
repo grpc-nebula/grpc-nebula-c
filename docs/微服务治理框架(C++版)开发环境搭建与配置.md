@@ -44,8 +44,207 @@ OR
 	6.在.bash_profile文件中增加zookeeper配置
 	7.使配置生效 source .bash_profile
 	8.启动ZK
-                                     
-# 4 目录结构
+# 4 发布包制作
+   grpc-c 源代码存放/home/appadmin/下， zookeeper源代码存放在/home/appadmin/， redhat目录存放在/usr下
+## 4.1 目录创建
+
+    [root@zabbixserver usr]# mkdir -p redhat/config
+	[root@zabbixserver usr]# mkdir -p redhat/demo
+	[root@zabbixserver usr]# mkdir -p redhat/include
+	[root@zabbixserver usr]# mkdir -p redhat/libs
+	[root@zabbixserver usr]# mkdir -p redhat/include/include
+	[root@zabbixserver usr]# mkdir -p redhat/include/orientsec_grpc
+	[root@zabbixserver usr]# mkdir -p redhat/include/third_party
+	[root@zabbixserver usr]# mkdir -p redhat/include/orientsec/orientsec_common
+	[root@zabbixserver usr]# mkdir -p redhat/include/orientsec/orientsec_consumer            
+
+## 4.2 代码编译
+### 4.2.1 开发代码编译
+	[root@zabbixserver orientsec]# pwd
+	/home/appadmin/grpc-c/third_party/orientsec
+	[root@zabbixserver orientsec]# ll
+	total 20
+	drwxr-xr-x 4 root root 4096 May 23 15:11 orientsec_common
+	drwxr-xr-x 4 root root 4096 May 23 15:22 orientsec_consumer
+	drwxr-xr-x 4 root root 4096 May 23 15:22 orientsec_provider
+	drwxr-xr-x 4 root root 4096 May 23 15:12 orientsec_registry
+
+	#make common module
+	cd orientsec_common
+	ls
+	aclocal
+	autoconf
+	autoheader
+	automake --add-missing
+	./configure
+	make
+	cd ..
+
+	#make registry module
+	cd orientsec_registry
+	ls
+	aclocal
+	autoconf
+	autoheader
+	automake --add-missing
+	./configure
+	make
+	cd ..
+ 
+	#make consumer module
+	cd orientsec_consumer
+	ls
+	aclocal
+	autoconf
+	autoheader
+	automake --add-missing
+	./configure
+	make
+	cd .. 
+ 
+	#make provider module
+	cd orientsec_provider
+	ls
+	aclocal
+	autoconf
+	autoheader
+	automake --add-missing
+	./configure
+	make
+	cd .. 
+
+### 4.2.2 zookeeper库编译
+	#make zookeeper lib
+	# cd zookeeper dir
+	cd XXX
+	chmod 755 configure
+	./configure
+	make
+
+### 4.2.3 grpc-c库编译
+	#make grpc-c lib
+	ls
+	make 
+
+## 4.3 接口（头文件）拷贝
+### 4.3.1 grpc头文件拷贝
+   grpc头文件位于./include/grpc,./include/grpcpp目录下：
+
+	#copy grpc include files to include dir
+	cp -rf  /home/appadmin/grpc-c/include/grpc  /usr/redhat/include/include
+	cp -rf  /home/appadmin/grpc-c/include/grpcpp  /usr/redhat/include/include
+
+### 4.3.2 开发版头文件拷贝
+   将开发版头文件拷贝到orientsec 和 orientsec\_grpc目录下, 源文件位于/home/appadmin/grpc-c/third\_party/orientsec.
+
+	[root@zabbixserver include]# pwd
+	/usr/redhat/include/
+	[root@zabbixserver include]# ll
+	total 4
+	drwxr-xr-x 4 root root   30 May 23 16:33 include
+	drwxr-xr-x 4 root root   54 Apr 28 17:42 orientsec
+	drwxr-xr-x 2 root root 4096 Apr 28 17:02 orientsec_grpc
+	drwxr-xr-x 3 root root   21 Apr 28 16:34 third_party
+	[root@zabbixserver include]# 
+	[root@zabbixserver include]# 
+	[root@zabbixserver include]# cd orientsec
+	[root@zabbixserver orientsec]# tree
+	.
+	├── orientsec_common
+	│   └── orientsec_grpc_string_op.h
+	└── orientsec_consumer
+ 	   └── orientsec_grpc_consumer_control_requests.h
+
+	2 directories, 2 files
+	[root@zabbixserver orientsec]# cd ../orientsec_grpc/
+	[root@zabbixserver orientsec_grpc]# pwd
+	/usr/redhat/include/orientsec_grpc
+	[root@zabbixserver orientsec_grpc]# tree
+	.
+	├── orientsec_grpc_common_init.h
+	├── orientsec_grpc_common_trace_key.h
+	├── orientsec_grpc_common_utils.h
+	├── orientsec_grpc_consumer_control_requests.h
+	├── orientsec_grpc_properties_constants.h
+	├── orientsec_grpc_properties_tools.h
+	├── orientsec_grpc_string_op.h
+	├── orientsec_grpc_utils.h
+	└── orientsec_types.h
+
+	0 directories, 9 files
+### 4.3.3 protobuf库头文件拷贝
+   拷贝 ./third\_party/protobuf/src/google/protobuf 目录到 redhat/include/third_party/protobuf/src/google/下.
+
+	[root@zabbixserver include]# cd third_party
+	[root@zabbixserver third_party]# tree
+	.
+	└── protobuf
+	    └── src
+	        └── google
+	            └── protobuf
+	                ├── io
+	                ├── stubs
+	                ├── util
+					└── ....
+
+## 4.4 动态库和静态库拷贝
+
+### 4.4.1 开发库拷贝
+
+	[root@zabbixserver orientsec]# pwd
+	/home/appadmin/grpc-c/third_party/orientsec
+	[root@zabbixserver orientsec]# cp -f orientsec_*/lib*.a  /usr/redhat/libs/lib/
+
+### 4.4.2 原生库拷贝
+
+	[root@zabbixserver opt]# pwd
+	/home/appadmin/grpc-c/libs/opt
+	[root@zabbixserver opt]# cp -d * /usr/redhat/libs/opt/ -rf
+
+### 4.4.3 protobuf库拷贝
+
+	[root@zabbixserver opt]# pwd
+	/home/appadmin/grpc-c/bins/opt
+	[root@zabbixserver opt]# cp -f grpc_cpp_plugin /usr/redhat/libs/protobuf/
+	[root@zabbixserver opt]# cd protobuf/
+	[root@zabbixserver protobuf]# pwd
+	/home/appadmin/grpc-c/bins/opt/protobuf
+	[root@zabbixserver protobuf]# cp -f protoc /usr/redhat/libs/protobuf/
+
+	[root@zabbixserver protobuf]# cd /home/appadmin/grpc-c/libs/opt/protobuf	
+	[root@zabbixserver protobuf]# pwd
+	/home/appadmin/grpc-c/libs/opt/protobuf
+	[root@zabbixserver protobuf]# ll
+	total 186428
+	-rw-r--r-- 1 root root  79614074 May 23 16:08 libprotobuf.a
+	-rw-r--r-- 1 root root 111283790 May 23 16:08 libprotoc.a
+	[root@zabbixserver protobuf]# cp libprotobuf.a  /usr/redhat/libs/protobuf/
+
+### 4.4.4 zookeeper库拷贝
+	[root@zabbixserver .libs]# pwd
+	/home/appadmin/zookeeper/.libs
+	[root@zabbixserver .libs]# cp -f libhashtable.a /usr/redhat/libs/zookeeper/
+	[root@zabbixserver .libs]# cp -f libzkmt.a /usr/redhat/libs/zookeeper/
+	[root@zabbixserver .libs]# cp -f libzkst.a /usr/redhat/libs/zookeeper/
+	[root@zabbixserver .libs]# cp -f libzookeeper_mt.a /usr/redhat/libs/zookeeper/
+	[root@zabbixserver .libs]# cp -d libzookeeper_mt.so /usr/redhat/libs/zookeeper/ -f
+	[root@zabbixserver .libs]# cp -d libzookeeper_mt.so.2 /usr/redhat/libs/zookeeper/ -f
+	[root@zabbixserver .libs]# cp -f libzookeeper_mt.so.2.0.0 /usr/redhat/libs/zookeeper/
+	[root@zabbixserver .libs]# cp -f libzookeeper_st.a /usr/redhat/libs/zookeeper/
+	[root@zabbixserver .libs]# cp -d libzookeeper_st.so /usr/redhat/libs/zookeeper/ -f
+	[root@zabbixserver .libs]# cp -d libzookeeper_st.so.2 /usr/redhat/libs/zookeeper/ -f
+	[root@zabbixserver .libs]# cp -f libzookeeper_st.so.2.0.0 /usr/redhat/libs/zookeeper/
+
+## 4.5 打包发布包
+
+
+	[root@zabbixserver usr]# cd /usr
+	[root@zabbixserver usr]# tar -czvf redhat.tar.gz redhat/
+	[root@zabbixserver usr]# ll
+	drwxr-xr-x    6 root root        55 Apr 26 10:56 redhat
+	-rw-r--r--    1 root root 195736631 May 28 14:34 redhat.tar.gz
+
+# 5 目录结构
 进入release包下，找到redhat平台发布包，redhat目录下共分四个目录，config、demo、include、libs，其中config为程序启动时所用的配置文件，demo里为应用程序，include为运行所必须的头文件，libs为所必须的库文件。
 
 	redhat/
@@ -61,6 +260,7 @@ OR
 	├── demo-pmtest-server
 	└── demo-pmtest-server-async
 	redhat/include/
+	├── orientsec
 	├── orientsec_grpc
 	├── include
 	└── third_party
@@ -71,8 +271,8 @@ OR
 	└── zookeeper
 
 
-## 4.1 依赖库配置
-### 4.1.1 原生库
+## 5.1 依赖库配置
+### 5.1.1 原生库
 
 	-rw-r--r-- 1 root root    46770 Mar 29 10:30 libaddress_sorting.a
 	lrwxrwxrwx 1 root root       27 Apr  1 11:42 libaddress_sorting.so -> libaddress_sorting.so.7.0.0
@@ -125,20 +325,20 @@ OR
 	drwxr-xr-x 2 root root       97 Mar 29 15:29 pkgconfig
 	drwxr-xr-x 2 root root       44 Apr  1 11:39 protobuf
  
-### 4.1.2 开发生成库
+### 5.1.2 开发生成库
 
 	redhat/libs/lib
 	├── liborientsec_common.a
 	├── liborientsec_consumer.a
 	├── liborientsec_provider.a
 	└── liborientsec_registry.a
-### 4.1.3 protobuf库
+### 5.1.3 protobuf库
 	redhat/libs/protobuf  
 	├── grpc_cpp_plugin  
 	├── libprotobuf.a  
 	└── protoc  
 
-### 4.1.4 zookeeper库
+### 5.1.4 zookeeper库
 	redhat/libs/zookeeper
 	├── libhashtable.a
 	├── libzkmt.a
@@ -152,26 +352,9 @@ OR
 	├── libzookeeper_st.so.2
 	└── libzookeeper_st.so.2.0.0
 
-## 4.2 开发目录
+## 5.2 开发目录
   在demo目录下，进行client 和 server端的应用程序开发。
 
 
-## 4.3 编译与运行
-
-### 4.3.1 编译
-   本篇主要是linux下的开发，采用编写CMakeLists.txt，经cmake生成Makefile，再make编译的步骤。  
-  以客户端为例，linux下C++编译命令如下：
-
-	[root@zabbixserver demo-sync-client]# mkdir cmake
-	[root@zabbixserver demo-sync-client]# cd cmake
-	[root@zabbixserver cmake]# cmake ..
-	[root@zabbixserver cmake]# make
-	[root@zabbixserver cmake]# cd ..
-	[root@zabbixserver cmake]# ls -l demo*
-
-### 4.3.2 运行
-  linux下C++运行命令如下：
-
-	[root@zabbixserver demo-sync-client]#./demo-sync-client
 
 
