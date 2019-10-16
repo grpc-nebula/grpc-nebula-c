@@ -39,14 +39,16 @@ void get_all_providers_by_name(const char*service_name);
 
 //根据服务名查询provider，返回provider_t数组（只返回一个有效服务）//addbylm
 provider_t* consumer_query_providers_write_point_policy(
-    const char* service_name,
-    grpc_core::LoadBalancingPolicy* lb_policy, int* nums);
-
+    const char* service_name, grpc_core::LoadBalancingPolicy* lb_policy,
+    int* nums, char* method_name);
+//provider_t* consumer_query_providers_write_point_policy(
+//    const char* service_name, grpc_core::LoadBalancingPolicy* lb_policy,
+//    int* nums, const char* method);
 //根据服务名查询provider，返回provider_t数组（只返回一个有效服务）
-provider_t* consumer_query_providers(const char *service_name, int *nums,char*hasharg);
+provider_t* consumer_query_providers(const char *service_name, int *nums,char*hasharg,char * method_name);
 
-//从可用的provider列表里算出对应的provider，将host/port存入policy//addbylm
-int get_index_from_lb_aglorithm(const char *service_name, provider_t *provider, const int*nums, char * hash_info);
+//从可用的provider列表里算出对应的provider，将host/port存入policy
+int get_index_from_lb_aglorithm(const char *service_name, provider_t *provider, const int*nums, char * hash_info, const char * stragry);
 
 
 //根据服务名查询provider，返回provider_t数组(provider不在黑名单列表内)
@@ -63,7 +65,7 @@ int orientsec_grpc_consumer_unregister(char * reginfo);
 char* orientsec_grpc_get_sn_from_target(char* target);
 
 //标记clientId(注册时填写的信息)调用providerId(provider_ip:provider_port)失败信息
-void record_provider_failure(char* clientId, char* providerId);
+void record_provider_failure(char* clientId, char* providerId,char* methods);
 
 //获取backoff算法参数
 int get_max_backoff_time() ;
@@ -71,8 +73,17 @@ int get_max_backoff_time() ;
 //获取经过服务版本检测后的provider数量
 int provider_num_after_service_check(char* service_name);
 
+//获取provider的active数量
+int provider_num_active_check(char* service_name);
+
+// 设置provider是否提供服务属性
+void provider_active_standby_setting(char* service_name, bool have_active);
+
 //获取经过黑白名单处理之后用于负载均衡的provider数量
 int get_consumer_lb_providers_acount(char *service_name);
+
+//获取可以调用的provider数量，用于容错切换
+int get_valid_providers_acount(char* service_name, char* method_name);
 
 //获取zk上某服务的provider数量
 int get_consumer_providers_acount(char* service_name);
@@ -91,6 +102,26 @@ bool check_consumer_flow_control(char *service_name);
 
 //检查对某个服务的请求计数
 void decrease_consumer_request_count(char *service_name);
+
+ // 判断是否发生方法级的负载均衡改变
+bool orientsec_method_lb_changed();
+// reset method lb flag
+void orientset_method_lb_reset();
+// 判断是否主备切换，重新resolve
+bool orientsec_active_standby_changed();
+// reset active/standby flag
+void orientsec_active_standby_reset();
+
+// 判断是否group属性发生改变，重新resolve
+bool orientsec_group_grade_changed();
+// reset group/grade flag
+void orientsec_group_grade_reset();
+
+// 判断是否需要resolve
+bool orientsec_need_resolved();
+// reset need_resolve flag
+void orientsec_need_resolved_reset();
+
 #ifdef __cplusplus
 }
 #endif

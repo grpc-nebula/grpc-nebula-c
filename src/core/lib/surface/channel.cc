@@ -78,7 +78,7 @@ struct grpc_channel {
   char* target;
   //add by liumin
   char* reginfo;
-  char c_provider_addr[25];
+  char c_provider_addr[32];
   //end by liumin
 };
 

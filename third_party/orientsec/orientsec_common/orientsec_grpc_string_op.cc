@@ -81,6 +81,7 @@ bool orientsec_grpc_split_to_map(const std::string& str,
   std::vector<std::string> vec_tmp;
   std::string key;
   std::string value;
+  std::string::size_type idx;
 
   // 循环分割字符串
   while (pos_begin != std::string::npos) {
@@ -94,11 +95,15 @@ bool orientsec_grpc_split_to_map(const std::string& str,
     }
 
     if (!tmp.empty()) {
-      if (orientsec_grpc_split_to_vec(tmp, vec_tmp, ":")) {
-        key = orientsec_grpc_trim(vec_tmp[0]);
-        value = orientsec_grpc_trim(vec_tmp[1]);
-        ret_.insert(std::pair<std::string, std::string>(key, value));
-        vec_tmp.clear();
+      idx = tmp.find(":");
+      if (idx != std::string::npos) {
+      
+        if (orientsec_grpc_split_to_vec(tmp, vec_tmp, ":")) {
+          key = orientsec_grpc_trim(vec_tmp[0]);
+          value = orientsec_grpc_trim(vec_tmp[1]);
+          ret_.insert(std::pair<std::string, std::string>(key, value));
+          vec_tmp.clear();
+        }
       }
       tmp.clear();
     }
@@ -110,7 +115,9 @@ bool orientsec_grpc_joint_hash_input(std::map<std::string, std::string> map_,
                                      std::vector<std::string>& vec_,
                                      std::string& hash_arg) {
   if (vec_.empty()) {
-    return false;
+    // 哈希参数未配置参数值取第一个参数的参数值返回
+    hash_arg = map_.begin()->second;
+    return true;
   }
   //根据vector里面的字段 读取map中相应的数据拼接
   for (std::vector<std::string>::iterator vec_iter = vec_.begin();
@@ -121,5 +128,8 @@ bool orientsec_grpc_joint_hash_input(std::map<std::string, std::string> map_,
       // joint into hash_arg
       hash_arg += map_iter->second;
   }
+  // 参数值列表不正确，harh_arg为空，则取第一个参数的参数值
+  if (hash_arg.empty() || (hash_arg.size() == 0)) 
+    hash_arg = map_.begin()->second;
   return true;
 }

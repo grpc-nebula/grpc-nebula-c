@@ -138,7 +138,7 @@ char* get_local_ip() {
   return g_local_ip;
 }
 
-// 获得本机IP
+// 获得本机网卡IP
 static char* get_localhost_ip() {
   bool bInitIP = false;
   int len = 0;
@@ -462,7 +462,7 @@ loadbalance_strategy_t lb_strategy_from_str(char* strategy) {
   return ret;
 }
 
-//将故障切换枚举类型转成字符串类型，范湖空间无需释放
+//将故障切换枚举类型转成字符串类型，分配空间无需释放
 char* cluster_strategy_to_str(cluster_strategy_t strategy) {
   switch (strategy) {
     case FAILOVER:
@@ -515,7 +515,7 @@ provider_t* new_provider() {
   provider->port = 0;
   REINIT(provider->version);
   //provider->version = NULL;
-  provider->group = NULL;
+  REINIT(provider->group);
   provider->default_timeout = 1000;
   provider->default_reties = 2;
   provider->default_connections = 0;
@@ -549,9 +549,12 @@ provider_t* new_provider() {
   provider->ext_data = NULL;
   provider->project = NULL;
   provider->comm_owner = NULL;
+  provider->is_master = true;
+  provider->online = true;
   return provider;
 }
 
+// initialize provider
 void init_provider(provider_t* provider) {
   char buf[ORIENTSEC_GRPC_PROPERTY_VALUE_MAX_LEN] = {0};
   if (!provider) {
@@ -584,16 +587,12 @@ void init_provider(provider_t* provider) {
                                           buf)) {
     provider->version = gprc_strdup(buf);
   }*/
-  REINIT(buf);
+  //REINIT(buf);
   if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_P_MODULE, NULL,
                                           buf)) {
     provider->module = gprc_strdup(buf);
   }
-  REINIT(buf);
-  if (0 ==
-      orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_P_GROUP, NULL, buf)) {
-    provider->group = gprc_strdup(buf);
-  }
+
   REINIT(buf);
   if (0 == orientsec_grpc_properties_get_value(
                ORIENTSEC_GRPC_PROPERTIES_P_DEFAULT_TIMEOUT, NULL, buf)) {
@@ -701,12 +700,27 @@ void init_provider(provider_t* provider) {
     provider->dubbo = gprc_strdup(buf);
   }
 
+  // added service grouping and grading
+  //REINIT(buf);
+  if (0 != orientsec_grpc_properties_get_value(
+               ORIENTSEC_GRPC_PROPERTIES_P_GROUP, NULL, provider->group)) {
+      strcpy(provider->group, ORIENTSEC_GRPC_PROPERTIES_P_GROUP_DEFAULT);
+  }
+
   REINIT(buf);
   if (0 == orientsec_grpc_properties_get_value(
                ORIENTSEC_GRPC_PROPERTIES_P_ACCESS_PROTECTED, NULL, buf)) {
     provider->access_protected =
         (orientsec_stricmp(buf, "true") == 0) ? true : false;
   }
+  // added provider active/standby property
+  REINIT(buf);
+  if (0 == orientsec_grpc_properties_get_value(
+               ORIENTSEC_GRPC_PROPERTIES_P_MASTER, NULL, buf)) {
+    provider->is_master =
+        (orientsec_stricmp(buf, "true") == 0) ? true : false;
+  }
+
 }
 
 void free_provider_v2(provider_t* provider) {
@@ -714,7 +728,7 @@ void free_provider_v2(provider_t* provider) {
     return;
   }
   //FREE_PTR(provider->version);
-  FREE_PTR(provider->group);
+  //FREE_PTR(provider->group);
   FREE_PTR(provider->token);
   FREE_PTR(provider->owner);
   FREE_PTR(provider->application);

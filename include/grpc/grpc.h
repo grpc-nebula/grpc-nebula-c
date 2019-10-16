@@ -549,6 +549,9 @@ char* orientsec_grpc_call_provider_addr_get(grpc_call* call);
 void orientsec_grpc_setcall_hashinfo(grpc_call* call, const char* s);
 
 char* orientsec_grpc_getcall_hashinfo(grpc_call* call);
+
+void orientsec_grpc_setcall_methodname(grpc_call* call, const char* s);
+char* orientsec_grpc_getcall_methodname(grpc_call* call);
 //-----end-----
 
 #ifdef __cplusplus

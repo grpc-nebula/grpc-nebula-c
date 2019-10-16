@@ -33,7 +33,7 @@
 #include "orientsec_grpc_properties_tools.h"
 #include "uuid4gen.h"
 
-#define ORIENTSEC_GRPC_SERVICE_VERSION_MAX 1024
+#define ORIENTSEC_GRPC_SERVICE_VERSION_MAX 512
 /*
 * 本功能windows平台和linux平台实现由差异
 */
@@ -93,11 +93,11 @@ void orientsec_grpc_getserveicename_by_fullmethod(const char* fullmethod, char* 
 //fullmethod格式为：  /com.aaa.bbb.ccc/methodname
 int orientsec_grpc_getserveice_by_fullmethod(const char* fullmethod, char ** ret_param) {
 	if (fullmethod == NULL) {
-		return NULL;
+		return 0;
 	}
 	size_t len = strlen(fullmethod);
 	if (len <= 0) {
-		return NULL;
+		return 0;
 	}
 	char *temp = strchr(fullmethod, '/');
 	if ((fullmethod - temp) == 0) {
@@ -106,7 +106,7 @@ int orientsec_grpc_getserveice_by_fullmethod(const char* fullmethod, char ** ret
 	}
 	len = temp - fullmethod;
 	if (len <= 0) {
-		return NULL;
+		return 0;
 	}
 	*ret_param = (char*)malloc(len * sizeof(char) + sizeof(char));
 	memset(*ret_param, 0, len * sizeof(char) + sizeof(char));
@@ -173,7 +173,7 @@ char* orientsec_consumer_service_version() {
 
 //获取provider端提供服务版本版本
 //获取内容不需要释放
-static char g_provider_service_version[500] = { 0 };
+static char g_provider_service_version[512] = { 0 };
 char* orientsec_provider_service_version() {
 	if (g_provider_service_version[0] != '\0')
 	{
@@ -185,15 +185,17 @@ char* orientsec_provider_service_version() {
 	return NULL;
 }
 
-//获取provider端提供服务版本版本
+//获取consumer端需要的服务分组信息
 //获取内容不需要释放
-static char g_provider_service_group[500] = { 0 };
+static char g_provider_service_group[512] = {0};
 char* orientsec_provider_service_group() {
 	if (g_provider_service_version[0] != '\0')
 	{
 		return g_provider_service_group;
 	}
-	if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_CONF_PROVIDER_GROUP, NULL, g_provider_service_group)) {
+        if (0 == orientsec_grpc_properties_get_value(
+                     ORIENTSEC_GRPC_CONF_CONSUMER_GROUP, NULL,
+                     g_provider_service_group)) {
 		return g_provider_service_group;
 	}
 	return NULL;

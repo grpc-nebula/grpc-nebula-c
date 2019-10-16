@@ -62,7 +62,6 @@ char *base64_encode(const char* data, int data_len)
 		memset(changed, '\0', 4);
 		while (temp < 3)
 		{
-			//printf("tmp = %d\n", tmp); 
 			if (tmp >= data_len)
 			{
 				break;

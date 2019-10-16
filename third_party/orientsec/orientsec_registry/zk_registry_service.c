@@ -761,9 +761,10 @@ static void get_acl_info() {
   }
 }
 
+char szUserPwd[ORIENTSEC_GRPC_PROPERTY_VALUE_MAX_LEN] = {0};
 //拼接 name 和 pwd
 char* combine_name_pwd(char* name, char* pwd, size_t* len) {
-  char szUserPwd[ORIENTSEC_GRPC_PROPERTY_VALUE_MAX_LEN] = {0};
+  
   snprintf(szUserPwd, strlen(name) + strlen(pwd) + 2, "%s:%s", name, pwd);
   *len = strlen(szUserPwd);
 
@@ -804,6 +805,33 @@ void zk_create_node(zk_connection_t* conn, char* path, bool dynamic) {
   if (!path || 0 == strlen(path)) {
     return;
   }
+  int root_len = strlen(ORIENTSEC_GRPC_REGISTRY_ROOT);
+  // 对于root，不能acl注册
+  if (root_len >= strlen(path)) {
+    p = strrchr(path, '/');
+    if (p) {
+      snprintf(buf, p - path + 1, "%s", path);
+      zk_create_node(conn, buf, false);
+    }
+
+    if (dynamic) {
+      ret = zoo_create(zkhandle, path, NULL, -1, &ZOO_OPEN_ACL_UNSAFE,
+                        ZOO_EPHEMERAL, NULL, 0);
+    } else {
+      ret = zoo_create(zkhandle, path, NULL, -1, &ZOO_OPEN_ACL_UNSAFE, 0,
+                        NULL, 0);
+    }
+    if (ZOK == ret) {
+      gpr_log(GPR_INFO, "create root node success[%s]", path);
+    } else if (ZNODEEXISTS == ret) {
+      gpr_log(GPR_INFO, "root node %s exists", path);
+    } else {
+      gpr_log(GPR_ERROR,
+              "create root node faild[%s],reason=[%s],error code=%d", path,
+              zerror(ret), ret);
+    }
+    return;
+ }
   p = strrchr(path, '/');
   if (p) {
     snprintf(buf, p - path + 1, "%s", path);
@@ -819,7 +847,7 @@ void zk_create_node(zk_connection_t* conn, char* path, bool dynamic) {
     char* plain = combine_name_pwd(zk_acl_name, zk_acl_pwd, &length);
     ret = zoo_add_auth(zkhandle, "digest", plain, length, 0, 0);
     if (ZOK != ret)
-      printf("Auth failed,zoo_add_auth = %d\n", ret);
+      gpr_log(GPR_ERROR, "Auth failed,zoo_add_auth = %d!!", ret);
 
     // enc格式digest ID为 userName:base64(sha1(userName:password))
     char enc[64] = {0};
@@ -840,7 +868,7 @@ void zk_create_node(zk_connection_t* conn, char* path, bool dynamic) {
     memset(_CREATOR_ALL_ACL_ACL, 0, sizeof(_CREATOR_ALL_ACL_ACL));
     //memset(ZOO_CREATOR_ALL_ACL, 0, sizeof(ZOO_CREATOR_ALL_ACL));
 
-      if (ZOK == ret) {
+    if (ZOK == ret) {
       gpr_log(GPR_INFO, "create zk acl node success[%s]", path);
     } else if (ZNODEEXISTS == ret) {
       gpr_log(GPR_INFO, "zk acl node %s exists", path);

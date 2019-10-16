@@ -16,6 +16,7 @@ consistent_hash_lb.cc \
 orientsec_grpc_consumer_control_deprecated.cc \
 orientsec_grpc_consumer_control_requests.cc \
 orientsec_grpc_consumer_control_version.cc \
+orientsec_grpc_consumer_control_group.cc \
 requests_controller_utils.cc
 liborientsec_consumer_a_LIBADD=../orientsec_registry/liborientsec_registry.a ../orientsec_common/liborientsec_common.a
 AUTOMAKE_OPTIONS=foreign

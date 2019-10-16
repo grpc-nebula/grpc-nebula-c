@@ -178,8 +178,12 @@ provider_t * conistent_hash_lb::choose_provider(const char * sn, const std::stri
 	{
 		return NULL;
 	}
-	// object process
-
+	
+        // fix divided by zero error
+        size = orientsec_grpc_cache_provider_count_get();
+        if (!size) return NULL;
+        
+        // object process
 	if (arg.empty())
 		factor = rand() % size;
 

@@ -97,7 +97,7 @@ class LoadBalancingPolicy
   void* elem;                    //存放elem对象
   bool force_close;  // lujun 强制结束，在没有可选的subchannel的情况下
   // add by yang
-  char* hash_lb =NULL;
+  char* hash_lb = NULL;
   //-----end-----
 
   // Not copyable nor movable.

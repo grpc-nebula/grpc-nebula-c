@@ -80,7 +80,6 @@ class BlockingUnaryCallImpl {
     // style s = "name:\"heiden111111\"\n"
     std::string str = ops.GetMessageName(request);
     //多个值要用map值存储，需要查找
-
     std::map<std::string, std::string> map_;
     std::vector<std::string> buf_vec;
     orientsec_grpc_split_to_vec(buf, buf_vec, ",");
@@ -88,6 +87,13 @@ class BlockingUnaryCallImpl {
 
     std::string hash_arg;
     orientsec_grpc_joint_hash_input(map_, buf_vec, hash_arg);
+
+    // Get method name
+    std::string m_fullname = method.name();
+    std::vector<std::string> ret;
+    orientsec_grpc_split_to_vec(m_fullname,ret ,"/");
+    std::string m_name = ret.back();
+    orientsec_grpc_setcall_methodname(call.call(), m_name.c_str());
 
     //传递给call 对象
     orientsec_grpc_transfer_setcall_hashinfo(call.call(), hash_arg.c_str());

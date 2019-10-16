@@ -17,6 +17,8 @@
 
 #include "orientsec_grpc_extend_init.h"
 #include "orientsec_grpc_common_init.h"
+#include "orientsec_grpc_consumer_control_version.h"
+#include "orientsec_grpc_consumer_control_group.h"
 
 
 /*
@@ -24,6 +26,9 @@
 */
 
 void orientsec_grpc_extend_param_init() {
-	//初始化common层配置参数
-	orientsec_grpc_common_param_init();
+  //初始化common层配置参数
+  orientsec_grpc_common_param_init();
+  orientsec_grpc_service_version_init();
+  //orientsec_grpc_service_group_init();
+
 }

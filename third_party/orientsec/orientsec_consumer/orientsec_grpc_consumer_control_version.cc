@@ -17,7 +17,7 @@
 
 #include "orientsec_grpc_consumer_control_version.h"
 #include "orientsec_grpc_common_init.h"
-#include <string>
+#include <cstring>
 #include <map>
 #include <vector>
 #include <iostream>
@@ -106,12 +106,12 @@ void orientsec_grpc_service_version_init() {
     g_consumer_service_version.insert(std::pair<std::string, std::string>(service_version[0], service_version[1]));
   }
   grpc_service_version_isinit = true;
-
-    for (std::map<std::string, std::string>::iterator ii =
+   //add debug log
+    /*for (std::map<std::string, std::string>::iterator ii =
            g_consumer_service_version.begin();
        ii != g_consumer_service_version.end(); ii++)
-    std::cout << "init g_consumer_service_version[" << ii->first
-              << "]:" << ii->second << std::endl;
+     
+    std::cout << "init g_consumer_service_version[" << ii->first<< "]:" << ii->second << std::endl;*/
 }
 
 //获取版本控制信息
@@ -134,11 +134,11 @@ void orientsec_grpc_consumer_control_version_update(char *service_name,char *ser
   if (!is_request_loadbalance())
     grpc_version_change_when_conn = true;
 
-  for (std::map<std::string, std::string>::iterator ii =
-           g_consumer_service_version.begin();
-       ii != g_consumer_service_version.end(); ii++)
-    std::cout << "g_consumer_service_version[" << ii->first << "]:" << ii->second
-              << std::endl;
+  //for (std::map<std::string, std::string>::iterator ii =
+  //         g_consumer_service_version.begin();
+  //     ii != g_consumer_service_version.end(); ii++)
+  //  std::cout << "g_consumer_service_version[" << ii->first << "]:" << ii->second
+  //            << std::endl;
 }
 
 //校验服务版本是否变动

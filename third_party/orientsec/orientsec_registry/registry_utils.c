@@ -129,7 +129,7 @@ url_t* url_from_provider(provider_t *provider) {
 	url_t* url = (url_t*)gpr_zalloc(sizeof(url_t));
 	int param_num = PROVIDER_PROPERTIES_MAX_NUM;
 	int param_index = 0;
-	char buf[100];
+	char buf[64];
 	if (provider->ext_data)
 	{
 		url_clone((url_t*)provider->ext_data, url);
@@ -155,12 +155,6 @@ url_t* url_from_provider(provider_t *provider) {
 	{
 		url->parameters[param_index].key = gprc_strdup(ORIENTSEC_GRPC_REGISTRY_KEY_VERSION);
 		url->parameters[param_index].value = gprc_strdup(provider->version);
-		param_index++;
-	}
-	if (provider->group)
-	{
-		url->parameters[param_index].key = gprc_strdup(ORIENTSEC_GRPC_REGISTRY_KEY_GROUP);
-		url->parameters[param_index].value = gprc_strdup(provider->group);
 		param_index++;
 	}
 
@@ -192,6 +186,27 @@ url_t* url_from_provider(provider_t *provider) {
 	sprintf(buf, "%s", provider->access_protected ? "true" : "false");
 	url->parameters[param_index].value = gprc_strdup(buf);
 	param_index++;
+
+        // provider active/standby property
+        REINIT(buf);
+        url->parameters[param_index].key = gprc_strdup(ORIENTSEC_GRPC_REGISTRY_KEY_MASTER);
+        sprintf(buf, "%s", provider->is_master ? "true" : "false");
+        url->parameters[param_index].value = gprc_strdup(buf);
+        param_index++;
+
+        // provider service grouping and grading
+        REINIT(buf);
+        url->parameters[param_index].key =
+            gprc_strdup(ORIENTSEC_GRPC_REGISTRY_KEY_GROUP);
+        sprintf(buf, "%s", provider->group);
+        url->parameters[param_index].value = gprc_strdup(buf);
+        param_index++;
+
+       
+        url->parameters[param_index].key = gprc_strdup(ORIENTSEC_GRPC_CATEGORY_KEY);
+        url->parameters[param_index].value = gprc_strdup(ORIENTSEC_GRPC_PROVIDERS_CATEGORY);
+        param_index++;
+       
 
 	url->parameters[param_index].key = gprc_strdup(ORIENTSEC_GRPC_REGISTRY_KEY_DEFAULT_LOADBALANCE);
 	url->parameters[param_index].value = gprc_strdup(lb_strategy_to_str(provider->default_loadbalance));
@@ -348,7 +363,7 @@ url_t* url_from_provider(provider_t *provider) {
 		param_index++;
 	}
 	return url;
-	}
+}
 
 
 provider_t* provider_from_url(url_t *url) {
@@ -385,7 +400,11 @@ void init_provider_from_url(provider_t *provider, url_t *url) {
 	}
 	provider->port = url->port;
 	//provider->version = url_get_parameter(url, ORIENTSEC_GRPC_REGISTRY_KEY_VERSION, NULL);
-	provider->group = url_get_parameter(url, ORIENTSEC_GRPC_REGISTRY_KEY_GROUP, NULL);
+	p = url_get_parameter(url, ORIENTSEC_GRPC_REGISTRY_KEY_GROUP, NULL);
+        if (p) {
+          snprintf(provider->group, strlen(p) + 1, "%s", p);
+          FREE_PTR(p);
+        }
 
         p = url_get_parameter(url, ORIENTSEC_GRPC_REGISTRY_KEY_VERSION, NULL);
         if (p) {
@@ -427,8 +446,8 @@ void init_provider_from_url(provider_t *provider, url_t *url) {
 	p = url_get_parameter(url, ORIENTSEC_GRPC_REGISTRY_KEY_DEFAULT_LOADBALANCE, NULL);
 	if (p)
 	{
-		provider->access_protected = lb_strategy_from_str(p);
-		FREE_PTR(p);
+          provider->default_loadbalance = lb_strategy_from_str(p);
+	  FREE_PTR(p);
 	}
 
 	p = url_get_parameter(url, ORIENTSEC_GRPC_REGISTRY_KEY_DEFAULT_ASYNC, NULL);
@@ -526,6 +545,13 @@ void init_provider_from_url(provider_t *provider, url_t *url) {
 	provider->flag_in_blklist = 0;    //不在黑名单
 	provider->flag_subchannel_close = 0;
 	provider->time_subchannel_close = 0;
+        p = url_get_parameter(url, ORIENTSEC_GRPC_REGISTRY_KEY_MASTER, NULL);
+        if (p) {
+          provider->is_master =
+              (0 == orientsec_stricmp("true", p)) ? true : false;
+          FREE_PTR(p);
+        }
+        provider->online = 1;
 	provider->ext_data = gpr_zalloc(sizeof(url_t));
 	url_clone(url, (url_t*)provider->ext_data);
 }
@@ -543,12 +569,13 @@ provider_t* clone_provider(provider_t* src) {
 	ret->port = src->port;
         strcpy(ret->version, src->version);
 	//ret->version = gprc_strdup(src->version);
-	ret->group = gprc_strdup(src->group);
+	strcpy(ret->group,src->group);
 	ret->default_timeout = src->default_timeout;
 	ret->default_reties = src->default_reties;
 	ret->default_connections = src->default_connections;
 	ret->default_requests = src->default_requests;
 	ret->access_protected = src->access_protected;
+        ret->is_master = src->is_master;
 	ret->default_loadbalance = src->default_loadbalance;
 	ret->default_async = src->default_async;
 	ret->token = gprc_strdup(src->token);

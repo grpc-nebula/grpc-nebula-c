@@ -76,6 +76,9 @@ void update_provider_deprecated(const char *intf, bool deprecated);
 //更新provider access_protected属性,intf为空时，更新所有的provider
 void update_provider_access_protected(const char *intf, bool access_protected);
 
+//更新provider is_master属性,intf为空时，更新所有的provider
+void update_provider_is_master(bool is_master, const char* intf, const char* host);
+
 #ifdef __cplusplus
 }
 #endif

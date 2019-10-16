@@ -110,7 +110,7 @@ void shutdown_registry();
 
 void consumer_providers_callback(url_t *urls, int url_num);
 
-char * orientsec_grpc_consumer_register(const char *fullmethod);
+//char * orientsec_grpc_consumer_register(const char *fullmethod);
 #ifdef __cplusplus
 }
 #endif

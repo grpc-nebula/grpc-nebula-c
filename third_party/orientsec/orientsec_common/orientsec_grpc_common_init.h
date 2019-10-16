@@ -44,6 +44,9 @@ extern "C" {
 	//获取consumer允许缓存的provider数量
 	int orientsec_grpc_cache_provider_count_get();
 
+        //获取consumer对服务分组的要求
+        char *orientsec_grpc_consumer_service_group_get();
+
 	int orientsec_grpc_common_get_writekafka_enabled_set(int enable);
 
 #ifdef __cplusplus

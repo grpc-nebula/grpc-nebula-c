@@ -29,7 +29,7 @@
 extern "C" {
 #endif
 
-#define ORIENTSEC_GRPC_PATH_MAX_LEN 4096
+#define ORIENTSEC_GRPC_PATH_MAX_LEN 2048
 #define ORIENTSEC_GRPC_BUF_LEN 2048
 
 //配置文件中key最大长度

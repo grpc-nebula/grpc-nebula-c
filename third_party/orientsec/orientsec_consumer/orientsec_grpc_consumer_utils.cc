@@ -70,7 +70,7 @@ int orientsec_grpc_consumer_conf_param(char * urlparam, grpc_conf_template_t con
 }
 
 //拼接url参数
-void orientsec_grpc_consumer_url_append(char *url, char * prefix, const  char *key, const char *val) {
+void orientsec_grpc_consumer_url_append(char *url, const char * prefix, const  char *key, const char *val) {
 	if (prefix != NULL) {
 		strcat(url, prefix);
 	}
@@ -122,10 +122,13 @@ static grpc_conf_template_t consumer_confitem_consumers[] = {
 	{ (char*)ORIENTSEC_GRPC_CONF_CONSUMER_SIDE,(char*)ORIENTSEC_GRPC_REGISTRY_KEY_SIDE,1,(char*)ORIENTSEC_GRPC_CONF_CONSUMER_SIDE_DEFAULT },
 	//&dynamic=true  （默认应该为 true）
 	{ (char*)ORIENTSEC_GRPC_CONF_CONSUMER_DYNAMIC,(char*)ORIENTSEC_GRPC_REGISTRY_KEY_DYNAMIC,0,(char*)ORIENTSEC_GRPC_CONF_CONSUMER_DYNAMIC_DEFAULT },
+        //&group= (default value= NULL)
+        { (char*)ORIENTSEC_GRPC_CONF_CONSUMER_GROUP,(char*)ORIENTSEC_GRPC_REGISTRY_KEY_GROUP,1,(char*)ORIENTSEC_GRPC_CONF_CONSUMER_GROUP_DEFAULT},
         //&project=grpc-test-app （默认应该为 grpc-test-app ）
         { (char*)ORIENTSEC_GRPC_CONF_COMMON_PROJECT, (char*)ORIENTSEC_GRPC_REGISTRY_KEY_PROJECT, 1, (char*)ORIENTSEC_GRPC_CONF_COMMON_PROJECT_DEFAULT},
         //&owner=A0000 （默认应该为 A0000 ）
         { (char*)ORIENTSEC_GRPC_CONF_COMMON_OWNER, (char*)ORIENTSEC_GRPC_REGISTRY_KEY_COMM_OWNER, 1, (char*)ORIENTSEC_GRPC_CONF_COMMON_OWNER_DEFAULT}};
+ 
 
 // 组织consumer配置参数
 int orientsec_grpc_concate_consumer_str(char * urlparam) {

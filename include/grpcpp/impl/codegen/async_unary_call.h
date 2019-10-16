@@ -210,6 +210,7 @@ class ClientAsyncResponseReader final
     // get the method
     auto* rpc_info = call_.client_rpc_info();
     const char* call_method = rpc_info->method();
+    orientsec_grpc_setcall_methodname(call.call(), call_method);
     // 判断是否大于最大允许请求数
     if (orientsec_grpc_consumer_control_requests(call_method) == -1) {
       Status state(StatusCode::EXCEEDING_REQUESTS,"Exceeding maximum requests");

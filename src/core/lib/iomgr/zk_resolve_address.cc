@@ -66,6 +66,7 @@ typedef struct {
   grpc_resolved_addresses** addresses;
   //----begin----add for hash consistent
   char* hasharg;
+  char* meth_name;
   //----end---
 
 } request;
@@ -73,7 +74,7 @@ typedef struct {
 static grpc_error* zk_blocking_resolve_address(
     const char* name, const char* default_port,
    //grpc_resolved_addresses** addresses) {
-   grpc_resolved_addresses** addresses, char* hasharg) {
+   grpc_resolved_addresses** addresses, char* hasharg,char* meth_name) {
   //struct addrinfo hints;
   //struct addrinfo *result = NULL, *resp;
   //char* host;
@@ -88,7 +89,8 @@ static grpc_error* zk_blocking_resolve_address(
   int provider_num = 0;
 
   //providers = consumer_query_providers(name, &provider_num, NULL);
-  providers = consumer_query_providers(name, &provider_num, hasharg);
+  // this provider list or IPs for subchannel build
+  providers = consumer_query_providers(name, &provider_num, hasharg, meth_name);
   if (provider_num == 0)
   {
     char* msg;
@@ -139,7 +141,7 @@ done:
 static void do_request_thread(void* rp, grpc_error* error) {
   request* r = (request*)rp;
   if (error == GRPC_ERROR_NONE) {
-    error = zk_blocking_resolve_address(r->name, r->default_port, r->addresses, r->hasharg);
+    error = zk_blocking_resolve_address(r->name, r->default_port, r->addresses, r->hasharg,r->meth_name);
   } else {
     GRPC_ERROR_REF(error);
   }
@@ -153,7 +155,7 @@ void zk_resolve_address(const char* name, const char* default_port,
                                     grpc_pollset_set* interested_parties,
                                     grpc_closure* on_done,
                         //grpc_resolved_addresses** addresses) {
-                        grpc_resolved_addresses** addresses,char* hasharg) {
+                        grpc_resolved_addresses** addresses,char* hasharg,char* meth_name) {
   request* r = (request*)gpr_malloc(sizeof(request));
   GRPC_CLOSURE_INIT(
       &r->request_closure, do_request_thread, r,
@@ -164,6 +166,7 @@ void zk_resolve_address(const char* name, const char* default_port,
   r->addresses = addresses;
   //----begin----
   r->hasharg = hasharg;
+  r->meth_name = meth_name;
   //----end----
   GRPC_CLOSURE_SCHED(&r->request_closure, GRPC_ERROR_NONE);
 }

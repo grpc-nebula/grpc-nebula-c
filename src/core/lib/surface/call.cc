@@ -262,6 +262,7 @@ struct grpc_call {
 
     // add by yang
   char hash_info[64]={0};
+  char call_name[64] = {0};
 };
 
 grpc_core::TraceFlag grpc_call_error_trace(false, "call_error");
@@ -688,9 +689,9 @@ static void cancel_with_error(grpc_call* c, grpc_error* error) {
   //----begin----
   // dengjq add,客户端容错控制 非原生调用触发容错处理
   if (c && c->is_client && !orientsec_grpc_channel_is_native(c->channel)) {
-    gpr_log(GPR_DEBUG, "terminate_with_error .......... ");
+    gpr_log(GPR_DEBUG, "terminate_with_error trigger failover... ");
     record_provider_failure(grpc_get_channel_client_reginfo(c->channel),
-                            grpc_get_channel_provider_addr(c->channel));
+                            grpc_get_channel_provider_addr(c->channel),c->call_name);
   }
   //-----end-----
   GRPC_CALL_INTERNAL_REF(c, "termination");
@@ -2044,3 +2045,11 @@ void orientsec_grpc_setcall_hashinfo(grpc_call* call, const char* s) {
   strcpy(call->hash_info, s);
 }
 char* orientsec_grpc_getcall_hashinfo(grpc_call* call) { return call->hash_info; }
+
+void orientsec_grpc_setcall_methodname(grpc_call* call, const char* s){
+  strcpy(call->call_name, s);
+}
+
+char* orientsec_grpc_getcall_methodname(grpc_call* call){
+  return call->call_name;
+}

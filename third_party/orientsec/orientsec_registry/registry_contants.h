@@ -17,9 +17,10 @@
 
 /*
  *    Author : heiden deng(dengjianquan@beyondcent.com)
+ *    Maintainer : Jianbin Yang
  *    2017/05/15
  *    version 0.0.9
- *    常量定义
+ *    常量定义, zookeeper registry key
  */
 
 #pragma once
@@ -34,7 +35,6 @@ extern "C" {
 #define ORIENTSEC_GRPC_REGISTRY_SEPARATOR   "/"
 
 #define ORIENTSEC_GRPC_REGISTRY_KEY_VERSION   "version"
-#define ORIENTSEC_GRPC_REGISTRY_KEY_GROUP   "group"
 #define ORIENTSEC_GRPC_REGISTRY_KEY_DEFAULT_TIMEOUT   "default.timeout"
 #define ORIENTSEC_GRPC_REGISTRY_KEY_DEFAULT_RETIES   "default.reties"
 #define ORIENTSEC_GRPC_REGISTRY_KEY_DEFAULT_CONNECTIONS   "default.connections"
@@ -65,9 +65,20 @@ extern "C" {
 #define ORIENTSEC_GRPC_REGISTRY_KEY_GRPC "grpc"
 #define ORIENTSEC_GRPC_REGISTRY_KEY_DUBBO "dubbo"
 #define ORIENTSEC_GRPC   "grpc"
-//add by liumin
+// add for method level load balance
+#define ORIENTSEC_GRPC_REGISTRY_KEY_METHOD  "method"
+#define ORIENTSEC_GRPC_REGISTRY_KEY_LB_MODE "loadbalance.mode"
+#define ORIENTSEC_GRPC_DEFAULT_METHOD_KEY  "i_am_wildcard"
+
+// add by liumin
 #define ORIENTSEC_GRPC_REGISTRY_KEY_PROJECT "project"
-#define ORIENTSEC_GRPC_REGISTRY_KEY_COMM_OWNER "common.owner"
+#define ORIENTSEC_GRPC_REGISTRY_KEY_COMM_OWNER "owner"
+
+// add for provider.master key in zookeeper registry
+#define ORIENTSEC_GRPC_REGISTRY_KEY_MASTER "master"
+
+// add for service group key in zookeeper registry
+#define ORIENTSEC_GRPC_REGISTRY_KEY_GROUP "group"
 
 #define ORIENTSEC_GRPC_REGISTRY_KEY_CHECK   "check"
 #define ORIENTSEC_GRPC_REGISTRY_KEY_DEFAULT_REFERENCE_FILTER   "default.reference.filter"

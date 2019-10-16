@@ -3137,7 +3137,8 @@ static void start_pick_locked(void* arg, grpc_error* ignored) {
   //----begin----
   grpc_call* channel_call = grpc_get_call_from_top_elem(elem);
   char* hash_value = orientsec_grpc_getcall_hashinfo(channel_call);
-  // char* hash_value = "abc";
+  
+  char* meth_name = orientsec_grpc_getcall_methodname(channel_call);
   //----end----
 
   if (GPR_LIKELY(chand->lb_policy != nullptr)) {
@@ -3159,7 +3160,7 @@ static void start_pick_locked(void* arg, grpc_error* ignored) {
         if (service_name && strlen(service_name) != 0) {
           int num;
           provider_t* provider = consumer_query_providers_write_point_policy(
-              service_name, lb_policy, &num);
+              service_name, lb_policy, &num, meth_name);
           if (provider && num > 0) {
             char** provider_addrs = (char**)malloc((size_t)num * sizeof(char*));
             //清理无效的链路
@@ -3226,6 +3227,9 @@ static void start_pick_locked(void* arg, grpc_error* ignored) {
       if (hash_value != NULL && strlen(hash_value)!=0) {
         chand->resolver->set_hash(hash_value);
       }
+      if (meth_name != NULL && strlen(meth_name) != 0) {
+        chand->resolver->set_meth_name(meth_name);
+      }
        start_resolving_locked(chand);
     } else {
       // Normally, we want to do this check in
@@ -3278,6 +3282,17 @@ static void cc_start_transport_stream_op_batch(
       char* service_name = orientsec_grpc_get_sn_from_target(target);
       //----debug 按时关闭流控及黑白名单控制
       if (service_name) {
+        if (orientsec_need_resolved()) {
+          orientsec_need_resolved_reset();
+          batch->payload->cancel_stream.cancel_error =
+              GRPC_ERROR_CREATE_FROM_STATIC_STRING("resolving is running.");
+          calld->cancel_error =
+              GRPC_ERROR_REF(batch->payload->cancel_stream.cancel_error);
+          chand->started_resolving = false;
+          have_no_provider = 1;
+          //chand->resolver->Resetting();
+          //process_resolver_shutdown_locked(chand);
+        }
         //黑白名单，没有有效的provider，
         int provider_count = get_consumer_lb_providers_acount(service_name);
         if (0 == provider_count) {
@@ -3296,40 +3311,90 @@ static void cc_start_transport_stream_op_batch(
           }
           chand->started_resolving = false;
           have_no_provider = 1;
-      }
-       // 服务版本检测
-      int provider_num = provider_num_after_service_check(service_name);
-       // 如果没有可用的服务版本,调用直接cancel，不做域名解析
-      if ( 0 == provider_num ) {
-        batch->payload->cancel_stream.cancel_error =
-            GRPC_ERROR_CREATE_FROM_STATIC_STRING(
-                "There is no appropriate service version online");
-        calld->cancel_error =
-            GRPC_ERROR_REF(batch->payload->cancel_stream.cancel_error);
-
-        chand->started_resolving = false;
-        have_no_provider = 1;
-      } else {
-        if (orientsec_grpc_version_changed_conn()) {   // connetcion mode
-          // reset flag
-          orientsec_reset_grpc_version_changed_conn();
+        } else {
+     
+          // 服务版本检测
+        int provider_num = provider_num_after_service_check(service_name);
+          // 如果没有可用的服务版本,调用直接cancel，不做域名解析
+        if ( 0 == provider_num ) {
           batch->payload->cancel_stream.cancel_error =
               GRPC_ERROR_CREATE_FROM_STATIC_STRING(
-                  "service version switching...");
+                  "There is no appropriate service version online");
           calld->cancel_error =
               GRPC_ERROR_REF(batch->payload->cancel_stream.cancel_error);
-          chand->started_resolving = false;
-          chand->resolver->Resetting();
-          process_resolver_shutdown_locked(chand);
-          //chand->lb_policy->Orphan();
-          //chand->lb_policy = nullptr;
-          
-          //chand->resolver->Orphan();
-          //chand->resolver->ShutdownLocked();
-          //chand->resolver = nullptr;
-          //have_no_provider = 1;
-        }
 
+          chand->started_resolving = false;
+          have_no_provider = 1;
+        } else {
+          if (orientsec_grpc_version_changed_conn()) {   // connetcion mode
+            // reset flag
+            orientsec_reset_grpc_version_changed_conn();
+            batch->payload->cancel_stream.cancel_error =
+                GRPC_ERROR_CREATE_FROM_STATIC_STRING(
+                    "service version switching...");
+            calld->cancel_error =
+                GRPC_ERROR_REF(batch->payload->cancel_stream.cancel_error);
+            chand->started_resolving = false;
+            chand->resolver->Resetting();
+            process_resolver_shutdown_locked(chand);
+          }
+          // method load balance occurred, then resolve again
+          if (orientsec_method_lb_changed()) {  // 监测到method url改变
+            orientset_method_lb_reset();
+            batch->payload->cancel_stream.cancel_error =
+                GRPC_ERROR_CREATE_FROM_STATIC_STRING(
+                    "method level load balance switching...");
+            calld->cancel_error =
+                GRPC_ERROR_REF(batch->payload->cancel_stream.cancel_error);
+            chand->started_resolving = false;
+            chand->resolver->Resetting();
+            process_resolver_shutdown_locked(chand);
+          }
+          
+          // 检测是否group属性发生变化
+          if (orientsec_group_grade_changed()) {
+            orientsec_group_grade_reset();
+            batch->payload->cancel_stream.cancel_error =
+                GRPC_ERROR_CREATE_FROM_STATIC_STRING(
+                    "provider group property changing...");
+            calld->cancel_error =
+                GRPC_ERROR_REF(batch->payload->cancel_stream.cancel_error);
+            chand->started_resolving = false;
+            chand->resolver->Resetting();
+            process_resolver_shutdown_locked(chand);
+          }
+
+          // 获取主provider的数量，如果没有，则修改online属性，重新resolve.
+          int active_num = provider_num_active_check(service_name);
+          gpr_log(GPR_DEBUG, "provider active_num = %d", active_num);
+          // 如果没有active provider,standby server online
+          if (0 == active_num) {
+           //  重置provider online 属性
+            provider_active_standby_setting(service_name, false);
+            printf("provider active_num = %d", active_num);
+          } 
+         
+            // 服务主备属性发生变化
+            if (orientsec_active_standby_changed()) {
+              orientsec_active_standby_reset();
+              if (provider_num_active_check(service_name)) {
+                // 存在master
+                 provider_active_standby_setting(service_name, true);
+              }else {
+                // 只有standby
+                 provider_active_standby_setting(service_name, false);
+              }               
+              batch->payload->cancel_stream.cancel_error =
+                  GRPC_ERROR_CREATE_FROM_STATIC_STRING(
+                      "provider active/standby switching...");
+              calld->cancel_error =
+                  GRPC_ERROR_REF(batch->payload->cancel_stream.cancel_error);
+              chand->started_resolving = false;
+              chand->resolver->Resetting();
+              process_resolver_shutdown_locked(chand);
+            }
+          
+        }
       }
       // 释放service_name指针
       free(service_name);

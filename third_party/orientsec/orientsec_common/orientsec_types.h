@@ -38,7 +38,7 @@ typedef enum _loadbalance_strategy_t {
 		PICK_FIRST,
 		ROUND_ROBIN,
 		WEIGHT_ROUND_ROBIN,
-        CONSISTENT_HASH
+                CONSISTENT_HASH
 }loadbalance_strategy_t;
 
 typedef enum _cluster_strategy_t {
@@ -52,6 +52,9 @@ typedef enum _cluster_strategy_t {
 #define PROTOCOL_NAME_MAX_LEN 16 
 #define HOST_MAX_LEN 32
 #define VERSION_MAX_LEN 32
+#define GROUP_MAX_LEN 32
+#define SIDE_MAX_LEN 16
+
 typedef struct _provider_t {
   char protocol[PROTOCOL_NAME_MAX_LEN];
   char *username;
@@ -59,12 +62,12 @@ typedef struct _provider_t {
   char host[HOST_MAX_LEN];
   //char *version;
   char version[VERSION_MAX_LEN];
-  char *group;
+  char group[GROUP_MAX_LEN];
   int port;
   int default_timeout;
   int default_reties;
   int default_connections;
-  char side[16];
+  char side[SIDE_MAX_LEN];  // provider category
   char *token;
   char *owner;
   long pid;
@@ -99,6 +102,8 @@ typedef struct _provider_t {
   void *ext_data;
   char* project;//add by liumin //default=grpc-test-app
   char* comm_owner;
+  bool is_master;  // add by yang, for active/standby server
+  bool online;     // mark provider was online or offline
 }provider_t;
 
 

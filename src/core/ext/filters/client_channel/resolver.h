@@ -107,8 +107,10 @@ class Resolver : public InternallyRefCountedWithTracing<Resolver> {
   void set_hash(char* input) {
     hasharg = input;
   }
+  void set_meth_name(char* input) { method_name = input;}
 
   char* get_hash() const { return hasharg; }
+  char* get_meth_name() const { return method_name; }
 
   virtual void Resetting() GRPC_ABSTRACT;
 
@@ -142,6 +144,7 @@ class Resolver : public InternallyRefCountedWithTracing<Resolver> {
   grpc_combiner* combiner_;
   //----begin----
   char* hasharg;
+  char* method_name;
   //---- end ----
 };
 

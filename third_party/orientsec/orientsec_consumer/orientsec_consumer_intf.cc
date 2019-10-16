@@ -47,14 +47,16 @@
 
 #include "condition_router.h"
 #include "consistent_hash_lb.h"
+#include "failover_utils.h"
 #include "orientsec_grpc_common_init.h"
 #include "orientsec_grpc_consumer_control_deprecated.h"
+#include "orientsec_grpc_consumer_control_group.h"
 #include "orientsec_grpc_consumer_control_requests.h"
 #include "orientsec_grpc_consumer_control_version.h"
 #include "orientsec_grpc_consumer_utils.h"
+#include "orientsec_grpc_string_op.h"
 #include "orientsec_loadbalance.h"
 #include "orientsec_router.h"
-#include "failover_utils.h"
 #include "pickfirst_lb.h"
 #include "requests_controller_utils.h"
 #include "round_robin_lb.h"
@@ -63,16 +65,37 @@
 // addbylm
 #include "src/core/ext/filters/client_channel/lb_policy_registry.h"
 
-//缓存
+// 全局provider list缓存
 static std::map<std::string, provider_t*> g_cache_providers;
+
+// 过滤后的缓存provider，用于建立subchannel，用于负载均衡
+static std::map<std::string, provider_t*> g_valid_providers;
 
 //保存某服务名下的router列表
 static std::map<std::string, std::vector<router*> > g_valid_routers;
 //保存请求某服务名的客户端,用于router中的过滤
 static std::map<std::string, std::vector<url_t*> > g_consumers;
 
-//保存客户端对应的负载均衡策略,key值由server_name组成
+//保存客户端对应的负载均衡算法,key值由server_name组成
 static std::map<std::string, std::string> g_consumer_lbstragry;
+// 基于方法级的负载均衡模式
+static std::map<std::string, std::string> g_method_lbstragry;
+// 基于方法级的负载均衡算法
+static std::map<std::string, std::string> g_method_lbalgorithem;
+
+// 判断是否存在master provider online
+static bool g_exist_master = true;
+/* 由于主备属性发生变化是否需要resolve,规则：
+ * (1) 当服务端列表中全部都是主服务器的时候，服务端列表不发生变化
+ * (2) 当服务端列表中全部都是备服务器的时候，服务端列表不发生变化
+ * (3) 当服务端列表中既有主服务器也有备服务器的时候，将备服务器从
+ *     服务列表中移除出去，只保留主服务器
+ */
+static bool g_active_standby = false;
+
+static bool g_group_grading = false;
+
+static bool g_need_resolve = false;
 
 /* Protects provider_queue */
 static gpr_mu g_providers_mu;
@@ -87,14 +110,17 @@ static gpr_spinlock g_checker_consumer_mu = GPR_SPINLOCK_STATIC_INITIALIZER;
 static bool g_initialized = false;
 
 static bool g_isrequest_lb_mode = false;  //默认是连接负载均衡
+// 是否基于方法的负载均衡
+static bool g_method_lb = false;
 
 static orientsec_grpc_loadbalance* pfLB = new pickfirst_lb();
 static orientsec_grpc_loadbalance* rrLB = new round_robin_lb();
 static orientsec_grpc_loadbalance* wrrLB = new weight_round_robin_lb();
 static conistent_hash_lb* chLB = new conistent_hash_lb();
 
-static failover_utils g_failover_utils;    // 容错切换
-static int orientsec_grpc_provider_callback_ok = 0;  //初始回调时置0 回调结束后置1
+static failover_utils g_failover_utils;  // 容错切换
+static int orientsec_grpc_provider_callback_ok =
+    0;  //初始回调时置0 回调结束后置1
 static int orientsec_grpc_router_callback_ok = 0;  //初始回调时置0 回调结束后置1
 
 static requests_controller_utils g_request_controller_utils;
@@ -150,8 +176,8 @@ void init_providers_list() {
       }
     }
     memset(buf, 0, ORIENTSEC_GRPC_PROPERTY_KEY_MAX_LEN);
-    if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_C_LB_MODE,
-                                            NULL, buf)) {
+    if (0 == orientsec_grpc_properties_get_value(
+                 ORIENTSEC_GRPC_PROPERTIES_C_LB_MODE, NULL, buf)) {
       if (0 == strcmp(buf, ORIENTSEC_GRPC_LB_MODE_REQUEST)) {
         g_isrequest_lb_mode = true;
       } else {
@@ -243,7 +269,7 @@ bool provider_weight_comp(provider_t* p1, provider_t* p2) {
 void updateProvidersCache(const char* service_name, url_t* urls, int url_num,
                           int reset) {
   GRPC_PROVIDERS_LIST_LOCK_START
-  //char provider_add[HOST_MAX_LEN];
+  // char provider_add[HOST_MAX_LEN];
   bool need_free_cache = false;
   std::set<std::string> new_providers;
   std::set<std::string> old_providers;
@@ -273,11 +299,11 @@ void updateProvidersCache(const char* service_name, url_t* urls, int url_num,
       int index_write = -1;     //可更新的坐标位置
       bool need_update = true;
 
-      //如果服务列表在url列表不存在代码服务已下线
+      //如果服务列表在url列表不存在，代表服务已下线
       for (i = 0; i < cache_providers_num; i++) {
         need_update = true;
         for (int j = 0; j < url_num; j++) {
-          //如果指定负责在url列表仍然存在，这不需要下线该服务
+          //如果指定服务在url列表仍然存在，这不需要下线该服务
           if (provider_lst->second[i].flag_invalid == 0 &&
               (provider_lst->second[i].host != NULL && urls[j].host != NULL &&
                strcmp(provider_lst->second[i].host, urls[j].host) == 0) &&
@@ -310,7 +336,8 @@ void updateProvidersCache(const char* service_name, url_t* urls, int url_num,
             if (index_invalid == -1) {
               time_invalid = provider_lst->second[i].flag_invalid_timestamp;
               index_invalid = i;
-            } else if (time_invalid > provider_lst->second[i].flag_invalid_timestamp) {
+            } else if (time_invalid >
+                       provider_lst->second[i].flag_invalid_timestamp) {
               time_invalid = provider_lst->second[i].flag_invalid_timestamp;
               index_invalid = i;
             }
@@ -362,9 +389,10 @@ void updateProvidersCache(const char* service_name, url_t* urls, int url_num,
         }
       }
     } else {
-      provider_t* providers = (provider_t*)gpr_zalloc(sizeof(provider_t) * cache_providers_num);
+      provider_t* providers =
+          (provider_t*)gpr_zalloc(sizeof(provider_t) * cache_providers_num);
 
-      for (i = 0; i < cache_providers_num && i < url_num;i++){
+      for (i = 0; i < cache_providers_num && i < url_num; i++) {
         init_provider_from_url(&providers[i], &urls[i]);
         providers[i].flag_invalid_timestamp = time_now;
       }
@@ -388,8 +416,8 @@ void updateProvidersCache(const char* service_name, url_t* urls, int url_num,
 
 //消费者 providers目录订阅函数
 void consumer_providers_callback(url_t* urls, int url_num) {
-  char* service_name =
-      url_get_parameter_v2(&urls[0], ORIENTSEC_GRPC_REGISTRY_KEY_INTERFACE, NULL);
+  char* service_name = url_get_parameter_v2(
+      &urls[0], ORIENTSEC_GRPC_REGISTRY_KEY_INTERFACE, NULL);
 
   if (urls[0].protocol != NULL &&
       0 == strcmp(urls[0].protocol, ORIENTSEC_GRPC_EMPTY_PROTOCOL)) {
@@ -400,6 +428,9 @@ void consumer_providers_callback(url_t* urls, int url_num) {
     updateProvidersCache(service_name, urls, url_num, 1);
     //重新计算黑白名单标记 ----debug 调试临时关闭
     revoker_providers_list_process(urls[0].path);
+
+    // zookeeper provider list changed
+    g_active_standby = true;
   }
 }
 
@@ -459,7 +490,7 @@ void consumer_routers_callback(url_t* urls, int url_num) {
   if (provider_lst_iter != g_cache_providers.end()) {
     for (size_t i = 0; i < orientsec_grpc_cache_provider_count_get(); i++) {
       ORIENTSEC_GRPC_SET_BIT(provider_lst_iter->second[i].flag_in_blklist,
-                        ORIENTSEC_GRPC_PROVIDER_FLAG_IN_BLKLIST_NOT);
+                             ORIENTSEC_GRPC_PROVIDER_FLAG_IN_BLKLIST_NOT);
     }
   }
   GRPC_PROVIDERS_LIST_LOCK_END
@@ -483,8 +514,11 @@ void consumer_configurators_callback(url_t* urls, int url_num) {
       0 == strcmp(urls[0].protocol, ORIENTSEC_GRPC_EMPTY_PROTOCOL)) {
     return;
   }
-  char* service_name =
-      url_get_parameter_v2(&urls[0], ORIENTSEC_GRPC_REGISTRY_KEY_INTERFACE, NULL);
+  char* service_name = url_get_parameter_v2(
+      &urls[0], ORIENTSEC_GRPC_REGISTRY_KEY_INTERFACE, NULL);
+
+  char* method_name =
+      url_get_parameter_v2(&urls[0], ORIENTSEC_GRPC_REGISTRY_KEY_METHODS, NULL);
   std::vector<url_t*> urlVec;
   for (size_t i = 0; i < url_num; i++) {
     urlVec.push_back(urls + i);
@@ -493,27 +527,31 @@ void consumer_configurators_callback(url_t* urls, int url_num) {
   char* ip = NULL;
   char* param = NULL;
   int weight = 0;
+  // add method load balance
+  char* lb_strategy = NULL;
+  char* lb_algorithem = NULL;
 
   GRPC_PROVIDERS_LIST_LOCK_START
 
   std::map<std::string, provider_t*>::iterator provider_lst_iter =
       g_cache_providers.find(service_name);
+  // updated weight of provider and deprecated property
   for (size_t i = 0; i < urlVec.size(); i++) {
     ip = urlVec[i]->host;
     if (provider_lst_iter != g_cache_providers.end()) {
       for (size_t j = 0; j < orientsec_grpc_cache_provider_count_get(); j++) {
         if ((0 == strcmp(ip, ORIENTSEC_GRPC_ANYHOST_VALUE)) ||
             (0 == strcmp(ip, provider_lst_iter->second[j].host))) {
-          param = url_get_parameter_v2(urlVec[i], ORIENTSEC_GRPC_REGISTRY_KEY_WEIGHT,
-                                       NULL);
+          param = url_get_parameter_v2(
+              urlVec[i], ORIENTSEC_GRPC_REGISTRY_KEY_WEIGHT, NULL);
           if (param) {
             weight = atoi(param);
             if (weight > 0) {
               provider_lst_iter->second[j].weight = weight;
             }
           }
-          param = url_get_parameter_v2(urlVec[i],
-                                       ORIENTSEC_GRPC_REGISTRY_KEY_DEPRECATED, NULL);
+          param = url_get_parameter_v2(
+              urlVec[i], ORIENTSEC_GRPC_REGISTRY_KEY_DEPRECATED, NULL);
           if (param) {
             if (0 == strcmp(param, "true")) {
               provider_lst_iter->second[j].deprecated = true;
@@ -523,6 +561,37 @@ void consumer_configurators_callback(url_t* urls, int url_num) {
             consumer_check_provider_deprecated(
                 service_name, provider_lst_iter->second[j].deprecated);
           }
+          param = url_get_parameter_v2(
+              urlVec[i], ORIENTSEC_GRPC_REGISTRY_KEY_MASTER, NULL);
+          if (param) {
+            if (0 == strcmp(param, "true")) {
+              provider_lst_iter->second[j].is_master = true;
+              //当有主服务上线时，触发resolve
+              g_active_standby = true;
+              if (!g_exist_master) g_exist_master = true;
+              gpr_log(GPR_DEBUG, "1provider:%s.is_master=%d",
+                      provider_lst_iter->second[j].host,
+                      provider_lst_iter->second[j].is_master);
+            } else {
+              provider_lst_iter->second[j].is_master = false;
+              // 当有备服务上线时，
+              // 1. 有主服务时，不resolve 2. 无主服务时，重新resolve
+              g_active_standby = true;
+              gpr_log(GPR_DEBUG, "2provider:%s.is_master=%d",
+                      provider_lst_iter->second[j].host,
+                      provider_lst_iter->second[j].is_master);
+            }
+          }
+          // 更新服务分组
+          param = url_get_parameter_v2(urlVec[i],
+                                       ORIENTSEC_GRPC_REGISTRY_KEY_GROUP, NULL);
+          if (param) {
+            if (0 != strcmp(provider_lst_iter->second[j].group, param)){
+              // group 属性发生改变时，触发resolve
+              g_group_grading = true;
+              strcpy(provider_lst_iter->second[j].group, param);
+            }
+          }
         }
       }
     }
@@ -531,14 +600,26 @@ void consumer_configurators_callback(url_t* urls, int url_num) {
 
   //更新客户端负载均衡策略配置以及流量控制参数
   char* lb = NULL;
+  char* meth_lb = NULL;
   std::map<std::string, std::string>::iterator lbIter;
   for (size_t i = 0; i < urlVec.size(); i++) {
     if (0 == strcmp(urlVec[i]->host, ORIENTSEC_GRPC_ANYHOST_VALUE) ||
         0 == strcmp(urlVec[i]->host, get_local_ip())) {
+      // 动态更新客户端流量控制参数
+      lb = url_get_parameter_v2(urlVec[i],
+                                ORIENTSEC_GRPC_CONSUMER_DEFAULT_REQUEST, NULL);
+      if (lb) {
+        orientsec_grpc_consumer_update_maxrequest(urlVec[i]->path, atol(lb));
+      }
+
       // 动态更新客户端负载均衡策略
       lb = url_get_parameter_v2(
           urlVec[i], ORIENTSEC_GRPC_REGISTRY_KEY_DEFAULT_LOADBALANCE, NULL);
-      if (lb) {
+      // method handle
+      meth_lb = url_get_parameter_v2(urlVec[i],
+                                     ORIENTSEC_GRPC_REGISTRY_KEY_METHOD, NULL);
+      // 基于服务级的lb 更新
+      if (!meth_lb && lb) {
         lbIter = g_consumer_lbstragry.find(urlVec[i]->path);
 
         if (lbIter == g_consumer_lbstragry.end()) {
@@ -548,53 +629,85 @@ void consumer_configurators_callback(url_t* urls, int url_num) {
           lbIter->second = std::string(lb);
         }
       }
-      // 动态更新客户端流量控制参数
-      lb = url_get_parameter_v2(urlVec[i], ORIENTSEC_GRPC_CONSUMER_DEFAULT_REQUEST,NULL);
-      if (lb) {
-        orientsec_grpc_consumer_update_maxrequest(urlVec[i]->path, atol(lb));
+      // 监听到客户端的负载均衡模式配置发生变化
+      // 基于方法级的lb 更新
+      if (meth_lb && lb) {
+        // set method level flag
+        g_method_lb = true;
+        // get lb mode and algorithem from url
+        lb_strategy = url_get_parameter_v2(
+            urlVec[i], ORIENTSEC_GRPC_REGISTRY_KEY_LB_MODE, NULL);
+        lb_algorithem = url_get_parameter_v2(
+            urlVec[i], ORIENTSEC_GRPC_REGISTRY_KEY_DEFAULT_LOADBALANCE, NULL);
+        // 遍历基于方法的策略map
+        if (lb_strategy) {
+          // 更新或者添加新的基于方法的策略
+          auto method_mode_iter = g_method_lbstragry.find(meth_lb);
+          if (method_mode_iter != g_method_lbstragry.end()) {
+            method_mode_iter->second = lb_strategy;
+          } else {
+            g_method_lbstragry.insert(make_pair(meth_lb, lb_strategy));
+          }
+        }
+        if (lb_algorithem) {
+          // 更新或者添加新的基于方法的均衡算法
+          auto method_algo_iter = g_method_lbalgorithem.find(meth_lb);
+          if (method_algo_iter != g_method_lbalgorithem.end()) {
+            method_algo_iter->second = lb_algorithem;
+
+          } else {
+            g_method_lbalgorithem.insert(make_pair(meth_lb, lb_algorithem));
+          }
+        }
       }
       // 通过zk中configurators配置动态更新客户端调用配置的版本号
-      char* version = url_get_parameter_v2(urlVec[i],ORIENTSEC_GRPC_CONSUMER_SERVICE_VERSION,NULL);
-      char* intf = url_get_parameter_v2(urlVec[i], ORIENTSEC_GRPC_REGISTRY_KEY_INTERFACE, NULL);
+      char* version = url_get_parameter_v2(
+          urlVec[i], ORIENTSEC_GRPC_CONSUMER_SERVICE_VERSION, NULL);
+      char* intf = url_get_parameter_v2(
+          urlVec[i], ORIENTSEC_GRPC_REGISTRY_KEY_INTERFACE, NULL);
       if (version && intf) {
         // 更新全局的 g_consumer_service_version
-        orientsec_grpc_consumer_control_version_update(intf, version);  
+        orientsec_grpc_consumer_control_version_update(intf, version);
       }
       lb = NULL;
       version = NULL;
       intf = NULL;
+      meth_lb = NULL;
     }
   }
 }
 
 // return the index(or subchannel) from the load balance aglorithm
 // modify this interface ( adding hash_info) for consistent hash algorithm
-int get_index_from_lb_aglorithm(const char* service_name,
-                                   provider_t* provider, const int* nums,
-                                   char* hash_info) {
+int get_index_from_lb_aglorithm(const char* service_name, provider_t* provider,
+                                const int* nums, char* hash_info,
+                                const char* stragry) {
   if (service_name == NULL || provider == NULL || nums == 0) return 0;
+  if (stragry == NULL) return 0;
+
   // 1,判断负载均衡模式，确认负载均衡算法
-  std::map<std::string, std::string>::iterator lbIter =
-      g_consumer_lbstragry.find(service_name);
-  std::string strLbStragry = ORIENTSEC_GRPC_DEFAULT_LB_TYPE;
-  if (lbIter != g_consumer_lbstragry.end()) {
-    strLbStragry = lbIter->second;
-  }
-  //! pick_first
-  if (0 == strcmp(strLbStragry.c_str(), ORIENTSEC_GRPC_LB_TYPE_PF)) {
+  // std::map<std::string, std::string>::iterator lbIter =
+  //    g_consumer_lbstragry.find(service_name);
+  // std::string strLbStragry = ORIENTSEC_GRPC_DEFAULT_LB_TYPE;
+  // if (lbIter != g_consumer_lbstragry.end()) {
+  //  strLbStragry = lbIter->second;
+  //}
+  // pick_first
+  if (0 == strcmp(stragry, ORIENTSEC_GRPC_LB_TYPE_PF)) {
     // 2，进入相应的负载均衡算法中进行计算
     return pfLB->choose_subchannel(service_name, provider, nums);
   }
-  //! weight_round_robin
-  else if (0 == strcmp(strLbStragry.c_str(), ORIENTSEC_GRPC_LB_TYPE_WRR)) {
+  // weight_round_robin
+  else if (0 == strcmp(stragry, ORIENTSEC_GRPC_LB_TYPE_WRR)) {
     return wrrLB->choose_subchannel(service_name, provider, nums);
   }
-  //! round_robin
-  else if (0 == strcmp(strLbStragry.c_str(), ORIENTSEC_GRPC_LB_TYPE_RR)) {
+  // round_robin
+  else if (0 == strcmp(stragry, ORIENTSEC_GRPC_LB_TYPE_RR)) {
     return rrLB->choose_subchannel(service_name, provider, nums);
   } else {
     // std::string arg("ip:port");
-    int select_idx = chLB->choose_subchannel(service_name, provider, nums, hash_info);
+    int select_idx =
+        chLB->choose_subchannel(service_name, provider, nums, hash_info);
     return select_idx;
   }
   return 0;
@@ -620,6 +733,7 @@ provider_t* get_providers_intf(const char* service_name) {
   }
 }
 
+// used in failover
 void get_all_providers_by_name(const char* service_name) {
   char query_str[ORIENTSEC_GRPC_PATH_MAX_LEN] = {0};
   size_t i = 0;
@@ -711,55 +825,201 @@ provider_t* consumer_query_providers_one(const char* service_name, int* nums) {
   return providers;
 }
 
-// query valid provider and write ip:port information into policy for transferring
-provider_t* consumer_query_providers_write_point_policy(const char* service_name, grpc_core::LoadBalancingPolicy* lb_policy,
-    int* nums) {
-  char query_str[ORIENTSEC_GRPC_PATH_MAX_LEN] = { 0 };
+// 在cc_start_transport_stream_op_batch中查看是否需要resolve
+bool orientsec_need_resolved() { return g_need_resolve; }
+
+void orientsec_need_resolved_reset() { g_need_resolve = false; }
+
+bool orientsec_group_grade_changed() { return g_group_grading; }
+
+void orientsec_group_grade_reset() { g_group_grading = false; }
+
+bool orientsec_active_standby_changed() { return g_active_standby; }
+
+void orientsec_active_standby_reset() { g_active_standby = false; }
+
+bool orientsec_method_lb_changed() { return g_method_lb; }
+
+void orientset_method_lb_reset() { g_method_lb = false; }
+
+// 判断provider是否提供此方法的调用
+static bool method_check(provider_t* provider, char* method_name,
+                         const int length) {
+  std::string methods = provider->methods;
+  // std::string methods("SayHello1,SayHello,SayBay,SayHello2");
+  std::vector<std::string> resultVec;
+  orientsec_grpc_split_to_vec(methods, resultVec, ",");
+  int nRet = std::count(resultVec.begin(), resultVec.end(), method_name);
+  if (nRet > 0) return true;
+  return false;
+}
+
+// 客户端需要分组调用时，根据规则调用优先级高的分组中的provider
+// 算法：对每个分组进行匹配，如果有provider，则返回对应的provider
+//       如果没有则循环到下一分组。
+static provider_t* orientsec_grpc_consumer_control_group_filter(
+    provider_t* providers, int *num) {
+  // 获取consumer group information
+  std::vector<std::string> group_info;
+  int grade_count = 0; // 统计各个分组里面的provider数量
+  provider_t* prov = NULL;  // 用于返回堆上的provider list
+  
+  std::vector<std::string> tmp;
+  std::vector<std::string> temp;
+
+  char* group_conf = orientsec_grpc_consumer_service_group_get();
+  if (group_conf == NULL || strlen(group_conf) == 0) {
+    return prov;
+  }
+  // 字符串分解成字符vector
+  orientsec_grpc_split_to_vec(std::string(group_conf), group_info, ";");
+  int grade = group_info.size();
+
+  for (int index = 0; index < grade; index++) {
+    std::string str= group_info[index];
+    orientsec_grpc_split_to_vec(str, tmp, ",");
+    grade_count = 0;
+    for (int in = 0; in < tmp.size(); in++) {
+      // 取高优先级的provider
+      for (int pro = 0; pro < *num; pro++) {
+        if (0 == strcmp(providers[pro].group,tmp[in].c_str()))
+          grade_count ++;
+      }
+    }
+    // 对每个分组的count进行处理
+    if (grade_count > 0) break;
+  }
+  // 如果找不到所有分组的provider，返回调用失败
+  if (0 == grade_count) {
+    *num = grade_count;
+    return prov;
+  }
+
+  // 取出对应分组的provider
+  prov= (provider_t*)gpr_zalloc(sizeof(provider_t) * grade_count);
+  int j = 0;
+  for (int index = 0; index < grade; index++) {
+    std::string str = group_info[index];
+    orientsec_grpc_split_to_vec(str, temp, ",");
+    grade_count = 0;
+    for (int in = 0; in < temp.size(); in++) {
+      // 取高优先级的provider
+      for (int pro = 0; pro < *num; pro++) {
+        if (0 == strcmp(providers[pro].group, temp[in].c_str())){
+          grade_count++;
+          strcpy(prov[j].host, providers[pro].host);
+          prov[j].port = providers[pro].port;
+          prov[j].weight = providers[pro].weight;
+          prov[j].curr_weight = providers[pro].curr_weight;
+          j++;
+        }
+      }
+    }
+    // 对每个分组的count进行处理
+    if (grade_count > 0) break;
+  }
+  gpr_free(providers);
+  *num = grade_count;
+  return prov;
+}
+
+// query valid provider and write ip:port information into policy for
+// transferring
+// adding method input for lb based method
+provider_t* consumer_query_providers_write_point_policy(
+    const char* service_name, grpc_core::LoadBalancingPolicy* lb_policy,
+    int* nums, char* method_name) {
+  char query_str[ORIENTSEC_GRPC_PATH_MAX_LEN] = {0};
   // change function to local variable
   int cache_providers_num = orientsec_grpc_cache_provider_count_get();
   size_t i = 0;
-  if (!service_name)
-  {
+  if (!service_name) {
+    return NULL;
+  }
+  if (!method_name) {
     return NULL;
   }
   int provider_nums = 0;
-  provider_t *providers = NULL;
+  provider_t* providers = NULL;
+  //provider_t* providers_trans = NULL;
+
+  // 计算负载均衡算法
+  std::string strLbStragry = ORIENTSEC_GRPC_DEFAULT_LB_TYPE;
+  bool is_method_level = false;
+  auto lbIter = g_consumer_lbstragry.find(service_name);
+  if (lbIter != g_consumer_lbstragry.end()) {
+    strLbStragry = lbIter->second;
+  }
+  auto meth_iter = g_method_lbalgorithem.find(method_name);
+  if (meth_iter != g_method_lbalgorithem.end()) {
+    strLbStragry = meth_iter->second;
+    is_method_level = true;
+  }
+
+  // 是否开启服务分组
+  bool is_group = is_group_grading();
+  // providers 每次申请再释放，未和全局provider效率作比较，
+  // 有待试验
 
   GRPC_PROVIDERS_LIST_LOCK_START
   //原始代码代码，返回所有providers，未应用负载均衡策略
   std::map<std::string, provider_t*>::iterator provider_lst_iter =
-  g_cache_providers.find(service_name); 	
-  if (provider_lst_iter !=g_cache_providers.end())
-  {
-   //首先统计合法的provider个数
-    for (i = 0; i < cache_providers_num; i++)
-    {
+      g_cache_providers.find(service_name);
+  if (provider_lst_iter != g_cache_providers.end()) {
+    //首先统计合法的provider个数
+    for (i = 0; i < cache_providers_num; i++) {
       provider_t* provider = &provider_lst_iter->second[i];
-      if (!ORIENTSEC_GRPC_CHECK_BIT(provider->flag_in_blklist,ORIENTSEC_GRPC_PROVIDER_FLAG_IN_BLKLIST) &&provider->flag_invalid == 0 &&
-          provider->flag_call_failover == 0)
-      {
-        if (orientsec_grpc_consumer_control_version_match(service_name, provider->version) == true)
-          provider_nums++;
+      if (!ORIENTSEC_GRPC_CHECK_BIT(provider->flag_in_blklist,
+                                    ORIENTSEC_GRPC_PROVIDER_FLAG_IN_BLKLIST) &&
+          provider->flag_invalid == 0 && provider->flag_call_failover == 0 &&
+          provider->online) {
+        if (!is_method_level) {
+          if (orientsec_grpc_consumer_control_version_match(
+                  service_name, provider->version) == true)
+            provider_nums++;
+        } else {
+          if (method_check(provider, method_name, cache_providers_num)) {
+            if (orientsec_grpc_consumer_control_version_match(
+                    service_name, provider->version) == true)
+              provider_nums++;
+          }
+        }
       }
     }
-    if (provider_nums != 0)
-    {
-      providers = (provider_t*)gpr_zalloc(sizeof(provider_t) *provider_nums); 
-      int j = 0; 			
-      for (int i = 0; i < cache_providers_num; i++)
-      {
-        provider_t* provider =&provider_lst_iter->second[i];
+    if (provider_nums != 0) {
+      providers = (provider_t*)gpr_zalloc(sizeof(provider_t) * provider_nums);
+      int j = 0;
+      for (int i = 0; i < cache_providers_num; i++) {
+        provider_t* provider = &provider_lst_iter->second[i];
         //有效且未在黑名单内的数据。
-        if (!ORIENTSEC_GRPC_CHECK_BIT(provider->flag_in_blklist,ORIENTSEC_GRPC_PROVIDER_FLAG_IN_BLKLIST) && provider->flag_invalid == 0 &&
-					provider->flag_call_failover == 0)
-        {
+        if (!ORIENTSEC_GRPC_CHECK_BIT(
+                provider->flag_in_blklist,
+                ORIENTSEC_GRPC_PROVIDER_FLAG_IN_BLKLIST) &&
+            provider->flag_invalid == 0 && provider->flag_call_failover == 0 &&
+            provider->online) {
           // 服务版本check
-          if (orientsec_grpc_consumer_control_version_match(service_name, provider->version) == true) {
-            strcpy(providers[j].host,provider->host); 
-            providers[j].port = provider->port; 					
-            providers[j].weight =provider->weight;
-            providers[j].curr_weight = provider->curr_weight;
-            j++;
+          if (!is_method_level) {
+            if (orientsec_grpc_consumer_control_version_match(
+                    service_name, provider->version) == true) {
+              strcpy(providers[j].host, provider->host);
+              strcpy(providers[j].group, provider->group);
+              providers[j].port = provider->port;
+              providers[j].weight = provider->weight;
+              providers[j].curr_weight = provider->curr_weight;
+              j++;
+            }
+          } else {
+            if (method_check(provider, method_name, cache_providers_num)) {
+              if (orientsec_grpc_consumer_control_version_match(
+                      service_name, provider->version) == true) {
+                strcpy(providers[j].host, provider->host);
+                strcpy(providers[j].group, provider->group);
+                providers[j].port = provider->port;
+                providers[j].weight = provider->weight;
+                providers[j].curr_weight = provider->curr_weight;
+                j++;
+              }
+            }
           }
         }
       }
@@ -767,27 +1027,36 @@ provider_t* consumer_query_providers_write_point_policy(const char* service_name
     }
   }
 
-  // no appriate provide 
-    if (provider_nums == 0) {
+  // no appriate provide
+  if (provider_nums == 0) {
     printf("-----------------provider_nums=%d  !!!\n", provider_nums);
     *nums = provider_nums;
-    //memset(lb_policy->provider_addr,0,sizeof(lb_policy->provider_addr));
-    //sprintf(lb_policy->provider_addr, "%s:%s","2.2.2.2","2222");
+    // memset(lb_policy->provider_addr,0,sizeof(lb_policy->provider_addr));
+    // sprintf(lb_policy->provider_addr, "%s:%s","2.2.2.2","2222");
     GRPC_PROVIDERS_LIST_LOCK_END
     return providers;
+  } else {
+    // 进行服务分组的校验
+    if (is_group) {
+      providers = orientsec_grpc_consumer_control_group_filter(
+          providers, &provider_nums);
+      *nums = provider_nums;
+    }
   }
-    
+  //printf("REQ valid provider_num = %d\n", provider_nums);
   // add by yang
-  char * hash_info = lb_policy->hash_lb;
-  int index = get_index_from_lb_aglorithm(service_name, providers,nums, hash_info);//provider为一个列表 	
-  sprintf(lb_policy->provider_addr,"ipv4:%s:%d", providers[index].host, providers[index].port);
-  //addbylm
+  char* hash_info = lb_policy->hash_lb;
+  int index = get_index_from_lb_aglorithm(
+      service_name, providers, nums, hash_info,
+                                  strLbStragry.c_str());  // provider为一个列表
+  sprintf(lb_policy->provider_addr, "ipv4:%s:%d", providers[index].host,
+          providers[index].port);
+  // addbylm
   for (int i = 0, j = 0; i < cache_providers_num; i++) {
-    if (!strcmp(providers[j].host, provider_lst_iter->second[i].host)
-         && providers[j].port == provider_lst_iter->second[i].port) 
-    {
-      provider_lst_iter->second[i].curr_weight =providers[j].curr_weight;
-      j++; 			
+    if (!strcmp(providers[j].host, provider_lst_iter->second[i].host) &&
+        providers[j].port == provider_lst_iter->second[i].port) {
+      provider_lst_iter->second[i].curr_weight = providers[j].curr_weight;
+      j++;
       if (j > *nums - 1) break;
     }
   }
@@ -807,73 +1076,181 @@ provider_t* sort_hash_to_first(provider_t* providers, int provider_nums,
 
   return providers;
 }
+
 /*
  * query all providers not in blacklist
  * only invoke during zookeeper resolving
+ * input: service name, hash variable, method name
+ * output: providers list,valid provider number
  */
 provider_t* consumer_query_providers(const char* service_name, int* nums,
-                                     char* hasharg) {
+                                     char* hasharg, char* method_name) {
   char query_str[ORIENTSEC_GRPC_PATH_MAX_LEN] = {0};
   size_t i = 0;
+  size_t ind = 0;
+  int standby_count = 0;
   int j = 0;
   if (!service_name) {
     return NULL;
   }
+  if (!method_name) return NULL;
   bool is_req = is_request_loadbalance();
+  int cache_providers_num = orientsec_grpc_cache_provider_count_get();
   int provider_nums = 0;
   provider_t* providers = NULL;
+  //provider_t* providers_trans = NULL;
+
+  // 计算负载均衡模式
+  std::string strLbMode = ORIENTSEC_GRPC_LB_MODE_CONNECT;
+  auto mode_iter = g_method_lbstragry.find(method_name);
+  if (mode_iter != g_method_lbstragry.end()) {
+    strLbMode = mode_iter->second;
+  }
+  if (0 == strcmp(ORIENTSEC_GRPC_LB_MODE_REQUEST, strLbMode.c_str())) {
+    is_req = true;
+  }
+
+  // 计算负载均衡算法
+  std::string strLbStragry = ORIENTSEC_GRPC_DEFAULT_LB_TYPE;
+  bool is_method_level = false;
+  auto lbIter = g_consumer_lbstragry.find(service_name);
+  if (lbIter != g_consumer_lbstragry.end()) {
+    strLbStragry = lbIter->second;
+  }
+  auto meth_iter = g_method_lbalgorithem.find(method_name);
+  if (meth_iter != g_method_lbalgorithem.end()) {
+    strLbStragry = meth_iter->second;
+    is_method_level = true;
+  }
+
+  // 是否开启服务分组
+  bool is_group = is_group_grading();
 
   GRPC_PROVIDERS_LIST_LOCK_START
   //*nums = 0;
-  //原始代码代码，返回所有providers，未应用负载均衡策略
+  //原始代码实现，返回所有providers，未应用负载均衡策略
   std::map<std::string, provider_t*>::iterator provider_lst_iter =
       g_cache_providers.find(service_name);
   if (provider_lst_iter != g_cache_providers.end()) {
+    // 判断是否存在master server
+    for (ind = 0; ind < cache_providers_num; ind++) {
+      provider_t* provider = &provider_lst_iter->second[ind];
+      // 备服务或者 下线的主服务
+      if ((!provider->is_master)||(provider->is_master&&provider->flag_invalid)) {
+        standby_count++;
+      }
+    }
+    if (standby_count == cache_providers_num) {
+      g_exist_master = false;
+      // g_active_standby = true;
+    } else {
+      g_exist_master = true;
+    }
+
+    // 标记provider 是否提供服务，根据active/standby 状态
+    for (ind = 0; ind < cache_providers_num; ind++) {
+      provider_t* provider = &provider_lst_iter->second[ind];
+      // 如果存在active provider，标记standby provider不可用
+      if (g_exist_master) {
+        if (!provider->is_master) {
+          provider->online = 0;
+        } else {
+          provider->online = 1;  // for zookeeper dynamic switch
+        }
+
+      } else {
+        provider->online = 1;
+      }
+
+    }
+
     //首先统计合法的provider个数
-    for (i = 0; i < orientsec_grpc_cache_provider_count_get(); i++) {
+    for (i = 0; i < cache_providers_num; i++) {
       provider_t* provider = &provider_lst_iter->second[i];
       if (!ORIENTSEC_GRPC_CHECK_BIT(provider->flag_in_blklist,
-                               ORIENTSEC_GRPC_PROVIDER_FLAG_IN_BLKLIST) &&
-          provider->flag_invalid == 0 && provider->flag_call_failover == 0) {
-        // 请求负载均衡情况下，加上版本校验，切换版本时无 subchannel可连接，
-        // 这里获得的provider ip:port 和 num 将用于创建连接各个服务的subchannel
-        // service version check
-        if (!is_req) {  // connection mode
-          if (orientsec_grpc_consumer_control_version_match(
-                  service_name, provider->version) == true)
+                                    ORIENTSEC_GRPC_PROVIDER_FLAG_IN_BLKLIST) &&
+          provider->flag_invalid == 0 && provider->flag_call_failover == 0 &&
+          provider->online) {
+        if (!is_method_level) {
+          // 请求负载均衡情况下，加上版本校验，切换版本时无 subchannel可连接，
+          // 这里获得的provider ip:port 和 num
+          // 将用于创建连接各个服务的subchannel service version check
+          if (!is_req) {  // connection mode
+            if (orientsec_grpc_consumer_control_version_match(
+                    service_name, provider->version) == true)
+              provider_nums++;
+          } else {
             provider_nums++;
-        } else {
-          provider_nums++;
-        }   
+          }
+        } else {  // 方法级别的判断
+          if (method_check(provider, method_name, cache_providers_num)) {
+            if (!is_req) {  // connection mode
+              if (orientsec_grpc_consumer_control_version_match(
+                      service_name, provider->version) == true) {
+                provider_nums++;
+              }
+            } else {
+              provider_nums++;
+            }
+          }
+        }
       }
     }
     if (provider_nums != 0) {
       providers = (provider_t*)gpr_zalloc(sizeof(provider_t) * provider_nums);
 
-      for (int k = 0; k < orientsec_grpc_cache_provider_count_get(); k++) {
+      for (int k = 0; k < cache_providers_num; k++) {
         provider_t* provider = &provider_lst_iter->second[k];
 
         //有效且未在黑名单内的数据。
-        if (!ORIENTSEC_GRPC_CHECK_BIT(provider->flag_in_blklist,
-                                 ORIENTSEC_GRPC_PROVIDER_FLAG_IN_BLKLIST) &&
-            provider->flag_invalid == 0 && provider->flag_call_failover == 0) {
-          if (!is_req) {  // connection mode
-          // service version check
-            if (orientsec_grpc_consumer_control_version_match(
-                  service_name, provider->version) == true) {
+        if (!ORIENTSEC_GRPC_CHECK_BIT(
+                provider->flag_in_blklist,
+                ORIENTSEC_GRPC_PROVIDER_FLAG_IN_BLKLIST) &&
+            provider->flag_invalid == 0 && provider->flag_call_failover == 0 &&
+            provider->online) {
+          if (!is_method_level) {
+            if (!is_req) {  // connection mode
+                            // service version check
+              if (orientsec_grpc_consumer_control_version_match(
+                      service_name, provider->version) == true) {
+                strcpy(providers[j].host, provider->host);
+                strcpy(providers[j].group, provider->group);
+                providers[j].port = provider->port;
+                providers[j].weight = provider->weight;
+                providers[j].curr_weight = provider->curr_weight;
+                j++;
+              }
+            } else {
               strcpy(providers[j].host, provider->host);
+              strcpy(providers[j].group, provider->group);
               providers[j].port = provider->port;
               providers[j].weight = provider->weight;
               providers[j].curr_weight = provider->curr_weight;
               j++;
+            }       // end of is_req
+          } else {  //方法级别的判断
+            if (method_check(provider, method_name, cache_providers_num)) {
+              if (!is_req) {  // connection mode
+                              // service version check
+                if (orientsec_grpc_consumer_control_version_match(
+                        service_name, provider->version) == true) {
+                  strcpy(providers[j].host, provider->host);
+                  strcpy(providers[j].group, provider->group);
+                  providers[j].port = provider->port;
+                  providers[j].weight = provider->weight;
+                  providers[j].curr_weight = provider->curr_weight;
+                  j++;
+                }
+              } else {
+                strcpy(providers[j].host, provider->host);
+                strcpy(providers[j].group, provider->group);
+                providers[j].port = provider->port;
+                providers[j].weight = provider->weight;
+                providers[j].curr_weight = provider->curr_weight;
+                j++;
+              }  // end of is_req
             }
-          } else {
-            strcpy(providers[j].host, provider->host);
-            providers[j].port = provider->port;
-            providers[j].weight = provider->weight;
-            providers[j].curr_weight = provider->curr_weight;
-            j++;
-          } //end of is_req
+          }
         }
       }  // end of for
       *nums = provider_nums;
@@ -881,11 +1258,27 @@ provider_t* consumer_query_providers(const char* service_name, int* nums,
   }
 
   if (provider_nums == 0) {
-    printf("-----------------provider_nums=%d  !!!\n",provider_nums);
+    printf("--------------query provider_nums=%d  !!!\n", provider_nums);
     *nums = provider_nums;
     GRPC_PROVIDERS_LIST_LOCK_END
     return providers;
+  } else {
+    // 进行服务分组的校验
+    if (is_group) {
+      providers = orientsec_grpc_consumer_control_group_filter(
+          providers, &provider_nums);
+      // 重新赋值nums
+      *nums = provider_nums;
+    }
   }
+
+  // 服务分组后再检查provider number
+  if (provider_nums == 0) {
+    printf("after grouping query provider_nums=%d  !!!\n", provider_nums);
+    GRPC_PROVIDERS_LIST_LOCK_END
+    return providers;
+  } 
+  printf("Resolved valid provider_num = %d\n", provider_nums);
 
   if (is_req) {  // request 情况下
     // 如果0或1个provider, 不考虑算法
@@ -893,7 +1286,7 @@ provider_t* consumer_query_providers(const char* service_name, int* nums,
       //判断负载均衡算法
       std::map<std::string, std::string>::iterator lbIter =
           g_consumer_lbstragry.find(service_name);
-      std::string strLbStragry = ORIENTSEC_GRPC_DEFAULT_LB_TYPE;
+
       int prov_index = 0;
       if (lbIter != g_consumer_lbstragry.end()) {
         strLbStragry = lbIter->second;
@@ -901,7 +1294,7 @@ provider_t* consumer_query_providers(const char* service_name, int* nums,
       //第一次如果是hash，就走一次算法，将hash算法选出来的provider放在第一个
       if (0 == strcmp(strLbStragry.c_str(), ORIENTSEC_GRPC_LB_TYPE_CH)) {
         //进入相应的负载均衡算法中进行计算
-        //std::string hash_arg;
+        // std::string hash_arg;
         prov_index =
             chLB->choose_subchannel(service_name, providers, nums, hasharg);
         // 假设provider index 已经选出
@@ -915,11 +1308,11 @@ provider_t* consumer_query_providers(const char* service_name, int* nums,
   } else {  // for connection mode
     // 过滤掉服务版本校验失败的provider
 
-
-    int index = get_index_from_lb_aglorithm(service_name, providers, nums,
-                                               hasharg);  // provider为一个列表
+    int index = get_index_from_lb_aglorithm(
+        service_name, providers, nums, hasharg,
+        strLbStragry.c_str());  // provider为一个列表
     // addbylm
-    for (i = 0, j = 0; i < orientsec_grpc_cache_provider_count_get(); i++) {
+    for (i = 0, j = 0; i < cache_providers_num; i++) {
       if (!strcmp(providers[j].host, provider_lst_iter->second[i].host) &&
           providers[j].port == provider_lst_iter->second[i].port) {
         provider_lst_iter->second[i].curr_weight = providers[j].curr_weight;
@@ -933,7 +1326,7 @@ provider_t* consumer_query_providers(const char* service_name, int* nums,
     } else {
       provider_t* myproviders = (provider_t*)gpr_zalloc(sizeof(provider_t));
       memcpy(myproviders, &providers[index], sizeof(provider_t));
-      //myproviders->version = NULL;
+      // myproviders->version = NULL;
 
       for (i = 0; i < *nums; i++) {
         free_provider_v2(providers + i);
@@ -986,14 +1379,26 @@ char* orientsec_grpc_consumer_register(const char* fullmethod) {
   std::map<std::string, std::string>::iterator lbIter =
       g_consumer_lbstragry.find(fullmethod);
   if (lbIter == g_consumer_lbstragry.end()) {
-    g_consumer_lbstragry.insert(
-        std::pair<std::string, std::string>(fullmethod, ORIENTSEC_GRPC_LB_TYPE_RR));
+    g_consumer_lbstragry.insert(std::pair<std::string, std::string>(
+        fullmethod, ORIENTSEC_GRPC_LB_TYPE_RR));
     lbIter = g_consumer_lbstragry.find(fullmethod);
   }
   char* consumerLb = url_get_parameter_v2(
       url, ORIENTSEC_GRPC_REGISTRY_KEY_DEFAULT_LOADBALANCE, NULL);
   if (consumerLb) {
     lbIter->second = std::string(consumerLb);
+  }
+
+  // 初始化基于方法的loadbalance配置
+  if (g_method_lbstragry.empty())
+    g_method_lbstragry.insert(std::pair<std::string, std::string>(
+        ORIENTSEC_GRPC_DEFAULT_METHOD_KEY, ORIENTSEC_GRPC_LB_MODE_CONNECT));
+  if (g_method_lbalgorithem.empty()) {
+    g_method_lbalgorithem.insert(std::pair<std::string, std::string>(
+        ORIENTSEC_GRPC_DEFAULT_METHOD_KEY, ORIENTSEC_GRPC_LB_TYPE_RR));
+    // 测试用
+    // g_method_lbalgorithem.insert(std::pair<std::string,
+    // std::string>("CreateBook", ORIENTSEC_GRPC_LB_TYPE_PF));
   }
   //消费者订阅providers目录
   url_update_parameter(url, (char*)ORIENTSEC_GRPC_CATEGORY_KEY,
@@ -1066,12 +1471,12 @@ int orientsec_grpc_consumer_unregister(char* reginfo) {
       return 0;
 }
 
-void record_provider_failure(char* clientId, char* providerId) {
+void record_provider_failure(char* clientId, char* providerId,char* methods) {
   g_failover_utils.record_provider_failure(
-      clientId, providerId);  //使用示例对象调用静态方法
+      clientId, providerId,methods);  //使用实例对象调用静态方法
 }
 
-int get_max_backoff_time() { 
+int get_max_backoff_time() {
   int value = 120;
   if (g_failover_utils.get_max_backoff_time() > 0)
     return g_failover_utils.get_max_backoff_time();
@@ -1079,9 +1484,50 @@ int get_max_backoff_time() {
     return value;
 }
 
+// provider active/standby check
+int provider_num_active_check(char* service_name) {
+  int count = 0;
+  std::map<std::string, provider_t*>::iterator provider_lst_iter =
+      g_cache_providers.find(service_name);
+  if (provider_lst_iter != g_cache_providers.end()) {
+    //首先统计合法的provider个数
+    for (int i = 0; i < orientsec_grpc_cache_provider_count_get(); i++) {
+      provider_t* provider = &provider_lst_iter->second[i];
+      if (!ORIENTSEC_GRPC_CHECK_BIT(provider->flag_in_blklist,
+                                    ORIENTSEC_GRPC_PROVIDER_FLAG_IN_BLKLIST) &&
+          provider->flag_invalid == 0 && provider->flag_call_failover == 0) {
+        // active/standby check
+        if (provider->is_master) count++;
+      }
+    }
+  }
+  return count;
+}
+
+// provider online property reset
+// call when no active provider
+void provider_active_standby_setting(char* service_name, bool have_active) {
+  std::map<std::string, provider_t*>::iterator provider_lst_iter =
+      g_cache_providers.find(service_name);
+  if (provider_lst_iter != g_cache_providers.end()) {
+    // traverse global provider list
+    for (int i = 0; i < orientsec_grpc_cache_provider_count_get(); i++) {
+      provider_t* provider = &provider_lst_iter->second[i];
+      if (provider->is_master) {
+        provider->online = (have_active ? 1 : 0);
+      } else {
+        // 无主服务器时，备服务器上线
+        provider->online = (have_active ? 0 : 1);
+      }
+
+    }
+  }
+  return;
+}
+
 // service version check
-int provider_num_after_service_check(char* service_name){ 
-  int count = 0; 
+int provider_num_after_service_check(char* service_name) {
+  int count = 0;
   std::map<std::string, provider_t*>::iterator provider_lst_iter =
       g_cache_providers.find(service_name);
   if (provider_lst_iter != g_cache_providers.end()) {
@@ -1092,15 +1538,14 @@ int provider_num_after_service_check(char* service_name){
                                     ORIENTSEC_GRPC_PROVIDER_FLAG_IN_BLKLIST) &&
           provider->flag_invalid == 0 && provider->flag_call_failover == 0) {
         // service version check
-        if (orientsec_grpc_consumer_control_version_match(service_name, provider->version) == true)
+        if (orientsec_grpc_consumer_control_version_match(
+                service_name, provider->version) == true)
           count++;
       }
     }
   }
   return count;
 }
-
-
 
 //获取经过黑白名单处理之后用于负载均衡的provider数量
 int get_consumer_lb_providers_acount(char* service_name) {
@@ -1115,6 +1560,48 @@ int get_consumer_lb_providers_acount(char* service_name) {
     }
   }
   return count;
+}
+
+//获取可以调用的provider数量，用于容错切换
+int get_valid_providers_acount(char* service_name, char* method_name) {
+  int provider_nums = 0;
+  int cache_providers_num = orientsec_grpc_cache_provider_count_get();
+  bool is_method_level = false;
+    // 计算负载均衡算法
+  std::string strLbStragry = ORIENTSEC_GRPC_DEFAULT_LB_TYPE;
+  auto meth_iter = g_method_lbalgorithem.find(method_name);
+  if (meth_iter != g_method_lbalgorithem.end()) {
+    strLbStragry = meth_iter->second;
+    is_method_level = true;
+  }
+
+  std::map<std::string, provider_t*>::iterator providerMapIter =
+      g_cache_providers.find(service_name);
+  if (providerMapIter != g_cache_providers.end()) {
+    //首先统计合法的provider个数
+    for (int i = 0; i < cache_providers_num; i++) {
+      provider_t* provider = &providerMapIter->second[i];
+      if (!ORIENTSEC_GRPC_CHECK_BIT(provider->flag_in_blklist,
+                                    ORIENTSEC_GRPC_PROVIDER_FLAG_IN_BLKLIST) &&
+          provider->flag_invalid == 0 && provider->flag_call_failover == 0 &&
+          provider->online) {
+        if (!is_method_level) {
+            if (orientsec_grpc_consumer_control_version_match(
+                    service_name, provider->version) == true)
+              provider_nums++;       
+        } else {  // 方法级别的判断
+          if (method_check(provider, method_name, cache_providers_num)) {
+
+              if (orientsec_grpc_consumer_control_version_match(
+                      service_name, provider->version) == true) {
+                provider_nums++;
+              }
+          }
+        }
+      }
+    }
+  }
+    return provider_nums;
 }
 
 //获取zk上某服务的provider数量
@@ -1138,6 +1625,7 @@ void set_or_clr_provider_failover_flag_inner(char* service_name,
                                              char* providerId, int isSet) {
   if (!service_name || !providerId || strlen(providerId) == 0) return;
 
+  bool is_req = is_request_loadbalance();
   std::string provider = providerId;
   size_t pos = provider.find_first_of(':');
   if (pos == std::string::npos) {
@@ -1158,14 +1646,18 @@ void set_or_clr_provider_failover_flag_inner(char* service_name,
           providerMapIter->second[i].port == provider_port &&
           providerMapIter->second[i].flag_invalid == 0) {
         if (isSet) {
-          ORIENTSEC_GRPC_SET_BIT(providerMapIter->second[i].flag_call_failover, 1);
+          ORIENTSEC_GRPC_SET_BIT(providerMapIter->second[i].flag_call_failover,
+                                 1);
         } else {
-          ORIENTSEC_GRPC_SET_BIT(providerMapIter->second[i].flag_call_failover, 0);
+          ORIENTSEC_GRPC_SET_BIT(providerMapIter->second[i].flag_call_failover,
+                                 0);
         }
         break;
       }
     }
   }
+  if (!is_req) //连接方式需要重新解析
+    g_need_resolve = true;
   GRPC_PROVIDERS_LIST_LOCK_END
 }
 

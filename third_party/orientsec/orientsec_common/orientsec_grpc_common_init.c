@@ -20,10 +20,10 @@
  *
  */
 #include "orientsec_grpc_common_init.h"
-#include<stdio.h>
-#include<stdlib.h>
-#include<stdbool.h>
-#include<string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
 
 #include "orientsec_grpc_properties_tools.h"
 #include "orientsec_grpc_conf.h"
@@ -44,6 +44,9 @@ static int g_orientsec_grpc_cache_provider_count;
 
 //服务根目录 默认值/Application/grpc
 char* g_orientsec_grpc_common_root_directory;
+
+// 服务分组信息
+static char g_common_consumer_group_version[128];
 
 //获取根目录参数
 char* orientsec_grpc_common_get_root_dir() {
@@ -98,16 +101,21 @@ void consumer_service_version_init() {
       ORIENTSEC_GRPC_CONF_CONSUMER_SERVICE_VERSION, NULL,
       g_orientsec_grpc_common_consumer_service_version);
 
-  // init here
-  orientsec_grpc_service_version_init();
-  //if (readbuff == NULL || strlen(readbuff) == 0) {
-  //  g_orientsec_grpc_common_consumer_service_version = NULL;
-  //}
-  //else {
-  //  g_orientsec_grpc_common_consumer_service_version = readbuff;
-  //}
-  ////add by yang, free the memory for all branch
+  //add by yang, free the memory for all branch
   //free(readbuff);
+}
+
+//获取consumer对服务分组要求
+char* orientsec_grpc_consumer_service_group_get() {
+  return g_common_consumer_group_version;
+}
+
+// 客户端服务版本读取配置文件初始化
+void consumer_service_group_init() {
+  orientsec_grpc_properties_get_value(
+      ORIENTSEC_GRPC_CONF_CONSUMER_GROUP, NULL,
+      g_common_consumer_group_version);
+
 }
 
 /*
@@ -143,7 +151,7 @@ void orientsec_grpc_common_param_init() {
 	memset(readbuff, 0, size);
 	orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_CACHE_PROVIDER_COUNT, NULL, readbuff);
 	if (readbuff == NULL || strcmp(readbuff, "") == 0 || orientsec_grpc_common_utils_isdigit(readbuff) != 1) {
-		g_orientsec_grpc_cache_provider_count = 5;
+		g_orientsec_grpc_cache_provider_count = 32;
 	}
 	else {
 		g_orientsec_grpc_cache_provider_count = atoi(readbuff);
@@ -152,6 +160,7 @@ void orientsec_grpc_common_param_init() {
 	free(readbuff);
 	consumer_service_version_init();
         common_root_directory_init();
+        consumer_service_group_init();
 }
 
 

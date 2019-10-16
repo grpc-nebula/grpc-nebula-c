@@ -35,6 +35,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+// 声明
+void update_provider_is_master(bool,const char*, const char*);
 
 
 typedef struct _provider_lst {
@@ -165,10 +167,13 @@ void provider_configurators_callback(url_t *urls, int url_num) {
   char *local_ip = get_local_ip();
   char *param = NULL;
   char *intf = NULL;
+  char hostip[32] = {0};
   bool access_protected = false;
+  bool is_active = true;
   bool need_update = false;
   //预处理
   overrides_preprocess(urls, url_num);
+  
   for (i = 0; i < url_num; i++)
   {
     if (urls[i].protocol != NULL && 0 == strcmp(urls[i].protocol, ORIENTSEC_GRPC_EMPTY_PROTOCOL))
@@ -204,6 +209,12 @@ void provider_configurators_callback(url_t *urls, int url_num) {
         need_update = true;
         access_protected = (0 == strcmp(param, "true")) ? true : false;
         update_provider_access_protected(NULL, access_protected);
+      }
+      param = url_get_parameter_v2(urls + i, ORIENTSEC_GRPC_REGISTRY_KEY_MASTER,NULL);
+      if (param) {
+        is_active = (0 != strcmp(param, "false")) ? true : false;  // default:true  
+        // update active/standby property
+        update_provider_is_master(is_active,NULL,NULL);  
       }
     }
   }
@@ -243,6 +254,12 @@ void provider_configurators_callback(url_t *urls, int url_num) {
 	need_update = true;
 	access_protected = (0 == strcmp(param, "true")) ? true : false;
 	update_provider_access_protected(intf, access_protected);
+      }
+      param = url_get_parameter_v2(urls + i, ORIENTSEC_GRPC_REGISTRY_KEY_MASTER, NULL);
+      if (param) {
+        is_active = (0 == strcmp(param, "true")) ? true : false;
+        strcpy(hostip, urls[i].host);
+        update_provider_is_master(is_active,intf,urls[i].host); 
       }
     }
   }
@@ -324,6 +341,7 @@ bool check_provider_connection(const char *intf) {
 	ret = true;
       }
       else {
+        gpr_log(GPR_ERROR, "connection nums reach MAX provider connection:%d",provider_node->provider->default_connections);
 	ret = false;
       }
       gpr_mu_unlock(&provider_node->conns_mu);
@@ -357,6 +375,8 @@ bool check_provider_connection(const char *intf) {
       ret = true;
     }
     else {
+      gpr_log(GPR_ERROR, "connection nums reach MAX provider default connection:%d",
+              provider_node->provider->default_connections);
       ret = false;
     }
     gpr_mu_unlock(&provider_node->conns_mu);
@@ -438,6 +458,8 @@ bool check_provider_request(const char *intf) {
       ret = true;
     }
     else {
+      gpr_log(GPR_ERROR, "request nums reach MAX provider request num:%d",
+              provider_node->provider->default_requests);
       ret = false;
     }
     gpr_mu_unlock(&provider_node->reqs_mu);
@@ -463,7 +485,7 @@ void decrease_provider_request(const char *intf) {
   {
     //首先判读是否进行请求数控制。
     if (0 == provider_node->provider->default_requests) {
-      return true;
+      return;
     }
     gpr_mu_lock(&provider_node->reqs_mu);
     if (provider_node->current_reqs > 0)
@@ -572,6 +594,33 @@ void update_provider_access_protected(const char* intf, bool access_protected) {
     } else if (0 == strcmp(intf, provider_node->provider->sInterface)) {
       provider_node->provider->access_protected = access_protected;
       break;
+    }
+  }
+}
+
+// update provider active/standby property
+void update_provider_is_master(bool is_master,const char* intf,const char* host) {
+  provider_lst* provider_node = p_provider_list_head->next;
+  char host_in[32] = {0};
+  if (host != NULL) strcpy(host_in, host);
+
+  bool ret = true;
+  for (; provider_node != NULL; provider_node = provider_node->next) {
+    if (!provider_node->provider || !provider_node->provider->sInterface) {
+      continue;
+    }
+    // 不指定服务名，全部provider调整active/standby属性
+    if (intf == NULL) {    
+        provider_node->provider->is_master = is_master;
+      
+    } else if (0 == strcmp(intf, provider_node->provider->sInterface)) { 
+      // 指定服务名，对指定IP provider处理
+      if (0 == strcmp(host_in, provider_node->provider->host)) {
+        provider_node->provider->is_master = is_master;
+        break; 
+      }
+       
+     
     }
   }
 }

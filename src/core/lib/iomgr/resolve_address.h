@@ -58,11 +58,13 @@ typedef struct grpc_zk_address_resolver_vtable {
                           grpc_pollset_set* interested_parties,
                           grpc_closure* on_done,
                           grpc_resolved_addresses** addresses,
-                          char* hasharg);
+                          char* hasharg,
+                          char* meth_name);
   grpc_error* (*blocking_resolve_address)(const char* name,
                                           const char* default_port,
                                           grpc_resolved_addresses** addresses,
-                                          char* hasharg);
+                                          char* hasharg,
+                                          char* meth_name);
 } grpc_zk_address_resolver_vtable;
 //----end----
 

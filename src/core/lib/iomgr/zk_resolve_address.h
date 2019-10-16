@@ -38,21 +38,22 @@ extern void (*grpc_zk_resolve_address)(grpc_core::ExecCtx* exec_ctx,
 	const char *default_port,
 	grpc_pollset_set *interested_parties,
 	grpc_closure *on_done,
-    grpc_resolved_addresses** addresses, char* hasharg);
+    grpc_resolved_addresses** addresses, char* hasharg,char* meth_name);
 
 
 /* Resolve addr in a blocking fashion. Returns NULL on failure. On success,
 result must be freed with grpc_resolved_addresses_destroy. */
 extern grpc_error *(*grpc_zk_blocking_resolve_address)(
 	const char *name, const char *default_port,
-    grpc_resolved_addresses** addresses, char* hasharg);
+    grpc_resolved_addresses** addresses, char* hasharg,char* meth_name);
 
 
 extern void zk_resolve_address(const char* name, const char* default_port,
                                grpc_pollset_set* interested_parties,
                                grpc_closure* on_done,
                                grpc_resolved_addresses** addresses,
-                               char* hasharg);
+                               char* hasharg,
+                               char* meth_name);
 
 #endif // !ORIENTSEC_ZK_RESOLVE_ADDRESS
 

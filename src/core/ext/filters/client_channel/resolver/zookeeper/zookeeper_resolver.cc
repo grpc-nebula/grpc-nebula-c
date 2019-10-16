@@ -117,6 +117,7 @@ class ZookeeperResolver : public Resolver {
   /// currently resolving addresses
   grpc_resolved_addresses* addresses_ = nullptr;
   char* hasharg = nullptr;
+  char* method_name = nullptr;
 };
 
 ZookeeperResolver::ZookeeperResolver(const ResolverArgs& args)
@@ -330,12 +331,13 @@ void ZookeeperResolver::StartResolvingLocked() {
   resolving_ = true;
   addresses_ = nullptr;
   hasharg = get_hash();
+  method_name = get_meth_name();
 
   //zk_resolve_address(name_to_resolve_, kDefaultPort, interested_parties_,
   //                    &on_resolved_, &addresses_);
   //----begin----
   zk_resolve_address(name_to_resolve_, kDefaultPort, interested_parties_,
-                     &on_resolved_, &addresses_,hasharg);
+                     &on_resolved_, &addresses_,hasharg,method_name);
   //----end----
 
   last_resolution_timestamp_ = grpc_core::ExecCtx::Get()->Now();

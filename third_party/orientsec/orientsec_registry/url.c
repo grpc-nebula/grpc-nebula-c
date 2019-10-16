@@ -31,8 +31,7 @@
 #include <ctype.h>
 #include<string.h>
 
-static char *
-strff(char *ptr, int n) {
+static char *strff(char *ptr, int n) {
 	int i;
 	int y = 0;
 	for (i = 0; i < n; ++i) {
@@ -42,8 +41,7 @@ strff(char *ptr, int n) {
 	return gprc_strdup(ptr);
 }
 
-static char *
-strrwd(char *ptr, int n) {
+static char *strrwd(char *ptr, int n) {
 	int y = 0;
 	int i;
 	for (i = 0; i < n; ++i) {
@@ -442,6 +440,7 @@ char *url_get_service_interface(url_t *url) {
 	return url_get_parameter(url, ORIENTSEC_GRPC_REGISTRY_KEY_INTERFACE, NULL);
 }
 
+// reserved,not use now
 char *url_get_service_key(url_t *url) {
 	char *intf = url_get_parameter(url, ORIENTSEC_GRPC_REGISTRY_KEY_INTERFACE, NULL);
 	char *version = NULL, *group = NULL;

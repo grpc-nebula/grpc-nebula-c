@@ -25,10 +25,11 @@
 #ifndef ORIENTSEC_GRPC_CONSUMER_CONTROL_VERSION_H
 #define ORIENTSEC_GRPC_CONSUMER_CONTROL_VERSION_H
 
+#include <stdbool.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
- 
+
 #define ORIENTSEC_GRPC_SERVICE_SEPARATOR_CHAR ','
 
 #define ORIENTSEC_GRPC_VERSION_SEPARATOR_CHAR ':'

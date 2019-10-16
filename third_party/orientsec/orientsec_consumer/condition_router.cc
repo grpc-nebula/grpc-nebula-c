@@ -280,8 +280,12 @@ int condition_router::route(provider_t* providers, url_t *url_param) {
 
 	//匹配条件和过滤条件为空时。
 	if ((when_condition.size() == 0) && (0 == then_condition.size())) {
-		gpr_log(GPR_ERROR, "The current consumer in the service blacklist. consumer:%s", url_param->host);
-		return -1;
+           gpr_log(GPR_ERROR, "The current consumer in the service blacklist. consumer:%s", url_param->host);
+           // 全部设置黑名单标记
+          for (size_t i = 0;i <orientsec_grpc_cache_provider_count_get();i++) 
+             ORIENTSEC_GRPC_SET_BIT( providers[i].flag_in_blklist,ORIENTSEC_GRPC_PROVIDER_FLAG_IN_BLKLIST);  //设置黑名单标记
+
+	  return -1;
 	}
 		
 	//校验定义的规则对改客户端是否有效
