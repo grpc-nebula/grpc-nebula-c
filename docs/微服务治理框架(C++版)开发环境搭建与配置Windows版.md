@@ -58,15 +58,15 @@ OR
 将编译后的第三方库拷贝到D:\Repo\third_part_sdk
 ### 4.1.2 zookeeper库编译
 
-git clone -b branch-3.4.13 https://github.com/apache/zookeeper.git
+git clone -b branch-3.4.13 https://github.com/apache/zookeeper.git  
 使用vs2013编译zookeeper库，或者在grpc-nebula目录下拷贝。
 
 ## 4.2 代码编译
 ### 4.2.1 项目配置  
 打开 grpc\vsprojects\grpc.sln  
-编译 gpr.lib、grpc.lib、grpc++.lib、orientsec_common.lib、orientsec_consumer.lib、orientsec_provider.lib和orientsec_registry.lib  
- - (1) gpr项目配置
-配置属性--常规：  
+编译 gpr.lib、grpc.lib、grpc++.lib、orientsec_common.lib、orientsec_consumer.lib、orientsec_provider.lib和orientsec_registry.lib    
+(1) gpr项目配置  
+配置属性--常规：    
 ![编译图](https://raw.githubusercontent.com/grpc-nebula/grpc-nebula/master/images/build4.2.1.1.png)  
 
 	输出目录：  

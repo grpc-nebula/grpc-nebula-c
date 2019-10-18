@@ -548,8 +548,8 @@ libprotobuf-lited.lib
   服务消费者，通过调用**GreeterClientImpl client(grpc::CreateChannel(,));**方法建立Channel，其中target的组成组成规则为“ **zookeeper:///** + **服务名称** ”。框架会到注册中心zookeeper上去寻找对应服务名称的服务提供者。
 
   例子：demo-sync-client.cpp  
-  代码比原生例子增加了多线程的支持。简单实例请参考原生示例。
-
+  代码比原生例子增加了多线程的支持。简单实例请参考原生示例。  
+	
 	#include <iostream>
 	#include <memory>
 	#include <string>
@@ -643,7 +643,7 @@ libprotobuf-lited.lib
 				return "RPC failed";
 			}
 		}
-
+	
 	private:
 		std::unique_ptr<Greeter::Stub> stub_;
 	};
@@ -693,7 +693,6 @@ libprotobuf-lited.lib
 			"zookeeper:///helloworld.Greeter", grpc::InsecureChannelCredentials()));
 	#endif
 	
-	
 	// for consistent hash testing	
 	#if 0
 		int count = 300;
@@ -723,8 +722,9 @@ libprotobuf-lited.lib
 			//Sleep(1000);
 		}
 	#endif
-
+	
 	}
+	
 	int main(int argc, char** argv) {
 		// Instantiate the client. It requires a channel, out of which the actual RPCs
 		// are created. This channel models a connection to an endpoint (in this case,
