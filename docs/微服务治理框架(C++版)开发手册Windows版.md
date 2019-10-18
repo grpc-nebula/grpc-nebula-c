@@ -550,203 +550,203 @@ libprotobuf-lited.lib
   例子：demo-sync-client.cpp  
   代码比原生例子增加了多线程的支持。简单实例请参考原生示例。  
 	
-	#include <iostream>
-	#include <memory>
-	#include <string>
+		#include <iostream>
+		#include <memory>
+		#include <string>
 
-	#include <grpcpp/grpcpp.h>
-	#include <grpc/support/thd_id.h>
-	#include <grpc/support/alloc.h>
+		#include <grpcpp/grpcpp.h>
+		#include <grpc/support/thd_id.h>
+		#include <grpc/support/alloc.h>
 
-	#ifdef BAZEL_BUILD
-	#include "examples/protos/helloworld.grpc.pb.h"
-	#else
-	#include "helloworld.grpc.pb.h"
-	#endif
+		#ifdef BAZEL_BUILD
+		#include "examples/protos/helloworld.grpc.pb.h"
+		#else
+		#include "helloworld.grpc.pb.h"
+		#endif
 
-	#if defined(_MSC_VER)
-	#define thread_local __declspec(thread)
-	#elif defined(__GNUC__)
-	#define thread_local __thread
-	#else
-	#error "Unknown compiler - please file a bug report"
-	#endif
-	static thread_local struct thd_info *g_thd_info;
+		#if defined(_MSC_VER)
+		#define thread_local __declspec(thread)
+		#elif defined(__GNUC__)
+		#define thread_local __thread
+		#else
+		#error "Unknown compiler - please file a bug report"
+		#endif
+		static thread_local struct thd_info *g_thd_info;
 
-	struct thd_info {
-		void(*body)(void *arg); /* body of a thread */
-		void *arg;               /* argument to a thread */
-		HANDLE join_event;       /* if joinable, the join event */
-		int joinable;            /* true if not detached */
-	};
-	static void destroy_thread(struct thd_info *t) {
-		if (t->joinable) CloseHandle(t->join_event);
-		gpr_free(t);
-	}
-
-
-	enum { GPR_THD_JOINABLE = 1 };
-
-	static DWORD WINAPI thread_body(void *v) {
-		g_thd_info = (struct thd_info *)v;
-		g_thd_info->body(g_thd_info->arg);
-		if (g_thd_info->joinable) {
-			BOOL ret = SetEvent(g_thd_info->join_event);
-			GPR_ASSERT(ret);
+		struct thd_info {
+			void(*body)(void *arg); /* body of a thread */
+			void *arg;               /* argument to a thread */
+			HANDLE join_event;       /* if joinable, the join event */
+			int joinable;            /* true if not detached */
+		};
+		static void destroy_thread(struct thd_info *t) {
+			if (t->joinable) CloseHandle(t->join_event);
+			gpr_free(t);
 		}
-		else {
-			destroy_thread(g_thd_info);
-		}
-		return 0;
-	}
 
-	typedef struct {
-		int flags; /* Opaque field. Get and set with accessors below. */
-	} gpr_thd_options;
 
-	using grpc::Channel;
-	using grpc::ClientContext;
-	using grpc::Status;
-	using helloworld::HelloRequest;
-	using helloworld::HelloReply;
-	using helloworld::Greeter;
+		enum { GPR_THD_JOINABLE = 1 };
 
-	class GreeterClient {
-	public:
-		GreeterClient(std::shared_ptr<Channel> channel)
-			: stub_(Greeter::NewStub(channel)) {}
-
-		// Assembles the client's payload, sends it and presents the response back
-		// from the server.
-		std::string SayHello(const std::string& user) {
-			// Data we are sending to the server.
-			HelloRequest request;
-			request.set_name(user);
-
-			// Container for the data we expect from the server.
-			HelloReply reply;
-
-			// Context for the client. It could be used to convey extra information to
-			// the server and/or tweak certain RPC behaviors.
-			ClientContext context;
-
-			// The actual RPC.
-			Status status = stub_->SayHello(&context, request, &reply);
-
-			// Act upon its status.
-			if (status.ok()) {
-				return reply.message();
+		static DWORD WINAPI thread_body(void *v) {
+			g_thd_info = (struct thd_info *)v;
+			g_thd_info->body(g_thd_info->arg);
+			if (g_thd_info->joinable) {
+				BOOL ret = SetEvent(g_thd_info->join_event);
+				GPR_ASSERT(ret);
 			}
 			else {
-				std::cout << status.error_code() << ": " << status.error_message()
-					<< std::endl;
-				return "RPC failed";
+				destroy_thread(g_thd_info);
 			}
+			return 0;
 		}
-	
-	private:
-		std::unique_ptr<Greeter::Stub> stub_;
-	};
 
-	static int gpr_thd_options_is_joinable(const gpr_thd_options* options) {
-		if (!options) return 0;
-		return (options->flags & GPR_THD_JOINABLE) == GPR_THD_JOINABLE;
-	}
+		typedef struct {
+			int flags; /* Opaque field. Get and set with accessors below. */
+		} gpr_thd_options;
 
-	static int gpr_thd_new(gpr_thd_id *t, void(*thd_body)(void *arg), void *arg,
-		const gpr_thd_options *options) {
-		HANDLE handle;
-		struct thd_info *info = static_cast<thd_info *>(gpr_malloc(sizeof(*info)));
-		info->body = thd_body;
-		info->arg = arg;
-		*t = 0;
-		if (gpr_thd_options_is_joinable(options)) {
-			info->joinable = 1;
-			info->join_event = CreateEvent(NULL, FALSE, FALSE, NULL);
-			if (info->join_event == NULL) {
-				gpr_free(info);
-				return 0;
+		using grpc::Channel;
+		using grpc::ClientContext;
+		using grpc::Status;
+		using helloworld::HelloRequest;
+		using helloworld::HelloReply;
+		using helloworld::Greeter;
+
+		class GreeterClient {
+		public:
+			GreeterClient(std::shared_ptr<Channel> channel)
+				: stub_(Greeter::NewStub(channel)) {}
+
+			// Assembles the client's payload, sends it and presents the response back
+			// from the server.
+			std::string SayHello(const std::string& user) {
+				// Data we are sending to the server.
+				HelloRequest request;
+				request.set_name(user);
+
+				// Container for the data we expect from the server.
+				HelloReply reply;
+
+				// Context for the client. It could be used to convey extra information to
+				// the server and/or tweak certain RPC behaviors.
+				ClientContext context;
+
+				// The actual RPC.
+				Status status = stub_->SayHello(&context, request, &reply);
+
+				// Act upon its status.
+				if (status.ok()) {
+					return reply.message();
+				}
+				else {
+					std::cout << status.error_code() << ": " << status.error_message()
+						<< std::endl;
+					return "RPC failed";
+				}
 			}
-		}
-		else {
-			info->joinable = 0;
-		}
-		handle = CreateThread(NULL, 64 * 1024, thread_body, info, 0, NULL);
-		if (handle == NULL) {
-			destroy_thread(info);
-		}
-		else {
-			*t = (gpr_thd_id)info;
-			CloseHandle(handle);
-		}
-		return handle != NULL;
-	}
-
-	void multiple(void * arg)
-	{
-	#if 0
-		GreeterClient greeter(grpc::CreateChannel(
-			"localhost:50051", grpc::InsecureChannelCredentials()));
-	#else
-		//GreeterClient greeter(grpc::CreateChannel("zookeeper:///dfzq.helloworld.Greeter", grpc::InsecureChannelCredentials()));
-		GreeterClient greeter(grpc::CreateChannel(
-			"zookeeper:///helloworld.Greeter", grpc::InsecureChannelCredentials()));
-	#endif
 	
-	// for consistent hash testing	
-	#if 0
-		int count = 300;
-		char *name = new char[20];
-		memset(name, 0, sizeof(char) * 20);
-		while (count--) {
-			std::string user("world");
-			char str[10];
-			if (!(count % 10)) {
+		private:
+			std::unique_ptr<Greeter::Stub> stub_;
+		};
+
+		static int gpr_thd_options_is_joinable(const gpr_thd_options* options) {
+			if (!options) return 0;
+			return (options->flags & GPR_THD_JOINABLE) == GPR_THD_JOINABLE;
+		}
+
+		static int gpr_thd_new(gpr_thd_id *t, void(*thd_body)(void *arg), void *arg,
+			const gpr_thd_options *options) {
+			HANDLE handle;
+			struct thd_info *info = static_cast<thd_info *>(gpr_malloc(sizeof(*info)));
+			info->body = thd_body;
+			info->arg = arg;
+			*t = 0;
+			if (gpr_thd_options_is_joinable(options)) {
+				info->joinable = 1;
+				info->join_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+				if (info->join_event == NULL) {
+					gpr_free(info);
+					return 0;
+				}
+			}
+			else {
+				info->joinable = 0;
+			}
+			handle = CreateThread(NULL, 64 * 1024, thread_body, info, 0, NULL);
+			if (handle == NULL) {
+				destroy_thread(info);
+			}
+			else {
+				*t = (gpr_thd_id)info;
+				CloseHandle(handle);
+			}
+			return handle != NULL;
+		}
+
+		void multiple(void * arg)
+		{
+		#if 0
+			GreeterClient greeter(grpc::CreateChannel(
+				"localhost:50051", grpc::InsecureChannelCredentials()));
+		#else
+			//GreeterClient greeter(grpc::CreateChannel("zookeeper:///dfzq.helloworld.Greeter", grpc::InsecureChannelCredentials()));
+			GreeterClient greeter(grpc::CreateChannel(
+				"zookeeper:///helloworld.Greeter", grpc::InsecureChannelCredentials()));
+		#endif
+	
+		// for consistent hash testing	
+		#if 0
+			int count = 300;
+			char *name = new char[20];
+			memset(name, 0, sizeof(char) * 20);
+			while (count--) {
+				std::string user("world");
+				char str[10];
+				if (!(count % 10)) {
+					sprintf(str, "%0d", count);
+					user.append(str);
+					strcpy(name, user.c_str());
+				}
+				std::string reply = greeter.SayHello(name);
+				std::cout << "Greeter received: " << reply << std::endl;
+			}
+		#else
+			int count = 100;
+			while (count--) {
+				std::string user("world");
+				char str[10];
 				sprintf(str, "%0d", count);
 				user.append(str);
-				strcpy(name, user.c_str());
+
+				std::string reply = greeter.SayHello(user);
+				std::cout << "Greeter received: " << reply << std::endl;
+				//Sleep(1000);
 			}
-			std::string reply = greeter.SayHello(name);
-			std::cout << "Greeter received: " << reply << std::endl;
-		}
-	#else
-		int count = 100;
-		while (count--) {
-			std::string user("world");
-			char str[10];
-			sprintf(str, "%0d", count);
-			user.append(str);
-
-			std::string reply = greeter.SayHello(user);
-			std::cout << "Greeter received: " << reply << std::endl;
-			//Sleep(1000);
-		}
-	#endif
+		#endif
 	
-	}
+		}
 	
-	int main(int argc, char** argv) {
-		// Instantiate the client. It requires a channel, out of which the actual RPCs
-		// are created. This channel models a connection to an endpoint (in this case,
-		// localhost at port 50051). We indicate that the channel isn't authenticated
-		// (use of InsecureChannelCredentials()).
-		//gpr_set_log_verbosity(GPR_LOG_SEVERITY_INFO);
-		//gpr_set_log_verbosity(GPR_LOG_SEVERITY_ERROR);
-		//gpr_set_log_verbosity(GPR_LOG_SEVERITY_DEBUG);
+		int main(int argc, char** argv) {
+			// Instantiate the client. It requires a channel, out of which the actual RPCs
+			// are created. This channel models a connection to an endpoint (in this case,
+			// localhost at port 50051). We indicate that the channel isn't authenticated
+			// (use of InsecureChannelCredentials()).
+			//gpr_set_log_verbosity(GPR_LOG_SEVERITY_INFO);
+			//gpr_set_log_verbosity(GPR_LOG_SEVERITY_ERROR);
+			//gpr_set_log_verbosity(GPR_LOG_SEVERITY_DEBUG);
 
-		gpr_thd_id thd_id;
-		//开启n线程并发调用
-		for (int i = 0; i < 1; i++) {
-			gpr_thd_new(&thd_id, multiple, NULL, NULL);
+			gpr_thd_id thd_id;
+			//开启n线程并发调用
+			for (int i = 0; i < 1; i++) {
+				gpr_thd_new(&thd_id, multiple, NULL, NULL);
+			}
+
+			getchar();
+
+			return 0;
 		}
 
-		getchar();
 
-		return 0;
-	}
-
-
-- 6.2配置客户端项目  
+- 6.2 配置客户端项目    
    同服务端项目配置。
 
 - 6.3 编译客户端文件
@@ -757,24 +757,24 @@ libprotobuf-lited.lib
    ![配置图](https://raw.githubusercontent.com/grpc-nebula/grpc-nebula/master/images/config6.3.2-1.png) 
 ......  
    ![配置图](https://raw.githubusercontent.com/grpc-nebula/grpc-nebula/master/images/config6.3.2-2.png) 
- - 3）在x64/Debug目录下生成client运行程序（.exe）。  
+  - 3）在x64/Debug目录下生成client运行程序（.exe）。  
 如图所示：  
  ![配置图](https://raw.githubusercontent.com/grpc-nebula/grpc-nebula/master/images/config6.3.3.png)  
 
 
 
-### 7. 运行程序 
-- 7.1准备工作
-  1) 将config目录及其下的dfzq-grpc-config.properties配置文件拷贝到.\demo\x64\Debug中  
-  2) 启动Zookeeper  
-  3) 将Zookeeper IP地址和端口号修改到配置文件中  
-zookeeper.host.server=XX：YY  
-  4) 将zookeeper 动态链接库zookeeper.dll 拷贝到 客户端（exe）和服务端（exe）同级目录中  
+### 7. 运行程序   
+- 7.1准备工作  
+  1) 将config目录及其下的dfzq-grpc-config.properties配置文件拷贝到.\demo\x64\Debug中    
+  2) 启动Zookeeper    
+  3) 将Zookeeper IP地址和端口号修改到配置文件中   
+zookeeper.host.server=XX：YY    
+  4) 将zookeeper 动态链接库zookeeper.dll 拷贝到 客户端（exe）和服务端（exe）同级目录中    
 - 7.2运行应用程序：  
-   - 1) 服务端启动    
+   1) 服务端启动    
   双击demo-sync-server.exe  
  ![运行图](https://raw.githubusercontent.com/grpc-nebula/grpc-nebula/master/images/config7.2.1.png)  
-   - 2) 客户端启动  
+   2) 客户端启动  
 双击demo-async-client.exe  
  ![运行图](https://raw.githubusercontent.com/grpc-nebula/grpc-nebula/master/images/config7.2.2.png)  
 
@@ -796,12 +796,14 @@ zookeeper.host.server=XX：YY
 - B. 检查zookeeper digest 用户名和密码是否正确
 - C. 检查 服务端机器和zookeeper主机之间的网络连通
 
-###2.  调用失败
+### 2.  调用失败
 - A. 检查 服务端和客户端 之间网络连通。
 - B. 检查服务端是否在线。
 - C. 检查调用的服务名服务是否在线。
-###3.  更改过proto文件之后，注意修改代码中的命名空间。
-###4.  如果遇到编译通过而不能正确调用
+- 
+### 3.  更改过proto文件之后，注意修改代码中的命名空间。
+
+### 4.  如果遇到编译通过而不能正确调用
 - A．查看对应client文件里创建channel里服务名是否正确，服务名需跟proto一致
   channel = grpc::CreateChannel("zookeeper:///helloworld.Greeter", grpc::InsecureChannelCredentials());
 - B．查看server与client对应的proto文件是否一致，如果proto文件不一致是无完成调用的
