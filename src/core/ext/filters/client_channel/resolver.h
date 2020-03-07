@@ -104,13 +104,18 @@ class Resolver : public InternallyRefCountedWithTracing<Resolver> {
   GRPC_ABSTRACT_BASE_CLASS
 
   //----begin----
-  void set_hash(char* input) {
-    hasharg = input;
+
+  virtual void set_hash(char* input){};
+  virtual void set_meth_name(char* input){};
+  //virtual char* get_hash() const {};
+  //virtual char* get_meth_name(){};
+  /*void set_hash(char* input) {
+    hasharg = gpr_strdup(input);
   }
-  void set_meth_name(char* input) { method_name = input;}
+  void set_meth_name(char* input) { method_name = gpr_strdup(input); }
 
   char* get_hash() const { return hasharg; }
-  char* get_meth_name() const { return method_name; }
+  char* get_meth_name() const { return method_name; }*/
 
   virtual void Resetting() GRPC_ABSTRACT;
 
@@ -133,7 +138,6 @@ class Resolver : public InternallyRefCountedWithTracing<Resolver> {
 
   grpc_combiner* combiner() const { return combiner_; }
 
-
  private:
   static void ShutdownAndUnrefLocked(void* arg, grpc_error* ignored) {
     Resolver* resolver = static_cast<Resolver*>(arg);
@@ -143,8 +147,8 @@ class Resolver : public InternallyRefCountedWithTracing<Resolver> {
 
   grpc_combiner* combiner_;
   //----begin----
-  char* hasharg;
-  char* method_name;
+  //char* hasharg;
+  //char* method_name;
   //---- end ----
 };
 

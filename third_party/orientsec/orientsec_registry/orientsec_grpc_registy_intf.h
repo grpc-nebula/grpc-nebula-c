@@ -32,6 +32,24 @@
 extern "C" {
 #endif
 
+typedef enum { PUBLIC_REG = 0, PRIVATE_REG, HYBRID_REG} zookeeper_reg;
+
+// exposed for consumer select registry center
+// all used in internal module
+void orientsec_grpc_registry_zk_intf_init();
+
+void zk_prov_reg_init(char*);
+char* get_pub_reg_center();
+char* get_pri_reg_center();
+void write_pub_addr(char* addr, size_t size);
+void write_pri_addr(char* addr, size_t size);
+
+// for registry action check
+zookeeper_reg get_cons_reg_scheme();
+void set_cons_reg_scheme(zookeeper_reg sch);
+zookeeper_reg get_prov_reg_scheme();
+void set_prov_reg_scheme(zookeeper_reg sch);
+
 
 /**
 * 注册数据，比如：提供者地址，消费者地址，路由规则，覆盖规则，等数据。
@@ -91,14 +109,14 @@ void unsubscribe(url_t *url, registry_notify_f notify_f);
 * @return 已注册信息列表，可能为空，含义同
 *
 */
-url_t* lookup(url_t *url,int *nums);
+url_t* lookup(url_t *url,int *nums,int *pri);
 
 /**
 * 提取指定目录下的数据
 * @param path  zk节点下的路径
 * @return 数据
 */
-char* getData(const char *path);
+char* getData(const char* path);
 
 
 /**
@@ -110,7 +128,6 @@ void shutdown_registry();
 
 void consumer_providers_callback(url_t *urls, int url_num);
 
-//char * orientsec_grpc_consumer_register(const char *fullmethod);
 #ifdef __cplusplus
 }
 #endif

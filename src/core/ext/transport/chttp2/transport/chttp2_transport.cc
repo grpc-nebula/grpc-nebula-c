@@ -3210,7 +3210,10 @@ void grpc_chttp2_transport_start_reading(
   }
   t->notify_on_receive_settings = notify_on_receive_settings;
   GRPC_CLOSURE_SCHED(&t->read_action_locked, GRPC_ERROR_NONE);
-}//----begin----add by yang
+}
+
+//----begin----add by yang
+// obtain the client ip address from transport object
 void orientsec_grpc_get_client_ip(grpc_transport* transport, char* remote) {
   if (transport->client_ip == NULL) {
     return;

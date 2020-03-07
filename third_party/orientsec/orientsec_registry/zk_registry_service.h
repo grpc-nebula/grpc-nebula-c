@@ -39,9 +39,9 @@ void zk_unregiste(registry_service_args_t *param, url_t *url);
 void zk_subscribe(registry_service_args_t *param, url_t *url, registry_notify_f notify);
 void zk_unsubscribe(registry_service_args_t *param, url_t *url, registry_notify_f notify);
 void zk_lookup(registry_service_args_t *param, url_t *src, url_t **result, int *len);
-char* zk_getData(registry_service_args_t *param, char *path);
-void zk_stop(registry_service_args_t *param);
-void zk_destroy(registry_service_args_t *param);
+char* zk_getData(registry_service_args_t* param, char* path);
+void zk_stop(registry_service_args_t* param);
+void zk_destroy(registry_service_args_t* param);
 
 
 
@@ -49,19 +49,32 @@ void zk_destroy(registry_service_args_t *param);
 /**
 * 返回url对应注册中心服务路径，例如,/orientsec/com.orientsec.example.hello
 **/
-char *zk_get_service_path(url_t *url);
+//char *zk_get_service_path(url_t *url);
 
 /**
 *返回url对应注册中心的路径，到catogory为止，例如/orientsec/com.orientsec.example.hello/providers
 **/
-char *zk_get_category_path(url_t *url);
+//char *zk_get_category_path(url_t *url);
 
 /**
 *返回url对应的注册中心全路径，包括子节点节点名
 *
 **/
-char *zk_get_url_path(url_t *url);
+//char* zk_get_url_path(zk_connection_t* conn, url_t* url);
 extern int orientsec_stricmp(const char* a, const char* b);
+
+/**
+ * 设置节点是否创建成功标识
+ *
+ **/
+void zk_set_create_node_flag(bool);
+
+/**
+ * 获取节点是否创建成功标识
+ *
+ **/
+bool zk_get_create_node_flag();
+
 #ifdef __cplusplus
 }
 #endif

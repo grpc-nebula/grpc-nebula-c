@@ -136,7 +136,7 @@ enum StatusCode {
   DATA_LOSS = 15,
 
   //----begin---- addbyhuyn
-  /// Exceeding maximum requests
+  /// Exceeded maximum requests
   EXCEEDING_REQUESTS = 16,
   //-----end-----
 

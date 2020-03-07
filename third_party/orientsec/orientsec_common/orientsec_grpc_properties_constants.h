@@ -39,6 +39,9 @@ extern "C" {
 #define ORIENTSEC_GRPC_PROPERTIES_COMMON_OWNER_DEFAULT "A0000"
 
 #define ORIENTSEC_GRPC_PROPERTIES_COMMON_LOCALHOST_IP "common.localhost.ip"
+ // add for nominal ip and port for provider
+#define ORIENTSEC_GRPC_PROPERTIES_COMMON_SERVICE_IP "common.service.ip"
+#define ORIENTSEC_GRPC_PROPERTIES_COMMON_SERVICE_PORT "common.service.port"
 
 #define ORIENTSEC_GRPC_PROPERTIES_P_VERSION "provider.version"
 #define ORIENTSEC_GRPC_PROPERTIES_P_SIDE "provider.side"
@@ -88,10 +91,18 @@ extern "C" {
 // add by yang
 #define ORIENTSEC_GRPC_PROPERTIES_C_CONSISTENT_HASH_ARG \
   "consumer.consistent.hash.arguments"
+// # 可选, 类型integer, 缺省值5, 
+// # 说明：连续多少次请求出错，自动切换到提供相同服务的新服务器
 #define ORIENTSEC_GRPC_PROPERTIES_C_CONSUMER_SWITH_THRES \
   "consumer.switchover.threshold"
-#define ORIENTSEC_GRPC_PROPERTIES_C_CONSUMER_PUNISH_TIME \
-  "consumer.unavailable.provider.punish.time"
+// # 可选，类型int，说明：服务端节点调用失败被移除请求列表后，经过多长时间将该服务端节点重新添加回服务端候选列表
+// # 单位毫秒，默认值600000，即600秒，即10分钟
+#define ORIENTSEC_GRPC_PROPERTIES_C_CONSUMER_SERVICE_RECOVERY \
+  "consumer.service.recoveryMilliseconds"
+
+//# 可选，默认int，缺省值10，单位分钟，说明：负载均衡模式为connection时，设置连接自动切换的时间
+#define ORIENTSEC_GRPC_PROPERTIES_C_CONSUMER_CONNECTION_SWITCH_TIME \
+"consumer.loadbalance.connection.switchTime"
 
 
 #ifdef __cplusplus

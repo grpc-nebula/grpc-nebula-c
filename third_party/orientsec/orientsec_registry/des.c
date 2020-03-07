@@ -23,6 +23,7 @@
  */
 #include "des.h"
 #include "stdint.h"
+#include "stdio.h"
 
 ////≥ı º÷√ªª±ÌIP  
 //int IP_Table[64] = { 58, 50, 42, 34, 26, 18, 10, 2, 60, 52, 44, 36, 28, 20, 12, 4,
@@ -543,11 +544,11 @@ int DES_DecryptFile(char *cipherFile, char *keyStr, char *plainFile) {
 char* DES_Encrypt(char *sourceData, int sourceSize, char *keyStr, int *resultSize) {
 
 	char *destData = 0;
-	int destSize = sourceSize;
-	if (destSize % 8 != 0)
-		destSize += (8 - (destSize % 8));
-	destData = (char*)malloc(destSize);
-	*resultSize = destSize;
+	int dest_size = sourceSize;
+	if (dest_size % 8 != 0)
+		dest_size += (8 - (dest_size % 8));
+	destData = (char*)malloc(dest_size);
+	*resultSize = dest_size;
 
 	
 	char sourceBlock[8], destBlock[8], keyBlock[8];

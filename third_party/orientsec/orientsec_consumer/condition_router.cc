@@ -148,7 +148,9 @@ std::map<std::string, std::string> url_to_map(url_t *url) {
 	}
 	for (size_t i = 0; i < url->params_num; i++)
 	{
-		result.insert(std::pair<std::string, std::string>(url->parameters[i].key, url->parameters[i].value));
+          // fix value = null error
+          if (url->parameters[i].value)
+	    result.insert(std::pair<std::string, std::string>(url->parameters[i].key, url->parameters[i].value));
 	}
 	return result;
 }
@@ -289,6 +291,7 @@ int condition_router::route(provider_t* providers, url_t *url_param) {
 	}
 		
 	//校验定义的规则对改客户端是否有效
+        // 无效直接返回，有效在下面设置黑白名单
 	if (!match_when(url_param))
 	{
 		return 0;
@@ -346,26 +349,52 @@ bool condition_router::match_when(url_t* url) {
 	if (when_condition.size() == 0) {
 		return true;// 如果匹配条件为空，表示对所有消费方应用
 	}
-	return match_condition(when_condition, url, NULL);
+        bool ret;
+	ret= match_condition(when_condition, url, NULL);
+        return ret;
 }
 
+// url: provider param : consumer
 bool condition_router::match_then(url_t* url, url_t* param) {
-	return match_condition(then_condition, url, param);
+  bool ret_then;
+	//return match_condition(then_condition, url, param);
+  ret_then= match_condition(then_condition, url, param);
+  return ret_then;
 }
 
 bool condition_router::match_condition(std::map<std::string, match_pair> condition, url_t* url, url_t* param) {
 	std::map<std::string, std::string> sample = url_to_map(url);
 	std::map<std::string, std::string>::iterator samp_iter;
 	std::map<std::string, match_pair>::iterator cond_iter;
+        std::vector<int> result;
+        int multi = 0;
+        bool match = false;
 	for (samp_iter = sample.begin(); samp_iter != sample.end(); samp_iter++) {
 		cond_iter = condition.find(samp_iter->first);
 		if (cond_iter != condition.end())
 		{
-			match_pair &pair = cond_iter->second;
-			if (!pair.is_match(samp_iter->second, param)) {
-				return false;
-			}
+		  match_pair &pair = cond_iter->second;
+                  match = pair.is_match(samp_iter->second, param);
+                  //if (param == NULL) {
+                  //  if (match) {
+                  //    result.push_back(1);
+                  //  } else {
+                  //    return false;
+                  //  }
+                  //} else {
+                  //  if (!match) {
+                  //      return false;
+                  //  }
+                  //}
+	           if (!match) {
+                      return false;
+	           }
 		}
 	}
+        if (result.size() > 0) {
+          for (auto it = result.begin(); it != result.end(); it++) multi += *it;
+          if (multi != result.size()) return false;
+        }
+       
 	return true;
 }

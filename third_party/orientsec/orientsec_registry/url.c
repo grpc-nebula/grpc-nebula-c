@@ -92,9 +92,11 @@ int url_parse_v2(char *url_data, url_t *pUrl) {
 	char *paramStart = NULL;
 	char *pHold = NULL;
 	char *pToken = NULL;
+        //char* ptemp = NULL;
 	char cParamDelimiter = '&';
 	char cKVDelimiter = '=';
 	char *p = NULL;
+        //char* cpstr = NULL;
 	char buf[2048];
 	int i = 0;
 	if (!pUrl || !url_data)
@@ -117,7 +119,17 @@ int url_parse_v2(char *url_data, url_t *pUrl) {
 		{
 			memset(buf, 0, 2048);
 			snprintf(buf, pToken - paramStart + 1, "%s", paramStart);
-			p = strchr(buf, '=');
+                        p = strchr(buf, '=');
+                        //cpstr = copystr(buf, p);
+                        //if (strcmp(cpstr, "rule") == 0) {
+                        //  ptemp = strchr(paramStart, '>');
+                        //  pToken = strchr(ptemp, '&');
+                        //  memset(buf, 0, 2048);
+                        //  snprintf(buf, pToken - paramStart + 1, "%s",
+                        //           paramStart);
+                        //  //paramStart = ptemp;
+                        //}
+                        //free(cpstr);
 			if (p)
 			{
 				pUrl->parameters[i].key = copystr(buf, p);
@@ -422,7 +434,8 @@ int url_update_parameter(url_t *url, char *key, char *value) {
 
 char *url_get_paramter_decode(url_t *url, char *key, char *prefix) {
 	char *buf = url_get_parameter(url, key, prefix);
-	if (buf == NULL)return;
+	if (buf == NULL) 
+          return NULL;
 	size_t len = strlen(buf);
 	if (buf && len > 0)
 	{
@@ -433,6 +446,7 @@ char *url_get_paramter_decode(url_t *url, char *key, char *prefix) {
 			return buf_decode;
 		}
 	}
+        FREE_PTR(buf);
 	return NULL;
 }
 
@@ -853,14 +867,15 @@ bool isMatch(url_t *p1, url_t *p2) {
 	version1 = url_get_parameter_v2(p1, ORIENTSEC_GRPC_REGISTRY_KEY_VERSION, NULL);
 	version2 = url_get_parameter_v2(p2, ORIENTSEC_GRPC_REGISTRY_KEY_VERSION, NULL);
 
-	if ((!version1 && version2) ||
-		(version1 && version2 && (0 != strcmp(version1, version2))))
+	if (!version1 && version2)
+		//(version1 && version2 && (0 != strcmp(version1, version2))))
 	{
 		return false;
 	}
 
-	group1 = url_get_parameter_v2(p1, ORIENTSEC_GRPC_REGISTRY_KEY_GROUP, NULL);
-	group2 = url_get_parameter_v2(p2, ORIENTSEC_GRPC_REGISTRY_KEY_GROUP, NULL);
+	group1 = url_get_parameter_v2(p1, ORIENTSEC_GRPC_REGISTRY_KEY_GROUP, NULL); //provider
+    // consumer key changed Dec.4th
+    group2 = url_get_parameter_v2(p2, ORIENTSEC_GRPC_REGISTRY_KEY_INVOKE_GROUP, NULL);
 	if ((!group1 && group2) ||
 		(group1 && group2 && (0 != strcmp(group1, group2))))
 	{

@@ -55,6 +55,7 @@ extern "C" {
 //可选, 类型string, 说明 : 服务注册根路径，默认值 / Application / grpc
 #define ORIENTSEC_GRPC_CONF_COMMON_ROOT_DIRECTORY "common.root"
 #define ORIENTSEC_GRPC_CONF_COMMON_ROOT_DIRECTORY_DEFAULT "/Application/grpc"
+#define ORIENTSEC_GRPC_ZK_PRIVATE_ROOT "zookeeper.private.root"
 // ------------ end of common config ------------
 
 
@@ -201,39 +202,17 @@ extern "C" {
 //可选, 类型string, 缺省值为空，说明 : 表示当前客户端服务器属于某个分组
 //使用场合：服务分组功能
 #define ORIENTSEC_GRPC_CONF_CONSUMER_GROUP "consumer.group"
-// conf文件 consumer.group默认值
+#define ORIENTSEC_GRPC_CONF_CONSUMER_INVOKE_GROUP "consumer.invoke.group"
+// conf文件 consumer.invoke.group默认值
 #define ORIENTSEC_GRPC_CONF_CONSUMER_GROUP_DEFAULT ""
 
 // ------------ end of consumer config ------------
 
-// ------------ begin of zookeeper config ------------
-
-// zookeeper主机列表
-//zookeeper.host.server = 192.168.207.4:2181, 192.168.207.6 : 2181
-#define ORIENTSEC_GRPC_CONF_ZOOKEEPER_HOST_SERVER "zookeeper.host.server"
-
-//重试次数
-#define ORIENTSEC_GRPC_CONF_ZOOKEEPER_RETRYNUM "zookeeper.retryNum"
-
-//连接超时时间
-#define ORIENTSEC_GRPC_CONF_ZOOKEEPER_CONNECTIONTIMEOUT "zookeeper.connectiontimeout"
-
-// ------------ end of zookeeper config ------------
-
-
-//--------------------begin switch----------------------
-//标记是否需要生成服务跟踪信息，默认值为 true即需要生成服务跟踪信息
-//生成服务跟踪信息，表示会服务跟踪信息写入链表，至于是否发送kafka由另外的开关进行控制
-#define ORIENTSEC_GRPC_TRACE_GENTRACE_KEY "gentrace.enabled"
-
-//可选, 类型boolean, 说明:是否启用向kafka写日志的功能
-//# true表示启用，缺省值为true，开发阶段可以配置为false，上线阶段注释掉该配置项
-#define ORIENTSEC_GRPC_TRACE_WRITEKAFKA_KEY "writekafka.enabled"
-
-//---------------------end switch-----------------------
-
-//consumer端缓存provider的最大数量默认值10
+//consumer端缓存provider的最大数量默认值32
 #define ORIENTSEC_GRPC_CACHE_PROVIDER_COUNT "consumer.cache.provider.count"
+
+//可选, 类型string, 说明：该参数用来手动指定提供服务的服务器地址列表。
+#define ORIENTSEC_GRPC_CONF_SERVICE_SERVER_LIST  "service.server.list"
 
 #ifdef __cplusplus
 }

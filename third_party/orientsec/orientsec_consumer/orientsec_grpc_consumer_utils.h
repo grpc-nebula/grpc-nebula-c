@@ -39,15 +39,24 @@ extern "C" {
 #endif	
 
 //拼接生成consumer注册所需的字符串。
-char *orientsec_grpc_consumer_url(const char *service_name);
+char *orientsec_grpc_consumer_url(const char *service_name,const char* frame_name);
 
 
 bool is_match_glob_pattern(std::string pattern, std::string value, url_t* param);
 
 bool is_match_glob_pattern2(std::string pattern, std::string value);
 
-//判断provider是否处于非法状态，例如处于黑名单或者此前出现过连接失败，非法状态返回true
+// 判断provider是否处于非法状态，例如处于黑名单或者此前出现过连接失败，非法状态返回true
 bool is_provider_invalid(provider_t* provider);
+
+// 获得基于服务名的分组信息
+char* obtain_invoke_group_based_service(const char* service_name);
+
+// 获得基于服务名或者方法名的重试次数
+int obtain_retries_based_service_or_method(const char* service_name,const char* method_name);
+
+// 获得基于服务名的指定的访问服务端列表
+char* obtain_appointed_provider_list(const char* service_name);
 
 #ifdef __cplusplus
 }

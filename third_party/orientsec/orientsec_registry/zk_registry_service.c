@@ -18,20 +18,16 @@
 /*
  *    Author : heiden deng(dengjianquan@beyondcent.com)
  *    2017/05/15
- *    version 0.9
+ *    version 1.0
  *    zookeeper服务注册操作函数实现
+ *    Modified: Jianbin Yang
  */
 
-#include "orientsec_grpc_utils.h"
-#include "registry_utils.h"
 #include "zk_registry_service.h"
-#include"registry_contants.h"
-#include "orientsec_grpc_properties_tools.h"
-#include <string.h>
-#include <grpc/support/log.h>
 #include <grpc/support/alloc.h>
 #include <grpc/support/log.h>
 #include <grpc/support/sync.h>
+#include <limits.h>
 #include <src/core/lib/gpr/spinlock.h>
 #include <src/core/lib/gpr/string.h>
 #include <string.h>
@@ -44,11 +40,10 @@
 #include "zookeeper.jute.h"
 
 //----begin---add for encryption by jianbin
-#include "sha1.h"    //zookeeper 加密算法
 #include "base64.h"  //zookeeper 加密算法
 #include "des.h"     //读取配置文件中密文字符并解析出明文
+#include "sha1.h"    //zookeeper 加密算法
 //----end----
-
 
 //每个url对应的订阅函数列表（监听器列表，当url下的子节点变化时，函数列表会被调用）
 typedef struct _zk_notify_node zk_notify_node;
@@ -81,7 +76,7 @@ typedef struct _zk_registy_url_node zk_registy_url_node;
 struct _zk_registy_url_node {
   gpr_mu mu;
   gpr_spinlock checker_registry_mu;
-  char* urlStr;
+  char* url_str;
   zk_registy_url_node* next;
   int live;  //是否有效，0： 有效，非0：已设置为删除，等待被删除
 };
@@ -95,7 +90,7 @@ typedef enum _zk_connect_state {
   ZK_LOSTING,           //正在丢失连接
   ZK_RECONNECTING,      //正在重连
   ZK_RECONNECTED,       //闪断重连已成功
-  ZK_MANU_RECONNECTED,  //闪断重连已成功
+  ZK_MANU_RECONNECTED,  //手动重连已成功 manual
   ZK_MANU_CLOSED,       //手动关闭连接
   ZK_DISCONNECTED       //断开连接
 } zk_connect_state;
@@ -108,15 +103,15 @@ typedef enum _zk_connect_state {
 //每建立一个zk连接，生成一个如下结构对象，
 typedef struct _zk_connection_t zk_connection_t;
 struct _zk_connection_t {
-  zhandle_t* zh;                                 // zk连接句柄
+  zhandle_t* zh;  // zk连接句柄
   clientid_t* clientid;
-  zk_listener_node* listener_list_head;          //该连接上的订阅链表
-  char zk_address[ORIENTSEC_GRPC_URL_MAX_LEN];   // zk连接地址
+  zk_listener_node* listener_list_head;         //该连接上的订阅链表
+  char zk_address[ORIENTSEC_GRPC_URL_MAX_LEN];  // zk连接地址
   // zk_acl* acl_info;
   zk_connection_t* next;
-  zk_connect_state connecte_state;               // zk连接状态
-  zk_registy_url_node* url_list_head;            //注册的url链表
-  int reconnectCount;                            //重连次数
+  zk_connect_state connect_state;      // zk连接状态
+  zk_registy_url_node* url_list_head;  //注册的url链表
+  int reconnect_count;                 //重连次数
 };
 #define zk_connection_t_len (sizeof(struct _zk_connection_t))
 
@@ -125,9 +120,21 @@ static zk_connection_t zk_connection_list_head = {NULL, 0,       NULL, "",
 static zk_connection_t* p_zk_connection_list_head = &zk_connection_list_head;
 
 // zookeeper acl name and passwd
-static char zk_acl_name[256] = {0};
-static char zk_acl_pwd[256] = {0};
+#define ACL_LENGTH 256
+static char zk_acl_name[ACL_LENGTH] = {0};
+static char zk_acl_pwd[ACL_LENGTH] = {0};
 static bool g_acl_flag = false;
+
+static char zk_pri_acl_name[ACL_LENGTH] = {0};
+static char zk_pri_acl_pwd[ACL_LENGTH] = {0};
+static bool g_pri_acl_flag = false;
+
+static bool g_create_node_success = true;
+
+extern char* g_orientsec_grpc_common_root_directory;
+extern char* g_orientsec_grpc_private_common_root_directory;
+// flag of public zk center or private
+bool is_public = true;
 
 /* Protects listener_queue */
 static gpr_mu g_conn_mu;
@@ -135,11 +142,26 @@ static gpr_mu g_conn_mu;
 static gpr_spinlock g_checker_conn_mu = GPR_SPINLOCK_STATIC_INITIALIZER;
 
 static bool g_initialized = false;
+// 存储最大的连接重试次数，最大2147483647
+static int conn_retry_times = INT_MAX;
 
+// fix memory error
+static char zk_public[ORIENTSEC_GRPC_PROPERTY_VALUE_MAX_LEN] = {0};
+static char zk_private[ORIENTSEC_GRPC_PROPERTY_VALUE_MAX_LEN] = {0};
+
+void write_pub_addr(char* addr, size_t size) {
+  strncpy(zk_public, addr, size);
+  return;
+}
+
+void write_pri_addr(char* addr, size_t size) {
+  strncpy(zk_private, addr, size);
+  return;
+}
 bool isZkConnected(zk_connection_t* conn) {
-  if (conn && ((ZK_CONNECTED == conn->connecte_state) ||
-               (ZK_RECONNECTED == conn->connecte_state) ||
-               (ZK_MANU_RECONNECTED == conn->connecte_state))) {
+  if (conn && ((ZK_CONNECTED == conn->connect_state) ||
+               (ZK_RECONNECTED == conn->connect_state) ||
+               (ZK_MANU_RECONNECTED == conn->connect_state))) {
     return true;
   }
   return false;
@@ -155,9 +177,9 @@ zk_registy_url_node* new_zk_registy_url_node(url_t* url, bool bHead) {
       new_node->checker_registry_mu = GPR_SPINLOCK_INITIALIZER;
     }
     new_node->live = 0;
-    new_node->urlStr = NULL;
+    new_node->url_str = NULL;
     if (url != NULL) {
-      new_node->urlStr = url_to_string(url);
+      new_node->url_str = url_to_string(url);
     }
     new_node->next = NULL;
   } else {
@@ -170,21 +192,21 @@ zk_registy_url_node* new_zk_registy_url_node(url_t* url, bool bHead) {
 zk_registy_url_node* lookup_registry_url_node(zk_connection_t* conn,
                                               url_t* url) {
   zk_registy_url_node* p = NULL;
-  char* urlStr = NULL;
+  char* url_str = NULL;
   if (!conn || !url) {
     return NULL;
   }
   if (gpr_spinlock_trylock(&conn->url_list_head->checker_registry_mu)) {
     gpr_mu_lock(&conn->url_list_head->mu);
     p = conn->url_list_head->next;
-    urlStr = url_to_string(url);
+    url_str = url_to_string(url);
     while (p) {
-      if (0 == strcmp(urlStr, p->urlStr)) {
+      if (0 == strcmp(url_str, p->url_str)) {
         break;
       }
       p = p->next;
     }
-    FREE_PTR(urlStr);
+    FREE_PTR(url_str);
     gpr_mu_unlock(&conn->url_list_head->mu);
     gpr_spinlock_unlock(&conn->url_list_head->checker_registry_mu);
   }
@@ -219,7 +241,7 @@ zk_registy_url_node* get_registry_url_node(zk_connection_t* conn, url_t* url) {
 //删除某连接上的url链表节点
 void remove_registry_url_node(zk_connection_t* conn, url_t* url) {
   zk_registy_url_node *p = NULL, *p1 = NULL;
-  char* urlStr = url_to_string(url);
+  char* url_str = url_to_string(url);
   if (!conn || !url) {
     return;
   }
@@ -227,18 +249,18 @@ void remove_registry_url_node(zk_connection_t* conn, url_t* url) {
   p1 = p->next;
 
   while (p1) {
-    if (0 == strcmp(p1->urlStr, urlStr)) {
+    if (0 == strcmp(p1->url_str, url_str)) {
       if (gpr_spinlock_trylock(&conn->url_list_head->checker_registry_mu)) {
         gpr_mu_lock(&conn->url_list_head->mu);
 
         p->next = p1->next;
-        FREE_PTR(p1->urlStr);
+        FREE_PTR(p1->url_str);
         FREE_PTR(p1);
 
         gpr_mu_unlock(&conn->url_list_head->mu);
         gpr_spinlock_unlock(&conn->url_list_head->checker_registry_mu);
       }
-      FREE_PTR(urlStr);
+      FREE_PTR(url_str);
       return;
     }
     p = p1;
@@ -382,8 +404,9 @@ zk_listener_node* add_zk_listener_list_node(zk_connection_t* conn, char* url) {
     new_node = new_zk_listener_node(false);
     if (new_node) {
       url_len = strlen(url);
-      url_len = (url_len >= ORIENTSEC_GRPC_URL_MAX_LEN) ? (ORIENTSEC_GRPC_URL_MAX_LEN - 1)
-                                                   : url_len;
+      url_len = (url_len >= ORIENTSEC_GRPC_URL_MAX_LEN)
+                    ? (ORIENTSEC_GRPC_URL_MAX_LEN - 1)
+                    : url_len;
       snprintf(new_node->url_full_string, url_len + 1, "%s", url);
       new_node->next = conn->listener_list_head->next;
       conn->listener_list_head->next = new_node;
@@ -490,15 +513,16 @@ zk_connection_t* zk_connection_t_new(char* address) {
     new_node->next = NULL;
     new_node->zk_address[0] = '\0';
     // new_node->acl_info = 0;
-    new_node->connecte_state = ZK_INIT;
+    new_node->connect_state = ZK_INIT;
     new_node->url_list_head = new_zk_registy_url_node(NULL, true);
     new_node->listener_list_head = new_zk_listener_node(true);
-    new_node->reconnectCount = 0;
+    new_node->reconnect_count = 0;
     if (address) {
       address_len = strlen(address);
       snprintf(new_node->zk_address,
-               address_len > ORIENTSEC_GRPC_URL_MAX_LEN ? ORIENTSEC_GRPC_URL_MAX_LEN
-                                                   : address_len + 1,
+               address_len > ORIENTSEC_GRPC_URL_MAX_LEN
+                   ? ORIENTSEC_GRPC_URL_MAX_LEN
+                   : address_len + 1,
                "%s", address);
     }
   } else {
@@ -615,7 +639,7 @@ void release_zk_conneciton(zk_connection_t* conn) {
         registry_url_node_0 = registry_url_node->next;
         while (registry_url_node_0) {
           registry_url_node->next = registry_url_node_0->next;
-          FREE_PTR(registry_url_node_0->urlStr);
+          FREE_PTR(registry_url_node_0->url_str);
           FREE_PTR(registry_url_node_0);
           registry_url_node_0 = registry_url_node->next;
         }
@@ -632,28 +656,40 @@ void release_zk_conneciton(zk_connection_t* conn) {
   }
 }
 
-extern char* g_orientsec_grpc_common_root_directory;
-char* zk_get_service_path(url_t* url) {
+char* zk_get_service_path(zk_connection_t* conn, url_t* url) {
   char* intf = url_get_service_interface(url);
   int intf_len = strlen(intf);
-  int root_len = strlen(ORIENTSEC_GRPC_REGISTRY_ROOT);
+  int root_len = 0;
+ 
   int sep_len = strlen(ORIENTSEC_GRPC_REGISTRY_SEPARATOR);
   char* buf = NULL;
   if (!url || !intf) {
     gpr_log(GPR_ERROR, "[zk_get_service_path] url is null or url.intf is null");
     return NULL;
   }
-  buf = (char*)malloc(sizeof(char) * (root_len + sep_len + intf_len + 1));
-  if (buf) {
+  if (0 == strcmp(conn->zk_address, zk_public)) {
+    root_len = strlen(g_orientsec_grpc_common_root_directory);
+    buf = (char*)malloc(sizeof(char) * (root_len + sep_len + intf_len + 1));
     snprintf(buf, (root_len + sep_len + intf_len + 1), "%s%s%s",
-             ORIENTSEC_GRPC_REGISTRY_ROOT, ORIENTSEC_GRPC_REGISTRY_SEPARATOR, intf);
-  }
+             g_orientsec_grpc_common_root_directory,
+             ORIENTSEC_GRPC_REGISTRY_SEPARATOR, intf);
+  } else if (0 == strcmp(conn->zk_address, zk_private)) {
+    root_len = strlen(g_orientsec_grpc_private_common_root_directory);
+    buf = (char*)malloc(sizeof(char) * (root_len + sep_len + intf_len + 1));
+    snprintf(buf, (root_len + sep_len + intf_len + 1), "%s%s%s",
+             g_orientsec_grpc_private_common_root_directory,
+             ORIENTSEC_GRPC_REGISTRY_SEPARATOR, intf);
+  } else {
+    buf = (char*)malloc(sizeof(char) * (root_len + sep_len + intf_len + 1));
+    printf("can not find the corresponding zk register center.");
+  } 
+  
   FREE_PTR(intf);
   return buf;
 }
 
-char* zk_get_category_path(url_t* url) {
-  char* svc = zk_get_service_path(url);
+char* zk_get_category_path(zk_connection_t* conn, url_t* url) {
+  char* svc = zk_get_service_path(conn, url);
   int sep_len = strlen(ORIENTSEC_GRPC_REGISTRY_SEPARATOR);
   int svc_len = strlen(svc);
   char* buf = NULL;
@@ -677,8 +713,8 @@ char* zk_get_category_path(url_t* url) {
 }
 
 // get url and url encode
-char* zk_get_url_path(url_t* url) {
-  char* categoryPath = zk_get_category_path(url);
+char* zk_get_url_path(zk_connection_t* conn, url_t* url) {
+  char* category_path = zk_get_category_path(conn, url);
   char* url_string = url_to_string(url);
   char* url_encode_string = url_encode(url_string);
   char* buf = NULL;
@@ -686,8 +722,8 @@ char* zk_get_url_path(url_t* url) {
   int category_len = 0;
   size_t url_encode_string_len = 0;
   int sep_len = strlen(ORIENTSEC_GRPC_REGISTRY_SEPARATOR);
-  if (!categoryPath || !url_string || !url_encode_string) {
-    FREE_PTR(categoryPath);
+  if (!category_path || !url_string || !url_encode_string) {
+    FREE_PTR(category_path);
     FREE_PTR(url_string);
     FREE_PTR(url_encode_string);
     gpr_log(
@@ -695,37 +731,36 @@ char* zk_get_url_path(url_t* url) {
         "[zk_get_url_path] category path is null or convert to string failed");
     return NULL;
   }
-  category_len = strlen(categoryPath);
+  category_len = strlen(category_path);
   url_encode_string_len = strlen(url_encode_string);
   buf_len = category_len + sep_len + url_encode_string_len;
   buf = (char*)gpr_zalloc(buf_len + 1);
   if (!buf) {
-    FREE_PTR(categoryPath);
+    FREE_PTR(category_path);
     FREE_PTR(url_string);
     FREE_PTR(url_encode_string);
     gpr_log(GPR_ERROR, "[zk_get_url_path] alloc buffer failed");
     return NULL;
   }
-  snprintf(buf, buf_len + 1, "%s%s%s", categoryPath,
+  snprintf(buf, buf_len + 1, "%s%s%s", category_path,
            ORIENTSEC_GRPC_REGISTRY_SEPARATOR, url_encode_string);
 
-  FREE_PTR(categoryPath);
+  FREE_PTR(category_path);
   FREE_PTR(url_string);
   FREE_PTR(url_encode_string);
   return buf;
 }
 
-//DES algorithm decrypt
-static char* get_des_plain(char* sourceData){
-
+// DES algorithm decrypt
+static char* get_des_plain(char* sourceData) {
   uint8_t mi[32] = {0};
-  int destSize;
-  char* pKey = "OrientZQ";
+  int dest_size;
+  char* p_key = "OrientZQ";
   char key[8];
   StrToHex(mi, sourceData, 16);
-  memcpy(key, pKey, 8);
-  int sourceSize = strlen(sourceData)/2;
-  char* dest = DES_Decrypt(mi, sourceSize, key, &destSize);
+  memcpy(key, p_key, 8);
+  int sourceSize = strlen(sourceData) / 2;
+  char* dest = DES_Decrypt(mi, sourceSize, key, &dest_size);
   return dest;
 }
 
@@ -733,42 +768,68 @@ static char* get_des_plain(char* sourceData){
 static void get_acl_info() {
   bool user_flag = false;
   bool pwd_flag = false;
-  char zk_acl_pwd_enc[256] = {0};
+  char zk_acl_pwd_enc[ACL_LENGTH] = {0};
   const char* pwd = NULL;
 
-  if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_ZK_ACL_USERNAME, NULL,
-                                          zk_acl_name)) {
+  bool user_pri_flag = false;
+  bool pwd_pri_flag = false;
+  char zk_pri_acl_pwd_enc[ACL_LENGTH] = {0};
+  const char* pri_pwd = NULL;
+
+  if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_ZK_ACL_USERNAME,
+                                               NULL, zk_acl_name)) {
     if (zk_acl_name == NULL || strlen(zk_acl_name) == 0) {
       user_flag = false;
     } else {
       user_flag = true;
     }
   }
-  if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_ZK_ACL_PASSWORD, NULL,
-                                          zk_acl_pwd_enc)) {
+  if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_ZK_ACL_PASSWORD,
+                                               NULL, zk_acl_pwd_enc)) {
     if (zk_acl_pwd_enc == NULL || strlen(zk_acl_pwd_enc) == 0) {
       pwd_flag = false;
     } else {
       pwd_flag = true;
       pwd = get_des_plain(zk_acl_pwd_enc);
       strncpy(zk_acl_pwd, pwd, strlen(pwd) + 1);
-
+    }
+  }
+  if (0 == orientsec_grpc_properties_get_value(
+               ORIENTSEC_GRPC_ZK_PRIVATE_ACL_USERNAME, NULL, zk_pri_acl_name)) {
+    if (zk_pri_acl_name == NULL || strlen(zk_pri_acl_name) == 0) {
+      user_pri_flag = false;
+    } else {
+      user_pri_flag = true;
+    }
+  }
+  if (0 ==
+      orientsec_grpc_properties_get_value(
+          ORIENTSEC_GRPC_ZK_PRIVATE_ACL_PASSWORD, NULL, zk_pri_acl_pwd_enc)) {
+    if (zk_pri_acl_pwd_enc == NULL || strlen(zk_pri_acl_pwd_enc) == 0) {
+      pwd_pri_flag = false;
+    } else {
+      pwd_pri_flag = true;
+      pri_pwd = get_des_plain(zk_pri_acl_pwd_enc);
+      strncpy(zk_pri_acl_pwd, pri_pwd, strlen(pri_pwd) + 1);
     }
   }
 
   if (user_flag && pwd_flag) {
-    g_acl_flag = true;    //设置全局acl开关，用于判断acl是否开启
+    g_acl_flag = true;  //设置全局公有注册中心acl开关，用于判断acl是否开启
+  }
+
+  if (user_pri_flag && pwd_pri_flag) {
+    g_pri_acl_flag = true;  //设置全局私有注册中心acl开关，用于判断acl是否开启
   }
 }
 
-char szUserPwd[ORIENTSEC_GRPC_PROPERTY_VALUE_MAX_LEN] = {0};
+char user_pwd[ORIENTSEC_GRPC_PROPERTY_VALUE_MAX_LEN] = {0};
 //拼接 name 和 pwd
 char* combine_name_pwd(char* name, char* pwd, size_t* len) {
-  
-  snprintf(szUserPwd, strlen(name) + strlen(pwd) + 2, "%s:%s", name, pwd);
-  *len = strlen(szUserPwd);
+  snprintf(user_pwd, strlen(name) + strlen(pwd) + 2, "%s:%s", name, pwd);
+  *len = strlen(user_pwd);
 
-  return szUserPwd;
+  return user_pwd;
 }
 
 //加密算法
@@ -782,18 +843,25 @@ char* encrypt(char* plain, size_t len) {
   return base64_encode(result, size);
 }
 // ACL参数设置
-static char* get_acl_param() {
+static char* get_acl_param(bool is_pub) {
   //加密user:pwd，使用base64(sha1(username:password))
   size_t length = 0;
-  char* szEncUserPwd = NULL;  // 28 byte
-  char szDigestIds[64] = {0};
+  char* enc_user_pwd = NULL;  // 28 byte
+  // char digest_id[64] = {0};
+  char* digest_id = (char*)malloc(64 * sizeof(char));
+  if (is_pub) {
+    enc_user_pwd =
+        encrypt(combine_name_pwd(zk_acl_name, zk_acl_pwd, &length), length);
+    snprintf(digest_id, strlen(zk_acl_name) + strlen(enc_user_pwd) + 2, "%s:%s",
+             zk_acl_name, enc_user_pwd);
+  } else {
+    enc_user_pwd = encrypt(
+        combine_name_pwd(zk_pri_acl_name, zk_pri_acl_pwd, &length), length);
+    snprintf(digest_id, strlen(zk_pri_acl_name) + strlen(enc_user_pwd) + 2,
+             "%s:%s", zk_pri_acl_name, enc_user_pwd);
+  }
 
-  szEncUserPwd =
-      encrypt(combine_name_pwd(zk_acl_name, zk_acl_pwd, &length), length);
-
-  snprintf(szDigestIds, sizeof(szDigestIds), "%s:%s", zk_acl_name,
-           szEncUserPwd);
-  return (char*)szDigestIds;
+  return digest_id;
 }
 
 //在zookeeper 上创建节点
@@ -805,93 +873,203 @@ void zk_create_node(zk_connection_t* conn, char* path, bool dynamic) {
   if (!path || 0 == strlen(path)) {
     return;
   }
-  int root_len = strlen(ORIENTSEC_GRPC_REGISTRY_ROOT);
-  // 对于root，不能acl注册
-  if (root_len >= strlen(path)) {
+
+  if (0 == strcmp(conn->zk_address, zk_public)) {
+    //公有注册中心
+    int root_len = strlen(g_orientsec_grpc_common_root_directory);
+    // 对于root，不能acl注册
+    if (root_len >= strlen(path)) {
+      p = strrchr(path, '/');
+      if (p) {
+        snprintf(buf, p - path + 1, "%s", path);
+        zk_create_node(conn, buf, false);
+      }
+
+      if (dynamic) {
+        ret = zoo_create(zkhandle, path, NULL, -1, &ZOO_OPEN_ACL_UNSAFE,
+                         ZOO_EPHEMERAL, NULL, 0);
+      } else {
+        ret = zoo_create(zkhandle, path, NULL, -1, &ZOO_OPEN_ACL_UNSAFE, 0,
+                         NULL, 0);
+      }
+      if (ZOK == ret) {
+        gpr_log(GPR_INFO, "create root node success[%s]", path);
+      } else if (ZNODEEXISTS == ret) {
+        gpr_log(GPR_INFO, "root node %s exists", path);
+      } else {
+        gpr_log(GPR_ERROR,
+                "create root node faild[%s],reason=[%s],error code=%d", path,
+                zerror(ret), ret);
+      }
+      return;
+    }
     p = strrchr(path, '/');
     if (p) {
       snprintf(buf, p - path + 1, "%s", path);
       zk_create_node(conn, buf, false);
     }
 
-    if (dynamic) {
-      ret = zoo_create(zkhandle, path, NULL, -1, &ZOO_OPEN_ACL_UNSAFE,
-                        ZOO_EPHEMERAL, NULL, 0);
-    } else {
-      ret = zoo_create(zkhandle, path, NULL, -1, &ZOO_OPEN_ACL_UNSAFE, 0,
-                        NULL, 0);
+    if (g_acl_flag) {
+      // 1.create ACL \ZOO_CREATOR_ALL_ACL
+      // 2.zoo_add_auth 应用程序使用zoo_add_auth方法来向服务器认证自己
+
+      size_t length = 0;
+      char* plain = combine_name_pwd(zk_acl_name, zk_acl_pwd, &length);
+      ret = zoo_add_auth(zkhandle, "digest", plain, length, 0, 0);
+      if (ZOK != ret)
+        gpr_log(GPR_ERROR, "Auth failed,zoo_add_auth = %d!!", ret);
+
+      // enc格式digest ID为 userName:base64(sha1(userName:password))
+      char enc[64] = {0};
+      char* acl_param_pub = get_acl_param(1);
+      strcpy(enc, acl_param_pub);
+      free(acl_param_pub);
+
+      //设置ACL_vector
+      struct ACL _CREATOR_ALL_ACL_ACL[] = {{0x1f, {"digest", enc}}};
+      struct ACL_vector ZOO_CREATOR_ALL_ACL = {1, _CREATOR_ALL_ACL_ACL};
+
+      if (dynamic) {
+        ret = zoo_create(zkhandle, path, NULL, -1, &ZOO_CREATOR_ALL_ACL,
+                         ZOO_EPHEMERAL, NULL, 0);
+
+      } else {
+        ret = zoo_create(zkhandle, path, NULL, -1, &ZOO_CREATOR_ALL_ACL, 0,
+                         NULL, 0);
+      }
+      // reset enc
+      memset(enc, 0, 64);
+      memset(_CREATOR_ALL_ACL_ACL, 0, sizeof(_CREATOR_ALL_ACL_ACL));
+      // memset(ZOO_CREATOR_ALL_ACL, 0, sizeof(ZOO_CREATOR_ALL_ACL));
+
+      if (ZOK == ret) {
+        gpr_log(GPR_INFO, "create zk acl node success[%s]", path);
+      } else if (ZNODEEXISTS == ret) {
+        gpr_log(GPR_INFO, "zk acl node %s exists", path);
+      } else {
+        gpr_log(GPR_ERROR,
+                "create zk acl node faild[%s],reason=[%s],error code=%d", path,
+                zerror(ret), ret);
+      }
+    } else {  // acl 没有开启
+      if (dynamic) {
+        ret = zoo_create(zkhandle, path, NULL, -1, &ZOO_OPEN_ACL_UNSAFE,
+                         ZOO_EPHEMERAL, NULL, 0);
+      } else {
+        ret = zoo_create(zkhandle, path, NULL, -1, &ZOO_OPEN_ACL_UNSAFE, 0,
+                         NULL, 0);
+      }
+      if (ZOK == ret) {
+        gpr_log(GPR_INFO, "create zk node success[%s]", path);
+      } else if (ZNODEEXISTS == ret) {
+        gpr_log(GPR_INFO, "zk node %s exists", path);
+      } else {
+        gpr_log(GPR_ERROR, "create zk node faild[%s],reason=[%s],error code=%d",
+                path, zerror(ret), ret);
+      }
     }
-    if (ZOK == ret) {
-      gpr_log(GPR_INFO, "create root node success[%s]", path);
-    } else if (ZNODEEXISTS == ret) {
-      gpr_log(GPR_INFO, "root node %s exists", path);
-    } else {
-      gpr_log(GPR_ERROR,
-              "create root node faild[%s],reason=[%s],error code=%d", path,
-              zerror(ret), ret);
+  } else if (0 == strcmp(conn->zk_address, zk_private)) {
+    // 私有注册中心
+    int root_len = strlen(g_orientsec_grpc_private_common_root_directory);
+    // 对于root，不能acl注册
+    if (root_len >= strlen(path)) {
+      p = strrchr(path, '/');
+      if (p) {
+        snprintf(buf, p - path + 1, "%s", path);
+        zk_create_node(conn, buf, false);
+      }
+
+      if (dynamic) {
+        ret = zoo_create(zkhandle, path, NULL, -1, &ZOO_OPEN_ACL_UNSAFE,
+                         ZOO_EPHEMERAL, NULL, 0);
+      } else {
+        ret = zoo_create(zkhandle, path, NULL, -1, &ZOO_OPEN_ACL_UNSAFE, 0,
+                         NULL, 0);
+      }
+      if (ZOK == ret) {
+        gpr_log(GPR_INFO, "create root node success[%s]", path);
+      } else if (ZNODEEXISTS == ret) {
+        gpr_log(GPR_INFO, "root node %s exists", path);
+      } else {
+        gpr_log(GPR_ERROR,
+                "create root node faild[%s],reason=[%s],error code=%d", path,
+                zerror(ret), ret);
+      }
+      return;
     }
-    return;
- }
-  p = strrchr(path, '/');
-  if (p) {
-    snprintf(buf, p - path + 1, "%s", path);
-    zk_create_node(conn, buf, false);
+    p = strrchr(path, '/');
+    if (p) {
+      snprintf(buf, p - path + 1, "%s", path);
+      zk_create_node(conn, buf, false);
+    }
+
+    if (g_pri_acl_flag) {
+      // 1.create ACL \ZOO_CREATOR_ALL_ACL
+      // 2.zoo_add_auth 应用程序使用zoo_add_auth方法来向服务器认证自己
+
+      size_t length = 0;
+      char* plain = combine_name_pwd(zk_pri_acl_name, zk_pri_acl_pwd, &length);
+      ret = zoo_add_auth(zkhandle, "digest", plain, length, 0, 0);
+      if (ZOK != ret)
+        gpr_log(GPR_ERROR, "Auth failed,zoo_add_auth = %d!!", ret);
+
+      // enc格式digest ID为 userName:base64(sha1(userName:password))
+      char enc[64] = {0};
+      char* acl_param_pri = get_acl_param(0);
+      strcpy(enc, acl_param_pri);
+      free(acl_param_pri);
+
+      //设置ACL_vector
+      struct ACL _CREATOR_ALL_ACL_ACL[] = {{0x1f, {"digest", enc}}};
+      struct ACL_vector ZOO_CREATOR_ALL_ACL = {1, _CREATOR_ALL_ACL_ACL};
+
+      if (dynamic) {
+        ret = zoo_create(zkhandle, path, NULL, -1, &ZOO_CREATOR_ALL_ACL,
+                         ZOO_EPHEMERAL, NULL, 0);
+
+      } else {
+        ret = zoo_create(zkhandle, path, NULL, -1, &ZOO_CREATOR_ALL_ACL, 0,
+                         NULL, 0);
+      }
+      // reset enc
+      memset(enc, 0, 64);
+      memset(_CREATOR_ALL_ACL_ACL, 0, sizeof(_CREATOR_ALL_ACL_ACL));
+      // memset(ZOO_CREATOR_ALL_ACL, 0, sizeof(ZOO_CREATOR_ALL_ACL));
+
+      if (ZOK == ret) {
+        gpr_log(GPR_INFO, "create private zk acl node success[%s]", path);
+      } else if (ZNODEEXISTS == ret) {
+        gpr_log(GPR_INFO, "zk private acl node %s exists", path);
+      } else {
+        gpr_log(
+            GPR_ERROR,
+            "create private zk acl node faild[%s],reason=[%s],error code=%d",
+            path, zerror(ret), ret);
+      }
+    } else {  // acl 没有开启
+      if (dynamic) {
+        ret = zoo_create(zkhandle, path, NULL, -1, &ZOO_OPEN_ACL_UNSAFE,
+                         ZOO_EPHEMERAL, NULL, 0);
+      } else {
+        ret = zoo_create(zkhandle, path, NULL, -1, &ZOO_OPEN_ACL_UNSAFE, 0,
+                         NULL, 0);
+      }
+      if (ZOK == ret) {
+        gpr_log(GPR_INFO, "create private zk node success[%s]", path);
+      } else if (ZNODEEXISTS == ret) {
+        gpr_log(GPR_INFO, "private zk node %s exists", path);
+      } else {
+        gpr_log(GPR_ERROR,
+                "create private zk node faild[%s],reason=[%s],error code=%d",
+                path, zerror(ret), ret);
+      }
+    }
+
+  } else {
+    printf("can not find the corresponding zk registry center.");
   }
-
-  if (g_acl_flag) {
-  
-    // 1.create ACL \ZOO_CREATOR_ALL_ACL
-    // 2.zoo_add_auth 应用程序使用zoo_add_auth方法来向服务器认证自己
-
-    size_t length = 0;
-    char* plain = combine_name_pwd(zk_acl_name, zk_acl_pwd, &length);
-    ret = zoo_add_auth(zkhandle, "digest", plain, length, 0, 0);
-    if (ZOK != ret)
-      gpr_log(GPR_ERROR, "Auth failed,zoo_add_auth = %d!!", ret);
-
-    // enc格式digest ID为 userName:base64(sha1(userName:password))
-    char enc[64] = {0};
-    strcpy(enc, get_acl_param()); 
-
-    //设置ACL_vector
-    struct ACL _CREATOR_ALL_ACL_ACL[] = {{0x1f, {"digest", enc}}};
-    struct ACL_vector ZOO_CREATOR_ALL_ACL = {1, _CREATOR_ALL_ACL_ACL};
-
-    if (dynamic) {
-      ret = zoo_create(zkhandle, path, NULL, -1, &ZOO_CREATOR_ALL_ACL, ZOO_EPHEMERAL, NULL, 0);
-   
-    } else {
-      ret = zoo_create(zkhandle, path, NULL, -1, &ZOO_CREATOR_ALL_ACL, 0, NULL, 0);
-    }
-    //reset enc
-    memset(enc, 0, 64);
-    memset(_CREATOR_ALL_ACL_ACL, 0, sizeof(_CREATOR_ALL_ACL_ACL));
-    //memset(ZOO_CREATOR_ALL_ACL, 0, sizeof(ZOO_CREATOR_ALL_ACL));
-
-    if (ZOK == ret) {
-      gpr_log(GPR_INFO, "create zk acl node success[%s]", path);
-    } else if (ZNODEEXISTS == ret) {
-      gpr_log(GPR_INFO, "zk acl node %s exists", path);
-    } else {
-      gpr_log(GPR_ERROR, "create zk acl node faild[%s],reason=[%s],error code=%d",
-              path, zerror(ret), ret);
-    }
-  }else {// acl 没有开启
-    if (dynamic) {
-      ret = zoo_create(zkhandle, path, NULL, -1, &ZOO_OPEN_ACL_UNSAFE,
-                       ZOO_EPHEMERAL, NULL, 0);
-    } else {
-      ret = zoo_create(zkhandle, path, NULL, -1, &ZOO_OPEN_ACL_UNSAFE, 0, NULL, 0);
-    }
-    if (ZOK == ret) {
-      gpr_log(GPR_INFO, "create zk node success[%s]", path);
-    } else if (ZNODEEXISTS == ret) {
-      gpr_log(GPR_INFO, "zk node %s exists", path);
-    } else {
-      gpr_log(GPR_ERROR, "create zk node faild[%s],reason=[%s],error code=%d",
-              path, zerror(ret), ret);
-    }
-  }
+  // free(zk_pub_addr);
+  // free(zk_pri_addr);
 }
 
 //在zk上删除指定节点
@@ -914,7 +1092,8 @@ void registy_recover(zk_connection_t* conn);
 // zk连接状态监控，重连时需要恢复注册和订阅
 void zk_conn_watcher_g(zhandle_t* zh, int type, int state, const char* path,
                        void* watcherCtx) {
-  int timeout = 5000;  // 5000ms
+  // int timeout = 5000;  // 5000ms
+  int local_max_times = conn_retry_times;
   char* host = NULL;
   char* key = NULL;
   char* p = NULL;
@@ -922,32 +1101,38 @@ void zk_conn_watcher_g(zhandle_t* zh, int type, int state, const char* path,
   zk_connection_t* conn = (zk_connection_t*)zoo_get_context(zh);
 
   if (ZOO_SESSION_EVENT == type && ZOO_CONNECTED_STATE == state) {
-    if (ZK_RECONNECTING == conn->connecte_state) {
-      conn->connecte_state = ZK_RECONNECTED;  //闪断重连成功
-    } else if (ZK_DISCONNECTED == conn->connecte_state) {
-      conn->connecte_state = ZK_MANU_RECONNECTED;  //手动重连成功
+    if (ZK_RECONNECTING == conn->connect_state) {
+      conn->connect_state = ZK_RECONNECTED;  //闪断重连成功
+    } else if (ZK_DISCONNECTED == conn->connect_state) {
+      conn->connect_state = ZK_MANU_RECONNECTED;  //手动重连成功
     } else {
-      conn->connecte_state = ZK_CONNECTED;  //初始已连接状态
+      conn->connect_state = ZK_CONNECTED;  //初始已连接状态
       conn->clientid = zoo_client_id(zh);
     }
 
   } else if (ZOO_SESSION_EVENT == type && ZOO_CONNECTING_STATE == state) {
-    conn->connecte_state = ZK_RECONNECTING;
+    conn->connect_state = ZK_RECONNECTING;
     //重连中,可能重连成功，也可能失败，失败之后状态为ZOO_EXPIRED_SESSION_STATE,否则为ZOO_CONNECTED_STATE
   } else if (ZOO_SESSION_EVENT == type && ZOO_EXPIRED_SESSION_STATE == state) {
     //会话超时，断开连接,需要手动开启重连，重连成功后恢复注册与订阅
     //重连
-    if (ZK_DISCONNECTED == conn->connecte_state) {
-      start_zk_connect(conn, 0);
+    if (ZK_DISCONNECTED == conn->connect_state) {
+      if (conn->reconnect_count < local_max_times)
+        start_zk_connect(conn, 0);
+      else
+        gpr_log(GPR_ERROR, "MAX zookeeper connected retry times \n");
     } else {  //第一次试图恢复原session，恢复失败后新建session
-      start_zk_connect(conn, 1);
+      if (conn->reconnect_count < local_max_times)
+        start_zk_connect(conn, 1);
+      else
+        gpr_log(GPR_ERROR, "MAX zookeeper connected retry times \n");
     }
-    conn->connecte_state = ZK_DISCONNECTED;
+    conn->connect_state = ZK_DISCONNECTED;
 
-    conn->reconnectCount++;
+    conn->reconnect_count++;
   }
 
-  if (ZK_MANU_RECONNECTED == conn->connecte_state) {
+  if (ZK_MANU_RECONNECTED == conn->connect_state) {
     //重连成功，恢复注册与订阅
     registy_recover(conn);
   }
@@ -1043,7 +1228,7 @@ void registy_recover(zk_connection_t* conn) {
   char buf[ORIENTSEC_GRPC_PATH_MAX_LEN] = {0};
   int ret = 0;
   struct String_vector childs;
-  if (!conn || ZK_MANU_RECONNECTED != conn->connecte_state) {
+  if (!conn || ZK_MANU_RECONNECTED != conn->connect_state) {
     return;
   }
   p_registry_node0 = conn->url_list_head;
@@ -1051,11 +1236,11 @@ void registy_recover(zk_connection_t* conn) {
   while (p_registry_node) {
     //恢复动态节点注册
     if (0 == p_registry_node->live) {
-      p = strstr(p_registry_node->urlStr, "dynamic=true");
+      p = strstr(p_registry_node->url_str, "dynamic=true");
       if (p) {
         memset(buf, 0, ORIENTSEC_GRPC_PATH_MAX_LEN);
-        url = url_parse(p_registry_node->urlStr);
-        p = zk_get_url_path(url);
+        url = url_parse(p_registry_node->url_str);
+        p = zk_get_url_path(conn, url);
         zk_create_node(conn, p, true);
         url_free(url);
         FREE_PTR(p);
@@ -1064,15 +1249,15 @@ void registy_recover(zk_connection_t* conn) {
       p_registry_node = p_registry_node->next;
     } else {  //删除状态为非0的url对应的zk节点并清空对应的内存
       memset(buf, 0, ORIENTSEC_GRPC_PATH_MAX_LEN);
-      url = url_parse(p_registry_node->urlStr);
-      p = zk_get_url_path(url);
+      url = url_parse(p_registry_node->url_str);
+      p = zk_get_url_path(conn, url);
       zk_delete_node(conn, p);
       url_free(url);
       FREE_PTR(p);
 
       //释放删除状态链接结构体内存
       p_registry_node0->next = p_registry_node->next;
-      FREE_PTR(p_registry_node->urlStr);
+      FREE_PTR(p_registry_node->url_str);
       FREE_PTR(p_registry_node);
       p_registry_node = p_registry_node0->next;
     }
@@ -1106,6 +1291,8 @@ void start_zk_connect(zk_connection_t* conn, int keepSession) {
   int key_len = 0;
   char buf[40] = {0};
   int timeout = 5000;  // 5000ms
+  int days = 30;
+  int retry_times = 0;
   zhandle_t* handle = NULL;
   if (!conn) {
     return;
@@ -1125,9 +1312,17 @@ void start_zk_connect(zk_connection_t* conn, int keepSession) {
   //----begin--- 获取acl信息并设置acl开关
   get_acl_info();
   //----end----
-  if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_ZK_TIMEOUT, NULL, buf)) {
+  if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_ZK_TIMEOUT, NULL,
+                                               buf)) {
     timeout = atoi(buf);
   }
+
+  memset(buf, 0, sizeof(buf));
+  if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_ZK_RETRY_TIME,
+                                               NULL, buf)) {
+    days = atoi(buf);
+  }
+  if (timeout) conn_retry_times = 1000 * 60 * 60 * 24 * days / timeout;
 
   if (0 != keepSession) {
     conn->zh = zookeeper_init(host, zk_conn_watcher_g, timeout, conn->clientid,
@@ -1160,7 +1355,7 @@ void zk_start(registry_service_args_t* param) {
             "failed]");
     return;
   }
-  if (ZK_INIT != conn->connecte_state) {
+  if (ZK_INIT != conn->connect_state) {
     return;
   }
   start_zk_connect(conn, 0);
@@ -1169,13 +1364,21 @@ void zk_start(registry_service_args_t* param) {
   FREE_PTR(host);
   // FREE_PTR(p);
 }
+
+//获取节点是否创建成功标识
+void zk_set_create_node_flag(bool flag) { g_create_node_success = flag; }
+
+//获取节点是否创建成功标识
+bool zk_get_create_node_flag() { return g_create_node_success; }
+
 void zk_registe(registry_service_args_t* param, url_t* url) {
   zk_connection_t* conn = NULL;
-  ;
   char* url_full_path = NULL;
   char* dynamic_str = NULL;
   bool dynamic = true;
   zk_registy_url_node* p_registry_url_node = NULL;
+  int ret = 0;  // return code of zoo_exists
+  struct Stat* stat = NULL;
   if (!param || !url) {
     return;
   }
@@ -1183,24 +1386,28 @@ void zk_registe(registry_service_args_t* param, url_t* url) {
   if (conn) {
     p_registry_url_node = get_registry_url_node(conn, url);
     if (NULL == p_registry_url_node) {
-      gpr_log(GPR_ERROR, "分配registry_url_node失败");
+      gpr_log(GPR_ERROR, "Allocating registry_url_node failed");
       return;
     }
     p_registry_url_node->live = 0;
-    url_full_path = zk_get_url_path(url);
+    url_full_path = zk_get_url_path(conn, url);
     dynamic_str =
         url_get_parameter_v2(url, ORIENTSEC_GRPC_REGISTRY_KEY_DYNAMIC, NULL);
     if (dynamic_str && 0 == orientsec_stricmp(dynamic_str, "false")) {
       dynamic = false;
     }
-    // debug code
-    //url_full_path = "/bocloud/acll/providers/grpc";
-    // url_full_path =
-    // "/bocloud/acll/providers/grpc%3A%2F192.168.2.123%3A50088";
-    // zoo_add_auth(conn->zh, SCHEME,
-    // USER_PASSWORD_MING,sizeof(USER_PASSWORD_MING), 0, 0);
-
+    // create zookeeper node
     zk_create_node(conn, url_full_path, dynamic);
+    // 判断node有没有成功创建
+    ret = zoo_exists(conn->zh, url_full_path, 0, stat);
+    // printf("zk_registe zoo_exists ret= %d !!!!!!!!!!\n", ret);
+    if (ZOK == ret) {
+      // set creating node successfully flag
+      g_create_node_success = true;
+    } else {
+      // set creating node failed flag
+      g_create_node_success = false;
+    }
   }
   FREE_PTR(url_full_path);
 }
@@ -1219,7 +1426,7 @@ void zk_unregiste(registry_service_args_t* param, url_t* url) {
       p_registry_url_node->live = 1;
     }
     if (!isZkConnected(conn)) return;
-    url_full_path = zk_get_url_path(url);
+    url_full_path = zk_get_url_path(conn, url);
     ret = zk_delete_node(conn, url_full_path);
     if (ZOK == ret) {
       remove_registry_url_node(conn, url);
@@ -1248,7 +1455,7 @@ void zk_subscribe(registry_service_args_t* param, url_t* url,
   }
   conn = (zk_connection_t*)(param->param->data);
   if (!conn) return;
-  url_category_path = zk_get_category_path(url);
+  url_category_path = zk_get_category_path(conn, url);
   zk_create_node(conn, url_category_path, false);
   p_listener_node = lookup_listener_node(conn, url_category_path);
 
@@ -1272,8 +1479,7 @@ void zk_subscribe(registry_service_args_t* param, url_t* url,
       urls_num = childs.count;
       myurl = (url_t*)gpr_zalloc(1 * sizeof(url_t));
       //对于子节点为空的情形，返回一个empty://0.0.0.0/service_name格式url
-      if (urls_num == 0)  
-      {
+      if (urls_num == 0) {
       } else {
         urls = (url_t*)gpr_zalloc(urls_num * sizeof(url_t));
         for (i = 0; i < urls_num; i++) {
@@ -1331,7 +1537,7 @@ void zk_unsubscribe(registry_service_args_t* param, url_t* url,
     return;
   }
   conn = (zk_connection_t*)(param->param->data);
-  url_category_path = zk_get_category_path(url);
+  url_category_path = zk_get_category_path(conn, url);
   p_listener_node = get_zk_listener_node(conn, url_category_path);
   if (p_listener_node) {
     remove_zk_notify_node(p_listener_node, notify);
@@ -1365,7 +1571,7 @@ void zk_lookup(registry_service_args_t* param, url_t* src, url_t** result,
     return;
   }
   conn = (zk_connection_t*)(param->param->data);
-  url_category_path = zk_get_category_path(src);
+  url_category_path = zk_get_category_path(conn, src);
 
   ret = zoo_get_children(conn->zh, url_category_path, 0, &childs);
   if (ZOK == ret) {
@@ -1383,7 +1589,8 @@ void zk_lookup(registry_service_args_t* param, url_t* src, url_t** result,
       *len = ret;
       *result = gpr_zalloc(ret * sizeof(url_t));
       for (i = 0; i < urls_num; i++) {
-        if (ORIENTSEC_GRPC_CHECK_BIT(urls[i].flag, ORIENTSEC_GRPC_URL_MATCH_POS)) {
+        if (ORIENTSEC_GRPC_CHECK_BIT(urls[i].flag,
+                                     ORIENTSEC_GRPC_URL_MATCH_POS)) {
           url_clone(urls + i, *result + index);
           index++;
         }
@@ -1402,7 +1609,7 @@ void zk_lookup(registry_service_args_t* param, url_t* src, url_t** result,
 char* zk_getData(registry_service_args_t* param, char* path) {
   zk_connection_t* conn = NULL;
   char buf[ORIENTSEC_GRPC_BUF_LEN] = {0};
-  char buf_len = ORIENTSEC_GRPC_BUF_LEN;
+  int buf_len = ORIENTSEC_GRPC_BUF_LEN;
   int ret = 0;
   if (!param || !path) {
     gpr_log(GPR_INFO, "zk_getData failed for param or path is null");
@@ -1428,7 +1635,7 @@ void zk_stop(registry_service_args_t* param) {
   conn = (zk_connection_t*)(param->param->data);
   ret = zookeeper_close(conn->zh);
   if (ZOK == ret) {
-    conn->connecte_state = ZK_MANU_CLOSED;
+    conn->connect_state = ZK_MANU_CLOSED;
   } else {
     gpr_log(GPR_ERROR, "zk_stop failed ,error code=%d,reason=%s", ret,
             zerror(ret));

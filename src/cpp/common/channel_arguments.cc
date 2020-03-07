@@ -202,9 +202,11 @@ void ChannelArguments::SetString(const grpc::string& key,
   arg.key = const_cast<char*>(strings_.back().c_str());
   strings_.push_back(value);
   arg.value.string = const_cast<char*>(strings_.back().c_str());
-
+  // store grpc version
+  if (0 == key.compare(GRPC_ARG_PRIMARY_USER_AGENT_STRING)) version_ = value;
   args_.push_back(arg);
 }
+void ChannelArguments::GetVersion(grpc::string& version) { version = version_;}
 
 void ChannelArguments::SetChannelArgs(grpc_channel_args* channel_args) const {
   channel_args->num_args = args_.size();

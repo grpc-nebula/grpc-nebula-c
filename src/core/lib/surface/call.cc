@@ -260,8 +260,8 @@ struct grpc_call {
     For 2, 3: See receiving_stream_ready() function */
   gpr_atm recv_state = 0;
 
-    // add by yang
-  char hash_info[64]={0};
+  // add by yang
+  char hash_info[64] = {0};
   char call_name[64] = {0};
 };
 
@@ -691,7 +691,8 @@ static void cancel_with_error(grpc_call* c, grpc_error* error) {
   if (c && c->is_client && !orientsec_grpc_channel_is_native(c->channel)) {
     gpr_log(GPR_DEBUG, "terminate_with_error trigger failover... ");
     record_provider_failure(grpc_get_channel_client_reginfo(c->channel),
-                            grpc_get_channel_provider_addr(c->channel),c->call_name);
+                            grpc_get_channel_provider_addr(c->channel),
+                            c->call_name);
   }
   //-----end-----
   GRPC_CALL_INTERNAL_REF(c, "termination");
@@ -2039,17 +2040,23 @@ char* orientsec_grpc_call_provider_addr_get(grpc_call* call) {
   }
   return grpc_get_channel_provider_addr(call->channel);
 }
+char* orientsec_grpc_call_get_reginfo(grpc_call* call) { 
+  if (call->destroy_called) return NULL;
+  return grpc_get_channel_client_reginfo(call->channel);
+}
 
 void orientsec_grpc_setcall_hashinfo(grpc_call* call, const char* s) {
   // call->hash_info = (char *)s;
   strcpy(call->hash_info, s);
 }
-char* orientsec_grpc_getcall_hashinfo(grpc_call* call) { return call->hash_info; }
+char* orientsec_grpc_getcall_hashinfo(grpc_call* call) {
+  return call->hash_info;
+}
 
-void orientsec_grpc_setcall_methodname(grpc_call* call, const char* s){
+void orientsec_grpc_setcall_methodname(grpc_call* call, const char* s) {
   strcpy(call->call_name, s);
 }
 
-char* orientsec_grpc_getcall_methodname(grpc_call* call){
+char* orientsec_grpc_getcall_methodname(grpc_call* call) {
   return call->call_name;
 }

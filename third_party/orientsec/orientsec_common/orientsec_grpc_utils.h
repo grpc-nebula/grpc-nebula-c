@@ -37,6 +37,12 @@ extern "C" {
 #endif
 int orientsec_stricmp(const char* a, const char* b);
 
+
+//获取provider端配置注册ip addr
+char* get_provider_registry_ip();
+//获取provider端配置注册port
+int get_provider_registry_port();
+
 //获取本地IP地址,返回字符指针无需释放
 char *get_local_ip();
 
@@ -47,13 +53,16 @@ int grpc_getpid();
 uint64_t orientsec_get_timestamp_in_mills();
 
 //返回应用程序名，返回空间无需释放
-char* orientsec_get_provider_AppName();
+char* orientsec_get_provider_appname();
 
 //根据方法全名提取服务名,例如/com.test.hello/sayHello,返回com.test.hello,返回内容无需释放
 char* get_service_name(char *method_full_name, char *buf, size_t buf_len);
 
 //去除字符串开头以及结尾的空字符
 void trim(char *strIn, char *strOut);
+
+//版本信息格式化处理
+char* grpc_verion_format(const char* str);
 
 
 //获取执行程序的执行目录
@@ -112,7 +121,7 @@ provider_t* new_provider();
 
 
 //根据配置文件初始化provider特定字段
-void init_provider(provider_t *provider);
+enum RegCode init_provider(provider_t* provider);
 
 //释放provider空间
 void free_provider(provider_t **p);

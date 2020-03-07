@@ -700,6 +700,8 @@ Server::Server(
 
   grpc_channel_args channel_args;
   args->SetChannelArgs(&channel_args);
+  // store version variable into server object
+  args->GetVersion(grpc_version_);
 
   for (size_t i = 0; i < channel_args.num_args; i++) {
     if (0 ==
@@ -1015,8 +1017,9 @@ void Server::Wait() {
       }
       methods += *it;
     }
+    // sync registry
     provider_registry(ports_.empty() ? 0 : ports_[0], serviceName.c_str(),
-                      methods.c_str());
+                      methods.c_str(), grpc_version_.c_str());
     serviceIt++;
   }
   //-----end-----

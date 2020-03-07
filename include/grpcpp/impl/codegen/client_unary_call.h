@@ -46,9 +46,28 @@ template <class InputMessage, class OutputMessage>
 Status BlockingUnaryCall(ChannelInterface* channel, const RpcMethod& method,
                          ClientContext* context, const InputMessage& request,
                          OutputMessage* result) {
-  return BlockingUnaryCallImpl<InputMessage, OutputMessage>(
-             channel, method, context, request, result)
-      .status();
+
+  Status call_status_ =  BlockingUnaryCallImpl<InputMessage, OutputMessage>(
+             channel, method, context, request, result).status();
+  if (!call_status_.ok() && (orientsec_get_failure_retry_times() > 0)) {
+    // retry call
+    int retries = orientsec_get_failure_retry_times();
+    do {
+      context->reset_call();
+      call_status_ = BlockingUnaryCallImpl<InputMessage, OutputMessage>(
+                         channel, method, context, request, result)
+                         .status();
+      if( call_status_.ok() ) {
+        break;
+      }       
+    }while (--retries);
+    if (retries == 0) {
+      std::cout << "Number of retries reached max times! return failure..."
+                << std::endl;
+    }
+  }
+
+  return call_status_;
 }
 
 template <class InputMessage, class OutputMessage>
@@ -69,7 +88,7 @@ class BlockingUnaryCallImpl {
     if (!status_.ok()) {
       return;
     }
-
+    grpc_call* callobj = call.call();
     //----begin----
     //获得hash_arg,用于hash 算法
     char buf[ORIENTSEC_GRPC_PROPERTY_KEY_MAX_LEN] = {0};
@@ -93,20 +112,23 @@ class BlockingUnaryCallImpl {
     std::vector<std::string> ret;
     orientsec_grpc_split_to_vec(m_fullname,ret ,"/");
     std::string m_name = ret.back();
-    orientsec_grpc_setcall_methodname(call.call(), m_name.c_str());
+    orientsec_grpc_setcall_methodname(callobj, m_name.c_str());
 
     //传递给call 对象
-    orientsec_grpc_transfer_setcall_hashinfo(call.call(), hash_arg.c_str());
+    orientsec_grpc_transfer_setcall_hashinfo(callobj, hash_arg.c_str());
     
     //判断是否大于最大允许请求数
     //----debug use----
     //const char* name = method.name();
     if (orientsec_grpc_consumer_control_requests(method.name()) == -1) {
       Status state(StatusCode::EXCEEDING_REQUESTS,
-                   "Exceeding maximum requests");
+                   "Exceeded maximum requests");
       return;
     }
 
+    // obtain register info and provider host info
+    char* reg_info = orientsec_grpc_call_get_reginfo(callobj);
+    char* prov_host = orientsec_grpc_call_serverhost(callobj);
 
     //----end----
     ops.SendInitialMetadata(&context->send_initial_metadata_,
@@ -118,13 +140,27 @@ class BlockingUnaryCallImpl {
     ops.ClientRecvStatus(context, &status_);
     call.PerformOps(&ops);
     if (cq.Pluck(&ops)) {
+      if (ops.got_message && status_.ok()) {
+        // reset when customized call and last call was not okay
+        if (reg_info != NULL && (!last_call_status_.ok())) { 
+          reset_provider_failure(reg_info, prov_host,m_name.c_str());
+        }
+      }
       if (!ops.got_message && status_.ok()) {
         status_ = Status(StatusCode::UNIMPLEMENTED,
                          "No message returned for unary request");
       }
     } else {
       GPR_CODEGEN_ASSERT(!status_.ok());
+      last_call_status_ = Status(StatusCode::CANCELLED,"Last call not okay");
     }
+    //  testing code
+   /* static int number = 0;
+    number++;
+    if (number < 30) {
+      std::cout << "number = " << number << std::endl;
+      status_ = Status(StatusCode::CANCELLED, "Testing xxx");
+    }*/
   }
   Status status() { return status_; }
   //----begin----
@@ -139,6 +175,9 @@ class BlockingUnaryCallImpl {
 
  private:
   Status status_;
+  Status last_call_status_;
+  int retry_times = 0;
+  bool init_first = true;
 };
 
 }  // namespace internal

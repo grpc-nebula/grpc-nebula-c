@@ -39,44 +39,55 @@
 //读取配置文件中的参数组织成url串。
 //生成的url串格式为 aaa=xx&bbb=xxx&ccc=xxxx
 int orientsec_grpc_consumer_conf_param(char * urlparam, grpc_conf_template_t confitem[], int itemcount) {
-	if (orientsec_grpc_properties_init() < 0) {
-		return -1;
-	}
-	char pconfitem[ORIENTSEC_GRPC_PROPERTY_VALUE_MAX_LEN];
-	int count = 0;
-	for (int i = 0; i < itemcount; i++) {
-		memset(pconfitem, 0, ORIENTSEC_GRPC_PROPERTY_VALUE_MAX_LEN);
-		if (confitem[i].keyreg == "" || confitem[i].keyreg == NULL) {
-			continue;
-		}
-		strcat(urlparam, "&");
-		strcat(urlparam, confitem[i].keyreg);
-		strcat(urlparam, "=");
-		//读取配置文件
-		if (confitem[i].key == "" || confitem[i].key == NULL) {
-			strcat(urlparam, confitem[i].defaultvalue);
-		}
-		else {
-			orientsec_grpc_properties_get_value(confitem[i].key, NULL, pconfitem);
-			if (pconfitem == NULL || strcmp(pconfitem, "") == 0) {  //取不到值，设置为默认值
-				strcat(urlparam, confitem[i].defaultvalue);
-			}
-			else {
-				strcat(urlparam, pconfitem);
-			}
-		}
-	}
-	return 0;
+  if (orientsec_grpc_properties_init() < 0) {
+	  return -1;
+  }
+  char pconfitem[ORIENTSEC_GRPC_PROPERTY_VALUE_MAX_LEN];
+  int count = 0;
+  for (int i = 0; i < itemcount; i++) {
+    memset(pconfitem, 0, ORIENTSEC_GRPC_PROPERTY_VALUE_MAX_LEN);
+    if (confitem[i].keyreg == "" || confitem[i].keyreg == NULL) {
+      continue;
+    }
+    strcat(urlparam, "&");
+    strcat(urlparam, confitem[i].keyreg);
+    strcat(urlparam, "=");
+    //读取配置文件
+    if (confitem[i].key == "" || confitem[i].key == NULL) {
+       strcat(urlparam, confitem[i].defaultvalue);
+    }
+    else {
+      orientsec_grpc_properties_get_value(confitem[i].key, NULL, pconfitem);
+      if (pconfitem == NULL || strcmp(pconfitem, "") == 0) {  //取不到值，设置为默认值
+        // add required fields check
+        if (ORIENTSEC_GRPC_CONF_COMMON_APPLICATION == confitem[i].key) {
+          gpr_log(GPR_ERROR,"[common.application] not configured.\n");
+        }
+        if (ORIENTSEC_GRPC_CONF_COMMON_PROJECT == confitem[i].key) {
+          gpr_log(GPR_ERROR,"[common.project] not configured.\n");
+        }
+        if (ORIENTSEC_GRPC_CONF_COMMON_OWNER == confitem[i].key) {
+          gpr_log(GPR_ERROR,"[common.owner] not configured.\n");
+        }
+        // joint default value if item not configured
+	strcat(urlparam, confitem[i].defaultvalue);
+      }
+      else {
+	strcat(urlparam, pconfitem);
+      }
+    }
+  }
+  return 0;
 }
 
 //拼接url参数
 void orientsec_grpc_consumer_url_append(char *url, const char * prefix, const  char *key, const char *val) {
-	if (prefix != NULL) {
-		strcat(url, prefix);
-	}
-	strcat(url, key);
-	strcat(url, "=");
-	strcat(url, val);
+  if (prefix != NULL) {
+    strcat(url, prefix);
+  }
+  strcat(url, key);
+  strcat(url, "=");
+  strcat(url, val);
 }
 
 //定义consumer端配置文件模板,数据样例
@@ -98,49 +109,129 @@ void orientsec_grpc_consumer_url_append(char *url, const char * prefix, const  c
 //&timestamp=1497246256401 另外附加
 //定义不定长数组用while循环变量
 static grpc_conf_template_t consumer_confitem_consumers[] = {
-	//application
-	{ (char*)ORIENTSEC_GRPC_CONF_COMMON_APPLICATION,(char*)ORIENTSEC_GRPC_REGISTRY_KEY_APPLICATION,1,(char*)ORIENTSEC_GRPC_COMMON_BLANK },
-	//category
-	{ (char*)ORIENTSEC_GRPC_CONF_CONSUMER_CATEGORY,(char*)ORIENTSEC_GRPC_CATEGORY_KEY,1,(char*)ORIENTSEC_GRPC_CONSUMERS_CATEGORY },
-	//check
-	{ (char*)ORIENTSEC_GRPC_CONF_CONSUMER_CHECK,(char*)ORIENTSEC_GRPC_REGISTRY_KEY_CHECK,1,(char*)ORIENTSEC_GRPC_CONF_CONSUMER_CHECK_DEFAULT },
-	//&default.cluster
-	{ (char*)ORIENTSEC_GRPC_CONF_CONSUMER_DEFAULT_CLUSTER,(char*)ORIENTSEC_GRPC_REGISTRY_KEY_DEFAULT_CLUSTER,1,(char*)ORIENTSEC_GRPC_CONF_CONSUMER_DEFAULT_CLUSTER_DEFAULT },
-	//&default.connections
-	{ (char*)ORIENTSEC_GRPC_CONF_CONSUMER_DEFAULT_CONNECTIONS,(char*)ORIENTSEC_GRPC_REGISTRY_KEY_DEFAULT_CONNECTIONS,1,(char*)ORIENTSEC_GRPC_CONF_CONSUMER_DEFAULT_CONNECTIONS_DEFAULT },
-	//&default.loadbalance=round_robin
-	{ (char*)ORIENTSEC_GRPC_CONF_CONSUMER_DEFAULT_LOADBALANCE,(char*)ORIENTSEC_GRPC_REGISTRY_KEY_DEFAULT_LOADBALANCE,1,(char*)ORIENTSEC_GRPC_CONF_CONSUMER_DEFAULT_LOADBALANCE_DEFAULT },
-	//&default.requests   默认需要检查，设置为 10000？？？？ huyntodo 
-	{ (char*)ORIENTSEC_GRPC_CONF_CONSUMER_DEFAULT_REQUESTS,(char*)ORIENTSEC_GRPC_REGISTRY_KEY_DEFAULT_REQUESTS,1,(char*)ORIENTSEC_GRPC_CONF_CONSUMER_DEFAULT_REQUESTS_DEFAULT },
-	//&default.retries=2
-	{ (char*)ORIENTSEC_GRPC_CONF_CONSUMER_DEFAULT_RETRIES,(char*)ORIENTSEC_GRPC_REGISTRY_KEY_DEFAULT_RETIES,0,(char*)ORIENTSEC_GRPC_CONF_CONSUMER_DEFAULT_RETRIES_DEFAULT },
-	//&default.timeout=1000
-	{ (char*)ORIENTSEC_GRPC_CONF_CONSUMER_DEFAULT_TIMEOUT,(char*)ORIENTSEC_GRPC_REGISTRY_KEY_DEFAULT_TIMEOUT,0,(char*)ORIENTSEC_GRPC_CONF_CONSUMER_DEFAULT_TIMEOUT_DEFAULT },
-	//&grpc=1.0.0
-	{ (char*)ORIENTSEC_GRPC_CONF_COMMON_GRPC,(char*)ORIENTSEC_GRPC_REGISTRY_KEY_VERSION,1,(char*)ORIENTSEC_GRPC_COMMON_BLANK },
-	//&side=consumer
-	{ (char*)ORIENTSEC_GRPC_CONF_CONSUMER_SIDE,(char*)ORIENTSEC_GRPC_REGISTRY_KEY_SIDE,1,(char*)ORIENTSEC_GRPC_CONF_CONSUMER_SIDE_DEFAULT },
-	//&dynamic=true  （默认应该为 true）
-	{ (char*)ORIENTSEC_GRPC_CONF_CONSUMER_DYNAMIC,(char*)ORIENTSEC_GRPC_REGISTRY_KEY_DYNAMIC,0,(char*)ORIENTSEC_GRPC_CONF_CONSUMER_DYNAMIC_DEFAULT },
-        //&group= (default value= NULL)
-        { (char*)ORIENTSEC_GRPC_CONF_CONSUMER_GROUP,(char*)ORIENTSEC_GRPC_REGISTRY_KEY_GROUP,1,(char*)ORIENTSEC_GRPC_CONF_CONSUMER_GROUP_DEFAULT},
-        //&project=grpc-test-app （默认应该为 grpc-test-app ）
-        { (char*)ORIENTSEC_GRPC_CONF_COMMON_PROJECT, (char*)ORIENTSEC_GRPC_REGISTRY_KEY_PROJECT, 1, (char*)ORIENTSEC_GRPC_CONF_COMMON_PROJECT_DEFAULT},
-        //&owner=A0000 （默认应该为 A0000 ）
-        { (char*)ORIENTSEC_GRPC_CONF_COMMON_OWNER, (char*)ORIENTSEC_GRPC_REGISTRY_KEY_COMM_OWNER, 1, (char*)ORIENTSEC_GRPC_CONF_COMMON_OWNER_DEFAULT}};
+  //application
+  { (char*)ORIENTSEC_GRPC_CONF_COMMON_APPLICATION,(char*)ORIENTSEC_GRPC_REGISTRY_KEY_APPLICATION,1,(char*)ORIENTSEC_GRPC_COMMON_BLANK },
+  //category
+  { (char*)ORIENTSEC_GRPC_CONF_CONSUMER_CATEGORY,(char*)ORIENTSEC_GRPC_CATEGORY_KEY,1,(char*)ORIENTSEC_GRPC_CONSUMERS_CATEGORY },
+  //check
+  { (char*)ORIENTSEC_GRPC_CONF_CONSUMER_CHECK,(char*)ORIENTSEC_GRPC_REGISTRY_KEY_CHECK,1,(char*)ORIENTSEC_GRPC_CONF_CONSUMER_CHECK_DEFAULT },
+  //&default.cluster
+  { (char*)ORIENTSEC_GRPC_CONF_CONSUMER_DEFAULT_CLUSTER,(char*)ORIENTSEC_GRPC_REGISTRY_KEY_DEFAULT_CLUSTER,1,(char*)ORIENTSEC_GRPC_CONF_CONSUMER_DEFAULT_CLUSTER_DEFAULT },
+  //&default.connections
+  { (char*)ORIENTSEC_GRPC_CONF_CONSUMER_DEFAULT_CONNECTIONS,(char*)ORIENTSEC_GRPC_REGISTRY_KEY_DEFAULT_CONNECTIONS,1,(char*)ORIENTSEC_GRPC_CONF_CONSUMER_DEFAULT_CONNECTIONS_DEFAULT },
+  //&default.loadbalance=round_robin
+  { (char*)ORIENTSEC_GRPC_CONF_CONSUMER_DEFAULT_LOADBALANCE,(char*)ORIENTSEC_GRPC_REGISTRY_KEY_DEFAULT_LOADBALANCE,1,(char*)ORIENTSEC_GRPC_CONF_CONSUMER_DEFAULT_LOADBALANCE_DEFAULT },
+  //&default.requests   默认需要检查，设置为 10000？？？？ huyntodo 
+  { (char*)ORIENTSEC_GRPC_CONF_CONSUMER_DEFAULT_REQUESTS,(char*)ORIENTSEC_GRPC_REGISTRY_KEY_DEFAULT_REQUESTS,1,(char*)ORIENTSEC_GRPC_CONF_CONSUMER_DEFAULT_REQUESTS_DEFAULT },
+  //&default.retries=2
+  { (char*)ORIENTSEC_GRPC_CONF_CONSUMER_DEFAULT_RETRIES,(char*)ORIENTSEC_GRPC_REGISTRY_KEY_DEFAULT_RETIES,0,(char*)ORIENTSEC_GRPC_CONF_CONSUMER_DEFAULT_RETRIES_DEFAULT },
+  //&default.timeout=1000
+  { (char*)ORIENTSEC_GRPC_CONF_CONSUMER_DEFAULT_TIMEOUT,(char*)ORIENTSEC_GRPC_REGISTRY_KEY_DEFAULT_TIMEOUT,0,(char*)ORIENTSEC_GRPC_CONF_CONSUMER_DEFAULT_TIMEOUT_DEFAULT },
+  //&grpc=1.0.0
+  { (char*)ORIENTSEC_GRPC_CONF_COMMON_GRPC,(char*)ORIENTSEC_GRPC_REGISTRY_KEY_VERSION,1,(char*)ORIENTSEC_GRPC_COMMON_BLANK },
+  //&side=consumer
+  { (char*)ORIENTSEC_GRPC_CONF_CONSUMER_SIDE,(char*)ORIENTSEC_GRPC_REGISTRY_KEY_SIDE,1,(char*)ORIENTSEC_GRPC_CONF_CONSUMER_SIDE_DEFAULT },
+  //&dynamic=true  （默认应该为 true）
+  { (char*)ORIENTSEC_GRPC_CONF_CONSUMER_DYNAMIC,(char*)ORIENTSEC_GRPC_REGISTRY_KEY_DYNAMIC,0,(char*)ORIENTSEC_GRPC_CONF_CONSUMER_DYNAMIC_DEFAULT },
+  //move to upper since of grouping based on service
+  //&group= (default value= NULL) 
+  //{ (char*)ORIENTSEC_GRPC_CONF_CONSUMER_GROUP,(char*)ORIENTSEC_GRPC_REGISTRY_KEY_INVOKE_GROUP,1,(char*)ORIENTSEC_GRPC_CONF_CONSUMER_GROUP_DEFAULT},
+  //&project=grpc-test-app （默认应该为 grpc-test-app ）
+  { (char*)ORIENTSEC_GRPC_CONF_COMMON_PROJECT, (char*)ORIENTSEC_GRPC_REGISTRY_KEY_PROJECT, 1, (char*)ORIENTSEC_GRPC_CONF_COMMON_PROJECT_DEFAULT},
+  //&owner=A0000 （默认应该为 A0000 ）
+  { (char*)ORIENTSEC_GRPC_CONF_COMMON_OWNER, (char*)ORIENTSEC_GRPC_REGISTRY_KEY_COMM_OWNER, 1, (char*)ORIENTSEC_GRPC_CONF_COMMON_OWNER_DEFAULT}};
  
 
 // 组织consumer配置参数
 int orientsec_grpc_concate_consumer_str(char * urlparam) {
-	return orientsec_grpc_consumer_conf_param(urlparam, consumer_confitem_consumers, sizeof(consumer_confitem_consumers) / sizeof(consumer_confitem_consumers[0]));
+  return orientsec_grpc_consumer_conf_param(urlparam, consumer_confitem_consumers, sizeof(consumer_confitem_consumers) / sizeof(consumer_confitem_consumers[0]));
+}
+
+// 获得基于服务名或者方法名的重试次数
+int obtain_retries_based_service_or_method(const char* service_name,
+                                             const char* method_name){
+  if (strlen(service_name) == 0 && strlen(method_name) == 0) return NULL;
+  char* search_service_key = (char*)gpr_zalloc(256 * sizeof(char));
+  char* search_method_key = (char*)gpr_zalloc(256 * sizeof(char));
+  char serv_retries[32] = {0};
+  char serv_specific_retries[32] = {0};
+  char meth_specific_retries[32] = {0};
+  strcpy(search_service_key, ORIENTSEC_GRPC_CONF_CONSUMER_DEFAULT_RETRIES);
+  strcat(search_service_key, "[");
+  strcat(search_service_key, service_name);
+  if (strlen(method_name) > 0 ){
+    strcpy(search_method_key, search_service_key);
+    strcat(search_method_key, ".");
+    strcat(search_method_key, method_name);
+    strcat(search_method_key, "]");
+  }
+  strcat(search_service_key, "]");
+  orientsec_grpc_properties_get_value(search_method_key, NULL,
+                                      meth_specific_retries);
+  orientsec_grpc_properties_get_value(search_service_key, NULL,
+                                      serv_specific_retries);
+  orientsec_grpc_properties_get_value(
+      ORIENTSEC_GRPC_CONF_CONSUMER_DEFAULT_RETRIES, NULL, serv_retries);
+  int serv_retry_times = atoi(serv_retries);
+  int serv_spec_retry_times = atoi(serv_specific_retries);
+  int meth_spec_retry_times = atoi(meth_specific_retries);
+  // 服务名配置的group为空
+  if (strlen(meth_specific_retries) > 0) {
+    gpr_free(search_service_key);
+    gpr_free(search_method_key);
+    return meth_spec_retry_times;
+  } else if (strlen(serv_specific_retries) > 0) {
+    gpr_free(search_service_key);
+    gpr_free(search_method_key);
+    return serv_spec_retry_times;
+  } else {
+    return serv_retry_times;
+  }
+}
+
+
+char* obtain_appointed_provider_list(const char* service_name) {
+  if ((service_name == NULL) || strlen(service_name) == 0) return NULL;
+  char* search_key = (char*)gpr_zalloc(128 * sizeof(char));
+  char* spec_prov_list = (char*)gpr_zalloc(1024);
+  strcpy(search_key, ORIENTSEC_GRPC_CONF_SERVICE_SERVER_LIST);
+  strcat(search_key, "[");
+  strcat(search_key, service_name);
+  strcat(search_key, "]");
+  orientsec_grpc_properties_get_value(search_key, NULL, spec_prov_list);
+  free(search_key);
+  return spec_prov_list;
+}
+
+char* obtain_invoke_group_based_service(const char* service_name) {
+  if ((service_name == NULL) || strlen(service_name) == 0) return NULL;
+  char* search_key = (char*)gpr_zalloc(128 * sizeof(char));
+  char* serv_group = (char*)gpr_zalloc(128);
+  char* invoke_group = (char*)gpr_zalloc(128);
+  strcpy(search_key, ORIENTSEC_GRPC_CONF_CONSUMER_INVOKE_GROUP);
+  strcat(search_key, "[");
+  strcat(search_key, service_name);
+  strcat(search_key, "]");
+  orientsec_grpc_properties_get_value(search_key, NULL, serv_group);
+  orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_CONF_CONSUMER_INVOKE_GROUP,
+                                      NULL, invoke_group);
+  // 服务名配置的group为空   
+  if (strlen(serv_group) == 0) { 
+    gpr_free(serv_group);
+    gpr_free(search_key);
+    return invoke_group;
+  } else {
+    gpr_free(invoke_group);
+    gpr_free(search_key);
+    return serv_group;
+  } 
 }
 
 //拼接url字符串。参数样例如下：
-char *orientsec_grpc_consumer_url(const char *service_name)
-{
+char* orientsec_grpc_consumer_url(const char* service_name,const char* frame_version) {
 	//此处可以判断是否需要注册不需要注册的话ruturn "" 即可。
 	size_t buf_size = sizeof(char) * ORIENTSEC_GRPC_URL_MAX_LEN;
-	char buf[64] = { 0 };
+	char buf[128] = { 0 };
 	//拼接consumer注册url串
 	char *result = (char*)malloc(buf_size);
 	memset(result, 0, buf_size);
@@ -168,6 +259,26 @@ char *orientsec_grpc_consumer_url(const char *service_name)
 	memset(buf, 0, sizeof(buf));
 	sprintf(buf, "%d", orientsec_grpc_thdid_get());
 	orientsec_grpc_consumer_url_append(result, "&", ORIENTSEC_GRPC_REGISTRY_KEY_THREADID, buf);
+       
+        // append property of grpc framework version
+        memset(buf, 0, sizeof(buf));
+        char* grpc_version = grpc_verion_format(frame_version);
+        strcpy(buf, grpc_version);
+        free(grpc_version);
+        orientsec_grpc_consumer_url_append(
+            result, "&", ORIENTSEC_GRPC_REGISTRY_KEY_FRAME_VERSION, buf);
+
+        // append property of grouping info
+        memset(buf, 0, sizeof(buf));
+        char* group_info = obtain_invoke_group_based_service(service_name);
+        if (0 == strlen(group_info))
+          strcpy(buf, (char*)ORIENTSEC_GRPC_CONF_CONSUMER_GROUP_DEFAULT);
+        else
+          strcpy(buf, group_info);
+        gpr_free(group_info);
+        orientsec_grpc_consumer_url_append(
+            result, "&", ORIENTSEC_GRPC_REGISTRY_KEY_INVOKE_GROUP, buf);
+        memset(buf, 0, sizeof(buf));
 
 	//附加consumers其他附加参数
 	orientsec_grpc_concate_consumer_str(result);

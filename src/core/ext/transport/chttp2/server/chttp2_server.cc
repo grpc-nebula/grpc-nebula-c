@@ -197,8 +197,9 @@ static void on_accept(void* arg, grpc_endpoint* tcp,
   gpr_mu_lock(&state->mu);
 
   //----begin---- 并发连接数判断
+  char* client_addr = grpc_endpoint_get_peer(tcp);
   // comment_debug_begin
-  if (!check_provider_connection(NULL)) {
+  if (!check_provider_connection(NULL,client_addr)) {
     gpr_log(GPR_ERROR, ORIENTSEC_GRPC_PROVIDER_TOO_MANY_CONNS);
     gpr_mu_unlock(&state->mu);
     grpc_endpoint_shutdown(tcp, GRPC_ERROR_CREATE_FROM_STATIC_STRING(ORIENTSEC_GRPC_PROVIDER_TOO_MANY_CONNS));

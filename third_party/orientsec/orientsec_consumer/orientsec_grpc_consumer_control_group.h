@@ -39,7 +39,7 @@ void orientsec_grpc_consumer_control_group_update(char* service_name,
 
 //std::vector<std::string> orientsec_grpc_global_service_group_get();
 
-bool is_group_grading();
+//bool is_group_grading();
 
 #ifdef __cplusplus
 }

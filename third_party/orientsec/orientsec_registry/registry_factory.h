@@ -79,7 +79,8 @@ void grpc_registry_zookeeper_init(void);
 
 void grpc_registry_zookeeper_shutdown(void);
 
-    registry_service_t *zk_get_registry_service(char* address);
+// 注册中心工厂类接口函数实现
+registry_service_t *zk_get_registry_service(char* address);
 
 #ifdef __cplusplus
 }

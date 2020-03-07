@@ -20,14 +20,16 @@
  *    2017/05/15
  *    version 0.0.9
  *    配置文件操作实现方法
+ *    Modified: Jianbin Yang
+ *    Add long item reading from configuration file
  */
 
 #include "orientsec_grpc_properties_tools.h"
 #include "orientsec_grpc_utils.h"
-#include<stdio.h>
-#include<stdlib.h>
-#include<stdbool.h>
-#include<string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
 
 #if (defined WIN64) || (defined WIN32)
 #include<direct.h>
@@ -75,7 +77,10 @@ int get_property_value(char *keyAndValue, char * key, char * value) {
 int orientsec_grpc_properties_init_inner(const char *filename) {
 	FILE *pf = NULL;
 	char line[ORIENTSEC_GRPC_BUF_LEN] = { 0 };
+        char tmp[ORIENTSEC_GRPC_BUF_LEN] = {0};  //temporary character
+        char str[ORIENTSEC_GRPC_BUF_LEN] = {0};  //存储拼接的长字符串
 	int index = 0;
+        bool need_strcat = false;
 	if (properties_inited)
 	{
 		return 1;
@@ -86,12 +91,41 @@ int orientsec_grpc_properties_init_inner(const char *filename) {
 		printf("open %s failed\n", filename);
 		return -1;
 	}
-	while (!feof(pf)) {
+	while (!feof(pf)) { 
 		memset(line, 0, ORIENTSEC_GRPC_BUF_LEN);
+                memset(tmp, 0, ORIENTSEC_GRPC_BUF_LEN);
 		fgets(line, ORIENTSEC_GRPC_BUF_LEN, pf);
+                // 续行符的处理
+                if (strstr(line, "\\\n") != NULL){  //Found '\' in line
+                  if (strlen(str) > 0) {   
+                    trim(line, tmp);
+                    strcat(str, tmp);
+                  } else {
+                    trim(line, tmp);
+                    strcpy(str, tmp);
+                  }
+                  need_strcat = true;
+                }
+                // 需要拼接的，去下一行拼接
+                if (need_strcat) {
+                  need_strcat = false;
+                  continue;   
+                } else {
+                  if (strlen(str) > 0) {
+                    //strcat(str, ",");
+                    strcat(str, line);
+                    memset(line, 0, sizeof(line));
+                    strcpy(line, str);
+                  }
+                }
+
 		if (0 == get_property_value(line, properties[index].key, properties[index].value)) {
-			index++;
+		  index++;
 		}
+
+                // 清理str
+                memset(str, 0, ORIENTSEC_GRPC_BUF_LEN);
+                
 	}
 	fclose(pf);
 	properties_num = index;

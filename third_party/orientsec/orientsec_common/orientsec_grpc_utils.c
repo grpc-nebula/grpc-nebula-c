@@ -51,8 +51,13 @@
 #include <unistd.h>
 #endif  //
 
+#define LOOPBACK_ADDR "127.0.0.1"
 static int orientsec_grpc_side_flag = 2;  // 2 consumer 1 provider
 static char* get_localhost_ip();
+
+static char g_provider_appName[ORIENTSEC_GRPC_PROPERTY_VALUE_MAX_LEN] = {0};
+static char g_local_ip[128] = {0};
+static char g_registry_ip[128] = {0};
 
 int grpc_getpid() {
 #if (defined WIN64) || (defined WIN32)
@@ -69,9 +74,7 @@ uint64_t orientsec_get_timestamp_in_mills() {
   return ret;
 }
 
-static char g_local_ip[128] = {0};
-
-// 判断IP地址是否有效 
+// 判断IP地址是否有效
 static bool is_ip_valid(const char* pszIPAddr) {
   if (!pszIPAddr) return false;  //若pszIPAddr为空
   char IP1[100], cIP[4];
@@ -102,7 +105,8 @@ static bool is_ip_valid(const char* pszIPAddr) {
     if (*p == '.') {
       if ((*(p - 1) >= '0' && *(p - 1) <= '9') &&
           (*(p + 1) >= '0' &&
-           *(p + 1) <= '9'))  //判断"."前后是否有数字，若无，则为无效IP，如“1.1.127.”
+           *(p + 1) <=
+               '9'))  //判断"."前后是否有数字，若无，则为无效IP，如“1.1.127.”
         num++;  //记录“.”出现的次数，不能大于3
       else
         return false;
@@ -117,7 +121,63 @@ static bool is_ip_valid(const char* pszIPAddr) {
   return true;
 }
 
-  // 获得主机IP 接口函数
+//obtain common.service.port if configured and legal
+int get_provider_registry_port() { 
+  int nominal_port = 0; 
+  char buf[32] = {0};
+  //读取配置文件中的ip信息
+  if (0 == orientsec_grpc_properties_get_value(
+               ORIENTSEC_GRPC_PROPERTIES_COMMON_SERVICE_PORT, NULL, buf)) {
+    // 判断端口的合法性
+    nominal_port = atoi(buf);
+    if (nominal_port > 65535 || nominal_port < 0) {
+      gpr_log(GPR_ERROR, "common.service.port %d is illegal!", nominal_port);
+      // abort directly if common.service.port was illegal
+      abort();
+    }
+    return nominal_port;
+  }
+  return 0;
+}
+
+// provider获得主机注册IP 接口函数
+// 1.优先级一：如果配置common.service.ip，获取配置项值并校验
+// 2.优先级二：如果配置common.localhost.ip 获取配置项值并校验
+// 3.优先级三：均未配置，则取网卡IP并校验
+// 只适用provider端
+char* get_provider_registry_ip() {
+  char config_provider_ip[128] = {0};
+
+  if (*g_local_ip != '\0') {
+    return g_local_ip;
+  }
+
+  //读取配置文件中的ip信息
+  if (0 == orientsec_grpc_properties_get_value(
+          ORIENTSEC_GRPC_PROPERTIES_COMMON_SERVICE_IP, NULL,
+               config_provider_ip)) {
+    // 校验配置IP是否合法
+    if (is_ip_valid(config_provider_ip)) {
+      int len = strlen(config_provider_ip);
+      snprintf(g_registry_ip, len + 1, "%s", config_provider_ip);
+      return g_registry_ip;
+    } else {
+      gpr_log(GPR_ERROR, "common.service.ip %s is illegal!",
+              config_provider_ip);
+      // abort directly if common.service.ip was illegal
+      abort();
+    }
+  }
+  char *local_ip = get_local_ip();
+  int lenth = strlen(local_ip);
+  snprintf(g_registry_ip, lenth + 1, "%s", local_ip);
+  return g_registry_ip;
+}
+
+// 获得主机IP 接口函数
+// 1.优先级一：如果配置common.localhost.ip 获取配置项值并校验
+// 2.优先级二：均未配置，则取网卡IP并校验
+// 适用provider端和consumer端
 char* get_local_ip() {
   char config_host_ip[64] = {0};
 
@@ -126,13 +186,18 @@ char* get_local_ip() {
   }
 
   //读取配置文件中的ip信息
-  if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_COMMON_LOCALHOST_IP, NULL, config_host_ip)) {
+  if (0 == orientsec_grpc_properties_get_value(
+               ORIENTSEC_GRPC_PROPERTIES_COMMON_LOCALHOST_IP, NULL,
+               config_host_ip)) {
     // 校验配置IP是否合法
     if (is_ip_valid(config_host_ip)) {
       int len = strlen(config_host_ip);
       snprintf(g_local_ip, len + 1, "%s", config_host_ip);
-      return g_local_ip;
+      
+    } else{
+      snprintf(g_local_ip, strlen(LOOPBACK_ADDR) + 1, "%s", LOOPBACK_ADDR);
     }
+    return g_local_ip;
   }
   get_localhost_ip();
   return g_local_ip;
@@ -223,15 +288,16 @@ static char* get_localhost_ip() {
   return g_local_ip;
 }
 
-static char g_provider_applicationName[ORIENTSEC_GRPC_PROPERTY_VALUE_MAX_LEN] = {0};
-char* orientsec_get_provider_AppName() {
+
+char* orientsec_get_provider_appname() {
   char* ptr = NULL;
-  if (*g_provider_applicationName != '\0') {
-    return g_provider_applicationName;
+  if (*g_provider_appName != '\0') {
+    return g_provider_appName;
   }
-  if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_COMMON_APP, NULL,
-                                          g_provider_applicationName)) {
-    return g_provider_applicationName;
+  if (0 ==
+      orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_COMMON_APP,
+                                          NULL, g_provider_appName)) {
+    return g_provider_appName;
   }
   return NULL;
 }
@@ -267,7 +333,8 @@ void trim(char* strIn, char* strOut) {
 
   temp = strIn + strlen(strIn) - 1;  //得到原字符串最后一个字符的指针(不是'\0')
 
-  while (*temp == ' ' || *temp == '\n' || *temp == '\r' || *temp == '\t') {
+  while (*temp == ' ' || *temp == '\n' || *temp == '\r' || *temp == '\t' ||
+         *temp == '\\') {
     --temp;
   }
 
@@ -290,8 +357,10 @@ int get_executable_path(char* processdir, int len, char* processname) {
     return -1;
   }
 
-  filename = strrchr(processdir, PATH_SEPRATOR);  //函数查找字符在指定字符串中最后一次出现的位置如果成功，则返回指定字符最后一次出现位置的地址，如果失败，则返回
-                                                  //false
+  filename = strrchr(
+      processdir,
+      PATH_SEPRATOR);  //函数查找字符在指定字符串中最后一次出现的位置如果成功，则返回指定字符最后一次出现位置的地址，如果失败，则返回
+                       // false
   if (filename == NULL) return -1;
   ++filename;
   strcpy(processname, filename);
@@ -314,6 +383,20 @@ char* gprc_strdup(const char* str) {
 
 void orientsec_log(char* msg) { printf("%s\n", msg); }
 
+//版本信息格式化处理
+char* grpc_verion_format(const char* str) {
+  if ((str == NULL) || strlen(str) == 0) return NULL;
+  char* out = NULL;
+  out = strchr(str,'/');
+  out = out++;
+  char* ret = (char*)malloc(64);
+  memset(ret,0,sizeof(ret));
+  strcpy(ret, ORIENTSEC_GRPC_VERSION_PRIFIX);
+  strcat(ret,out);
+  return ret;
+}
+
+// count num of char 'a 'in string 'str'
 int countchar(char* str, char a) {
   int n = 0;
   int i = 0;
@@ -514,7 +597,7 @@ provider_t* new_provider() {
   snprintf(provider->host, sizeof("127.0.0.1") + 1, "%s", "127.0.0.1");
   provider->port = 0;
   REINIT(provider->version);
-  //provider->version = NULL;
+  // provider->version = NULL;
   REINIT(provider->group);
   provider->default_timeout = 1000;
   provider->default_reties = 2;
@@ -549,47 +632,57 @@ provider_t* new_provider() {
   provider->ext_data = NULL;
   provider->project = NULL;
   provider->comm_owner = NULL;
+  provider->serv_type = NULL;
   provider->is_master = true;
   provider->online = true;
   return provider;
 }
 
 // initialize provider
-void init_provider(provider_t* provider) {
+enum RegCode init_provider(provider_t* provider) {
   char buf[ORIENTSEC_GRPC_PROPERTY_VALUE_MAX_LEN] = {0};
   if (!provider) {
-    return;
+    return OTHER;
   }
   orientsec_grpc_properties_init();
-  if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_COMMON_APP, NULL,
-                                          buf)) {
+  if (0 == orientsec_grpc_properties_get_value(
+               ORIENTSEC_GRPC_PROPERTIES_COMMON_APP, NULL, buf)) {
     provider->application = gprc_strdup(buf);
+  } else {
+    return APPL_NOT_CONF;
   }
   REINIT(buf);
-  //begin by liumin
-  if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_COMMON_PROJECT, NULL, buf)) {
-      provider->project = gprc_strdup(buf) ;
+  // begin by liumin
+  if (0 == orientsec_grpc_properties_get_value(
+               ORIENTSEC_GRPC_PROPERTIES_COMMON_PROJECT, NULL, buf)) {
+    provider->project = gprc_strdup(buf);
   } else {
     provider->project = ORIENTSEC_GRPC_PROPERTIES_COMMON_PROJECT_DEFAULT;
+    return PROJ_NOT_CONF;
   }
   REINIT(buf);
-  if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_COMMON_OWNER, NULL, buf)) {
+  if (0 == orientsec_grpc_properties_get_value(
+               ORIENTSEC_GRPC_PROPERTIES_COMMON_OWNER, NULL, buf)) {
     provider->comm_owner = gprc_strdup(buf);
   } else {
     provider->comm_owner = ORIENTSEC_GRPC_PROPERTIES_COMMON_OWNER_DEFAULT;
+    return OWNR_NOT_CONF;
   }
   REINIT(buf);
-  //end by liumin
+  // end by liumin
 
   orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_P_VERSION, NULL,
                                       provider->version);
-  /*if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_P_VERSION, NULL,
+  if (strlen(provider->version) == 0 || provider->version == NULL)
+    return VSON_NOT_CONF;
+  /*if (0 ==
+  orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_P_VERSION, NULL,
                                           buf)) {
     provider->version = gprc_strdup(buf);
   }*/
-  //REINIT(buf);
-  if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_P_MODULE, NULL,
-                                          buf)) {
+  // REINIT(buf);
+  if (0 == orientsec_grpc_properties_get_value(
+               ORIENTSEC_GRPC_PROPERTIES_P_MODULE, NULL, buf)) {
     provider->module = gprc_strdup(buf);
   }
 
@@ -599,62 +692,64 @@ void init_provider(provider_t* provider) {
     provider->default_timeout = atoi(buf);
   }
   REINIT(buf);
-  if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_P_DEFAULT_RETIES,
-                                          NULL, buf)) {
+  if (0 == orientsec_grpc_properties_get_value(
+               ORIENTSEC_GRPC_PROPERTIES_P_DEFAULT_RETIES, NULL, buf)) {
     provider->default_reties = atoi(buf);
   }
   REINIT(buf);
-  if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_P_DEFAULT_CONN,
-                                          NULL, buf)) {
+  if (0 == orientsec_grpc_properties_get_value(
+               ORIENTSEC_GRPC_PROPERTIES_P_DEFAULT_CONN, NULL, buf)) {
     provider->default_connections = atoi(buf);
   }
   REINIT(buf);
-  if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_P_DEFAULT_REQ,
-                                          NULL, buf)) {
+  if (0 == orientsec_grpc_properties_get_value(
+               ORIENTSEC_GRPC_PROPERTIES_P_DEFAULT_REQ, NULL, buf)) {
     provider->default_requests = atoi(buf);
   }
   REINIT(buf);
-  if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_P_DEFAULT_LB,
-                                          NULL, buf)) {
+  if (0 == orientsec_grpc_properties_get_value(
+               ORIENTSEC_GRPC_PROPERTIES_P_DEFAULT_LB, NULL, buf)) {
     provider->default_loadbalance = lb_strategy_from_str(buf);
   }
   REINIT(buf);
-  if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_P_DEFAULT_ASYNC,
-                                          NULL, buf)) {
-    provider->default_async = (orientsec_stricmp(buf, "true") == 0) ? true : false;
+  if (0 == orientsec_grpc_properties_get_value(
+               ORIENTSEC_GRPC_PROPERTIES_P_DEFAULT_ASYNC, NULL, buf)) {
+    provider->default_async =
+        (orientsec_stricmp(buf, "true") == 0) ? true : false;
   }
   REINIT(buf);
-  if (0 ==
-      orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_P_TOKEN, NULL, buf)) {
+  if (0 == orientsec_grpc_properties_get_value(
+               ORIENTSEC_GRPC_PROPERTIES_P_TOKEN, NULL, buf)) {
     provider->token = gprc_strdup(buf);
   }
 
   REINIT(buf);
-  if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_P_DEPRECATED,
-                                          NULL, buf)) {
+  if (0 == orientsec_grpc_properties_get_value(
+               ORIENTSEC_GRPC_PROPERTIES_P_DEPRECATED, NULL, buf)) {
     provider->deprecated = (orientsec_stricmp(buf, "true") == 0) ? true : false;
   }
 
   REINIT(buf);
-  if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_P_DYNAMIC, NULL,
-                                          buf)) {
+  if (0 == orientsec_grpc_properties_get_value(
+               ORIENTSEC_GRPC_PROPERTIES_P_DYNAMIC, NULL, buf)) {
     provider->dynamic = (orientsec_stricmp(buf, "true") == 0) ? true : false;
   }
 
   REINIT(buf);
-  if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_P_ACCESSLOG,
-                                          NULL, buf)) {
+  if (0 == orientsec_grpc_properties_get_value(
+               ORIENTSEC_GRPC_PROPERTIES_P_ACCESSLOG, NULL, buf)) {
     provider->accesslog = (orientsec_stricmp(buf, "true") == 0) ? true : false;
   }
 
   REINIT(buf);
-  if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_P_OWNER, NULL, buf)) {
+  if (0 == orientsec_grpc_properties_get_value(
+               ORIENTSEC_GRPC_PROPERTIES_P_OWNER, NULL, buf)) {
     provider->owner = gprc_strdup(buf);
   }
 
   REINIT(buf);
-  if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_P_WEIGHT, NULL,
-                                          buf)) {
+  if (0 == orientsec_grpc_properties_get_value(
+               ORIENTSEC_GRPC_PROPERTIES_P_WEIGHT, NULL, buf)) {
     provider->weight = atoi(buf);
   }
 
@@ -665,46 +760,39 @@ void init_provider(provider_t* provider) {
   }
 
   REINIT(buf);
-  if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_P_APP_VERSION,
-                                          NULL, buf)) {
+  if (0 == orientsec_grpc_properties_get_value(
+               ORIENTSEC_GRPC_PROPERTIES_P_APP_VERSION, NULL, buf)) {
     provider->application_version = gprc_strdup(buf);
   }
 
   REINIT(buf);
-  if (0 ==
-      orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_P_ORG, NULL, buf)) {
+  if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_P_ORG,
+                                               NULL, buf)) {
     provider->organization = gprc_strdup(buf);
   }
 
   REINIT(buf);
-  if (0 ==
-      orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_P_ENV, NULL, buf)) {
+  if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_P_ENV,
+                                               NULL, buf)) {
     provider->environment = gprc_strdup(buf);
   }
 
   REINIT(buf);
-  if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_P_MOD_VER, NULL,
-                                          buf)) {
+  if (0 == orientsec_grpc_properties_get_value(
+               ORIENTSEC_GRPC_PROPERTIES_P_MOD_VER, NULL, buf)) {
     provider->module_version = gprc_strdup(buf);
   }
 
   REINIT(buf);
-  if (0 == orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_P_ANYHOST, NULL,
-                                          buf)) {
+  if (0 == orientsec_grpc_properties_get_value(
+               ORIENTSEC_GRPC_PROPERTIES_P_ANYHOST, NULL, buf)) {
     provider->anyhost = (orientsec_stricmp(buf, "true") == 0) ? true : false;
   }
 
   REINIT(buf);
-  if (0 ==
-      orientsec_grpc_properties_get_value(ORIENTSEC_GRPC_PROPERTIES_P_DUBBO, NULL, buf)) {
+  if (0 == orientsec_grpc_properties_get_value(
+               ORIENTSEC_GRPC_PROPERTIES_P_DUBBO, NULL, buf)) {
     provider->dubbo = gprc_strdup(buf);
-  }
-
-  // added service grouping and grading
-  //REINIT(buf);
-  if (0 != orientsec_grpc_properties_get_value(
-               ORIENTSEC_GRPC_PROPERTIES_P_GROUP, NULL, provider->group)) {
-      strcpy(provider->group, ORIENTSEC_GRPC_PROPERTIES_P_GROUP_DEFAULT);
   }
 
   REINIT(buf);
@@ -717,18 +805,17 @@ void init_provider(provider_t* provider) {
   REINIT(buf);
   if (0 == orientsec_grpc_properties_get_value(
                ORIENTSEC_GRPC_PROPERTIES_P_MASTER, NULL, buf)) {
-    provider->is_master =
-        (orientsec_stricmp(buf, "true") == 0) ? true : false;
+    provider->is_master = (orientsec_stricmp(buf, "true") == 0) ? true : false;
   }
-
+  return OK;
 }
 
 void free_provider_v2(provider_t* provider) {
   if (!provider) {
     return;
   }
-  //FREE_PTR(provider->version);
-  //FREE_PTR(provider->group);
+  // FREE_PTR(provider->version);
+  // FREE_PTR(provider->group);
   FREE_PTR(provider->token);
   FREE_PTR(provider->owner);
   FREE_PTR(provider->application);
@@ -741,8 +828,8 @@ void free_provider_v2(provider_t* provider) {
   FREE_PTR(provider->methods);
   FREE_PTR(provider->grpc);
   FREE_PTR(provider->dubbo);
-  //FREE_PTR(provider->project);
-  //FREE_PTR(provider->comm_owner);
+  // FREE_PTR(provider->project);
+  // FREE_PTR(provider->comm_owner);
 }
 
 void free_provider(provider_t** p) {

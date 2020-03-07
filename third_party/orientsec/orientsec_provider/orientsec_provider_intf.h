@@ -33,7 +33,7 @@ extern "C" {
 #endif
 
 //注册Provider，并订阅configurators目录
-void provider_registry(int port, const char *sIntf, const char *sMethods);
+void provider_registry(int port, const char *sIntf, const char *sMethods,const char* grpc_verison);
 
 //注销本应用所有的服务并取消订阅
 void providers_unregistry();
@@ -43,10 +43,10 @@ void providers_unregistry();
 #define ORIENTSEC_GRPC_PROVIDER_IN_ACCESS_PROTECTED "Cancelled service called because service being in access protected status"
 
 //检查指定服务并发连接数满足条件，即 0 < 当前连接数 + 1 <=max,满足条件时，连接数+1，并返回true,否则返回false
-bool check_provider_connection(const char *intf);
+bool check_provider_connection(const char *intf,const char*);
 
 //减少Provider的当前并发连接计数
-void decrease_provider_connection(const char *intf);
+void decrease_provider_connection(const char *intf,const char*);
 
 //检查指定服务并发请求数满足条件，即 0 < 当前并发请求数 + 1 <=max,满足条件时，连接数+1，并返回true,否则返回false
 bool check_provider_request(const char *intf);

@@ -39,6 +39,8 @@ typedef void(*registry_notify_f)(url_t*, int);
 
 typedef struct _registry_service registry_service_t;
 
+//typedef enum { PUBLIC_CENTER = 0, PRIVATE_CENTER } zookeeper_center_property;
+
 //接口参数类型
 typedef struct _registry_service_args {
 	registry_service_t *param;
@@ -61,9 +63,11 @@ typedef  struct _registry_service {
 	//读取某个路径下的数据
 	char* (*getData)(registry_service_args_t*, char*);
 	//断开连接
-	void (*stop)(registry_service_args_t*);
+        void (*stop)(registry_service_args_t*);
 	//释放接口中的数据
 	void(*destroy)(registry_service_args_t*);
+        // 定义注册中心的public/private 属性
+        //zookeeper_center_property zk_center;
 	//接口的唯一标识，例如为注册中心地址
 	char *key;
 	//接口的其他数据，

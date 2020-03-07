@@ -26,7 +26,6 @@
 #define ORIENTSEC_CONSUMER_INTF_H
 
 #include "orientsec_types.h"
-
 //addbylm
 #include "src/core/ext/filters/client_channel/lb_policy_registry.h"
 
@@ -41,9 +40,7 @@ void get_all_providers_by_name(const char*service_name);
 provider_t* consumer_query_providers_write_point_policy(
     const char* service_name, grpc_core::LoadBalancingPolicy* lb_policy,
     int* nums, char* method_name);
-//provider_t* consumer_query_providers_write_point_policy(
-//    const char* service_name, grpc_core::LoadBalancingPolicy* lb_policy,
-//    int* nums, const char* method);
+
 //根据服务名查询provider，返回provider_t数组（只返回一个有效服务）
 provider_t* consumer_query_providers(const char *service_name, int *nums,char*hasharg,char * method_name);
 
@@ -55,7 +52,8 @@ int get_index_from_lb_aglorithm(const char *service_name, provider_t *provider, 
 provider_t* consumer_query_providers_all(const char *service_name, int *nums);
 
 //consumer注册，返回注册的url串。
-char *orientsec_grpc_consumer_register(const char *fullmethod);
+char* orientsec_grpc_consumer_register(const char* fullmethod,
+                                       const char* frameversion);
 
 //consumer取消注册。
 int orientsec_grpc_consumer_unregister(char * reginfo);
@@ -121,6 +119,11 @@ void orientsec_group_grade_reset();
 bool orientsec_need_resolved();
 // reset need_resolve flag
 void orientsec_need_resolved_reset();
+
+// switch provider every 10min when connection mode
+void check_elapse_time_reach_setting();
+bool orientsec_switch_when_connection_resolved();
+void orientsec_switch_when_connection_resolved_reset();
 
 #ifdef __cplusplus
 }

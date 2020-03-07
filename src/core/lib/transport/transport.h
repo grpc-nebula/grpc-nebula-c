@@ -396,6 +396,6 @@ grpc_transport_stream_op_batch* grpc_make_transport_stream_op(
     grpc_closure* on_consumed);
 
 //---begin----
-void orientsec_grpc_get_client_ip(grpc_transport* transport, char* remote);
+//void orientsec_grpc_get_client_ip(grpc_transport* transport, char* remote);
 //----end-----
 #endif /* GRPC_CORE_LIB_TRANSPORT_TRANSPORT_H */

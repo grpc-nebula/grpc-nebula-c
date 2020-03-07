@@ -360,6 +360,9 @@ class ClientContext {
   /// Applications never need to call this method.
   grpc_call* c_call() { return call_; }
 
+  /// reset call if failure retry
+  void reset_call();
+
   /// EXPERIMENTAL debugging API
   ///
   /// if status is not ok() for an RPC, this will return a detailed string

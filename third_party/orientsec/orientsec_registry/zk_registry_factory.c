@@ -29,11 +29,17 @@
 #include "zk_registry_service.h"
 #include <grpc/support/log.h>
 
-#define MAX_REGISTRY 50
+#define MAX_REGISTRY 64
 #define DEFAULT_REGISTRY_PREFIX_MAX_LENGTH 32
 
 static registry_service_t *g_all_of_the_zk_registries[MAX_REGISTRY];
 static int g_number_of_zk_registries = 0;
+
+// 返回全部的zk注册接口
+registry_service_t** zk_all_registry_center() {
+  return g_all_of_the_zk_registries;
+}
+
 
 //查找指定地址对应的zk接口
 registry_service_t* zk_lookup_registry(char *address) {
@@ -56,6 +62,7 @@ registry_service_t *zk_get_registry_service(char* address) {
 	int len = 0;
 	registry_service_args_t args;
 	registry_service_t *registry = zk_lookup_registry(address);
+        // 能找到则返回，找不到则新建
 	if (registry) {
 		return registry;
 	}

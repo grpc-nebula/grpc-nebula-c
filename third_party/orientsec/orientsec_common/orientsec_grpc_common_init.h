@@ -45,9 +45,12 @@ extern "C" {
 	int orientsec_grpc_cache_provider_count_get();
 
         //获取consumer对服务分组的要求
-        char *orientsec_grpc_consumer_service_group_get();
+        //char *orientsec_grpc_consumer_service_group_get();
 
 	int orientsec_grpc_common_get_writekafka_enabled_set(int enable);
+
+       // 获取注册根目录
+        char* orientsec_grpc_common_get_root_dir();
 
 #ifdef __cplusplus
 }

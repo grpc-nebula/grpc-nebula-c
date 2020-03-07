@@ -29,19 +29,25 @@
 extern "C" {
 #endif
 
-	//请求数控制结构体
-	typedef struct _orientsec_grpc_consumer_request {
-		long currentrequests;
-		int64_t timestamp;
-	} orientsec_grpc_consumer_request_t;
+  //请求数控制结构体
+  typedef struct _orientsec_grpc_consumer_request {
+                long currentrequests;
+                int64_t timestamp;
+  } orientsec_grpc_consumer_request_t;
 
-	//最大请求数控制锁初始化
-	void orientsec_grpc_consumer_request_mu_init();
+  //最大请求数控制锁初始化
+  void orientsec_grpc_consumer_request_mu_init();
 
-	void orientsec_grpc_consumer_update_maxrequest(char * servicename, long requestnum);
+  void orientsec_grpc_consumer_update_maxrequest(char * servicename, long requestnum);
 
-	//校验制定服务是否需要进行请求数控制
-	int orientsec_grpc_consumer_control_requests(const char * fullmethod);
+  //校验制定服务是否需要进行请求数控制
+  int orientsec_grpc_consumer_control_requests(const char * fullmethod);
+
+  //reset clientId(注册时填写的信息)调用providerId(provider_ip:provider_port)失败信息
+  void reset_provider_failure(char* clientId, char* providerId,const char* methods);
+
+  // obtain retry times to consumer call
+  int orientsec_get_failure_retry_times();
 
 #ifdef __cplusplus
 }

@@ -112,6 +112,10 @@ class ChannelArguments {
   /// Set a textual argument \a value under \a key.
   void SetString(const grpc::string& key, const grpc::string& value);
 
+  //----begin----
+  // get grpc framework version.
+  void GetVersion(grpc::string& version);
+  //----end----
   /// Return (by value) a C \a grpc_channel_args structure which points to
   /// arguments owned by this \a ChannelArguments instance
   grpc_channel_args c_channel_args() const {
@@ -141,6 +145,7 @@ class ChannelArguments {
 
   std::vector<grpc_arg> args_;
   std::list<grpc::string> strings_;
+  std::string version_;
 };
 
 }  // namespace grpc

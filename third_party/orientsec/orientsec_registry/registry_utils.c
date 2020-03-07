@@ -20,6 +20,8 @@
  *    2017/05/15
  *    version 0.0.9
  *    工具类
+ *    Modified: Jianbin Yang
+ *    Mod: new property added in url
  */
 
 #include "registry_utils.h"
@@ -30,7 +32,11 @@
 #include <grpc/support/log.h>
 #include <grpc/support/alloc.h>
 #include <src/core/lib/gpr/string.h>
+
+// shared variable of public and private zk register directory
 extern char* g_orientsec_grpc_common_root_directory;
+extern char* g_orientsec_grpc_private_common_root_directory;
+
 int get_service_name_from_path(const char* path, char* service_name, int buf_len) {
 	if (!path || !service_name)
 	{

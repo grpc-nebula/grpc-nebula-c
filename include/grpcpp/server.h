@@ -279,6 +279,7 @@ class Server : public ServerInterface, private GrpcLibraryCodegen {
 
   //---begin---
   std::vector<int> ports_;
+  std::string grpc_version_;
   //---end---
 
   // A special handler for resource exhausted in sync case

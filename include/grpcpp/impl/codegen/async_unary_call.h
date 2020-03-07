@@ -159,6 +159,26 @@ class ClientAsyncResponseReader final
       single_buf.ClientRecvStatus(context_, status);
       call_.PerformOps(&single_buf);
     }
+
+    //----begin----
+    // for consumer called failover  
+    grpc_call* call_obj = call_.call();
+    // get the method
+    auto* rpc_info = call_.client_rpc_info();
+    const char* called_method = rpc_info->method();
+    // obtain register info and provider host info
+    char* reg_info = orientsec_grpc_call_get_reginfo(call_obj);
+    char* prov_host = orientsec_grpc_call_serverhost(call_obj);
+    // if called okay, reset the failover data
+    if (status->ok()) {
+      // reset when customized call and last call was not okay
+      if (reg_info != NULL && (!last_call_status_)) {
+        reset_provider_failure(reg_info, prov_host, called_method);
+      }
+    } else {
+      last_call_status_ = false;
+    }  
+    //----end----
   }
 
  private:
@@ -167,6 +187,7 @@ class ClientAsyncResponseReader final
   ::grpc::internal::Call call_;
   bool started_;
   bool initial_metadata_read_ = false;
+  bool last_call_status_ = true;
 
   //----begin----
   template <class W>

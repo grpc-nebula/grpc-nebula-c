@@ -285,6 +285,12 @@ GRPCAPI struct census_context* grpc_census_call_get_context(grpc_call* call);
     created for. */
 GRPCAPI char* grpc_channel_get_target(grpc_channel* channel);
 
+//----begin----
+/** Return a newly allocated string representing the client ip addr a channel
+    was created for. */
+GRPCAPI char* grpc_channel_get_client_addr(grpc_channel* channel);
+//----end----
+
 /** Request info about the channel.
     \a channel_info indicates what information is being requested and
     how that information will be returned.
@@ -527,23 +533,25 @@ GRPCAPI char* grpc_channelz_get_subchannel(intptr_t subchannel_id);
    is allocated and must be freed by the application. */
 GRPCAPI char* grpc_channelz_get_socket(intptr_t socket_id);
 
-
 //----begin----
-//extern int grpc_call_error_trace;
+// extern int grpc_call_error_trace;
 
-void grpc_set_call_provider_addr(grpc_call* channel_call, const char* provider_addr);
+void grpc_set_call_provider_addr(grpc_call* channel_call,
+                                 const char* provider_addr);
 
-//grpc_call* grpc_get_call_from_call_stack(grpc_call_stack* call_stack);
+// grpc_call* grpc_get_call_from_call_stack(grpc_call_stack* call_stack);
 ////
-//grpc_call* grpc_get_call_from_top_elem(grpc_call_element* elem);
+// grpc_call* grpc_get_call_from_top_elem(grpc_call_element* elem);
 
 char* grpc_get_call_target(grpc_call* channel_call);
 //根据call 对象获取server ip
 char* orientsec_grpc_call_serverhost(grpc_call* call);
-//-----
+//----end----
 //----begin----
 // add by huyn 获取provider addr
 char* orientsec_grpc_call_provider_addr_get(grpc_call* call);
+
+char* orientsec_grpc_call_get_reginfo(grpc_call* call);
 
 // add by yang
 void orientsec_grpc_setcall_hashinfo(grpc_call* call, const char* s);
@@ -551,6 +559,7 @@ void orientsec_grpc_setcall_hashinfo(grpc_call* call, const char* s);
 char* orientsec_grpc_getcall_hashinfo(grpc_call* call);
 
 void orientsec_grpc_setcall_methodname(grpc_call* call, const char* s);
+
 char* orientsec_grpc_getcall_methodname(grpc_call* call);
 //-----end-----
 

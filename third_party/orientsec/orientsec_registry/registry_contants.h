@@ -77,8 +77,10 @@ extern "C" {
 // add for provider.master key in zookeeper registry
 #define ORIENTSEC_GRPC_REGISTRY_KEY_MASTER "master"
 
-// add for service group key in zookeeper registry
+// add for provider service group key in zookeeper registry
 #define ORIENTSEC_GRPC_REGISTRY_KEY_GROUP "group"
+// add for consumer service group key in zookeeper registry
+#define ORIENTSEC_GRPC_REGISTRY_KEY_INVOKE_GROUP "invoke.group"
 
 #define ORIENTSEC_GRPC_REGISTRY_KEY_CHECK   "check"
 #define ORIENTSEC_GRPC_REGISTRY_KEY_DEFAULT_REFERENCE_FILTER   "default.reference.filter"
@@ -145,6 +147,14 @@ extern "C" {
 
 #define ORIENTSEC_GRPC_ZK_HOSTS "zookeeper.host.server"
 #define ORIENTSEC_GRPC_ZK_TIMEOUT "zookeeper.connectiontimeout"
+#define ORIENTSEC_GRPC_ZK_RETRY_TIME "zookeeper.retry.time"
+
+// 区分内外部服务
+#define ORIENTSEC_GRPC_ZK_PRIVATE_HOSTS "zookeeper.private.host.server"
+#define ORIENTSEC_GRPC_ZK_PRIVATE_ACL_USERNAME "zookeeper.private.acl.username"
+#define ORIENTSEC_GRPC_ZK_PRIVATE_ACL_PASSWORD "zookeeper.private.acl.password"
+#define ORIENTSEC_GRPC_ZK_PUBLIC_SERVICES "public.service.list"
+#define ORIENTSEC_GRPC_ZK_PRIVATE_SERVICES "private.service.list"
 
 //访问控制用户名和密码
 
@@ -155,6 +165,18 @@ extern "C" {
 
 // 类型string, 说明:客户端调用服务版本号
 #define ORIENTSEC_GRPC_CONSUMER_SERVICE_VERSION "service.version"
+
+// 服务端服务公开性
+#define ORIENTSEC_GRPC_REGISTRY_KEY_SERVICE_TYPE "service.type"
+
+// grpc框架版本号
+#define ORIENTSEC_GRPC_REGISTRY_KEY_FRAME_VERSION "grpc"
+
+// provider real ip addr
+#define ORIENTSEC_GRPC_REGISTRY_KEY_REAL_IP "real.ip"
+
+// provider real port
+#define ORIENTSEC_GRPC_REGISTRY_KEY_REAL_PORT "real.port"
 
 #ifdef __cplusplus
 }

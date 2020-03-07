@@ -128,12 +128,12 @@ grpc_call* grpc_get_call_from_call_stack(grpc_call_stack* call_stack);
 grpc_call* grpc_get_call_from_top_elem(grpc_call_element* elem);
 //----begin----
 //根据channel对象获得调用的provider ip addr
-char* orientsec_grpc_call_serverhost(grpc_call* call);
+//char* orientsec_grpc_call_serverhost(grpc_call* call);
 //----end----
 
 //----begin----
 // add by huyn 获取provider addr
-char* orientsec_grpc_call_provider_addr_get(grpc_call* call);
+//char* orientsec_grpc_call_provider_addr_get(grpc_call* call);
 
 //// add by yang
 //void orientsec_grpc_setcall_hashinfo(grpc_call* call, const char* s);

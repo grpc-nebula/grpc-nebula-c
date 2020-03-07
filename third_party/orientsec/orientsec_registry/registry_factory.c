@@ -18,7 +18,7 @@
 /*
  *    Author : heiden deng(dengjianquan@beyondcent.com)
  *    2017/05/15
- *    version 0.0.9
+ *    version 0.9
  *    注册中心工厂接口函数实现
  */
 
@@ -33,10 +33,11 @@ static int g_number_of_registry_factories = 0;
 
 static char g_default_registry_factory_prefix[DEFAULT_REGISTRY_PREFIX_MAX_LENGTH] = "zookeeper://";
 
+// 创建工厂（Zookeeper，Redis and ect)
 void orientsec_grpc_register_registry_factory_type(registry_factory_t *registry_factory) {
 	int i;
 	for (i = 0; i < g_number_of_registry_factories; i++) {
-		//add by huyn 不重复注册zk factory
+		//add by huyn 不重复注册zookeeper factory
 		if (strcmp(registry_factory->scheme,
 			g_all_of_the_registry_factories[i]->scheme) == 0) {
 			return;
@@ -46,6 +47,7 @@ void orientsec_grpc_register_registry_factory_type(registry_factory_t *registry_
 	g_all_of_the_registry_factories[g_number_of_registry_factories++] = registry_factory;
 }
 
+// 查询注册工厂类
 registry_factory_t* lookup_registry_factory(char *address) {
 	char *p = NULL;
 	int schema_len = 0;

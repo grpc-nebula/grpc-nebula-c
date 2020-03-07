@@ -864,8 +864,8 @@ static void got_initial_metadata(void* ptr, grpc_error* error) {
     if (service_name) {
       if (!check_provider_request(service_name)) {
         gpr_log(GPR_INFO,
-                "Cancel %s call from client because  request num exceed max "
-                "current request",
+                "Cancel %s call from client because request number exceed max "
+                "concurrent request",
                 service_name);
         //gpr_mu_lock(&calld->mu_state);
         calld->state = ZOMBIED;
@@ -934,6 +934,8 @@ static void accept_stream(void* cd, grpc_transport* transport,
 static void channel_connectivity_changed(void* cd, grpc_error* error) {
   channel_data* chand = static_cast<channel_data*>(cd);
   grpc_server* server = chand->server;
+  // store client ip addr
+  char client_addr[32] = {0};
   if (chand->connectivity_state != GRPC_CHANNEL_SHUTDOWN) {
     grpc_transport_op* op = grpc_make_transport_op(nullptr);
     op->on_connectivity_state_change = &chand->channel_connectivity_changed;
@@ -943,13 +945,14 @@ static void channel_connectivity_changed(void* cd, grpc_error* error) {
                          op);
   } else {
     gpr_mu_lock(&server->mu_global);
+    strcpy(client_addr, grpc_channel_get_client_addr(chand->channel));
     destroy_channel(chand, GRPC_ERROR_REF(error));
     gpr_mu_unlock(&server->mu_global);
     GRPC_CHANNEL_INTERNAL_UNREF(chand->channel, "connectivity");
 
     //----begin----  
     // 并发连接数判断，客户端连接断开，减少并发连接计数
-    decrease_provider_connection(NULL);
+    decrease_provider_connection(NULL,client_addr);
     //-----end-----
   }
 }

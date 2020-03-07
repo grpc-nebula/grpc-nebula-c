@@ -18,7 +18,7 @@
 #include "orientsec_grpc_properties_tools.h"
 #include "orientsec_grpc_conf.h"
 #include "orientsec_grpc_common_init.h"
-#include "orientsec_grpc_string_op.h"
+//#include "orientsec_grpc_string_op.h"
 #include <cstring>
 #include <vector>
 
@@ -31,7 +31,7 @@ static bool grpc_service_group_isinit = false;
 #define ORIENTSEC_GRPC_GRADE_SEPARATOR_STR ","
 
 //用户存服务的分组约束，如果为空时，说明不需要做分组控制
-static std::vector<std::string> g_consumer_service_group;
+//static std::vector < std::string > g_consumer_service_group;
 
 void orientsec_grpc_consumer_control_group_update(char* service_name,
                                                   char* group_info) {}
@@ -55,40 +55,40 @@ void orientsec_grpc_consumer_control_group_update(char* service_name,
 //  return g_consumer_service_group;
 //}
 
-bool is_group_grading() {
-  char* group_info = orientsec_grpc_consumer_service_group_get(); 
-  if (strlen(group_info) == 0)
-     return false; 
-  return true;
-}
+//bool is_group_grading() {
+//  char* group_info = orientsec_grpc_consumer_service_group_get(); 
+//  if (strlen(group_info) == 0)
+//     return false; 
+//  return true;
+//}
 
-void orientsec_grpc_service_group_init() {
-  //保证只执行一次初始化
-  if (grpc_service_group_isinit) {
-    return;
-  }
-
-  //解析字符串放入map对象
-  char* group_conf = orientsec_grpc_consumer_service_group_get();
-  if (group_conf == NULL || strlen(group_conf) == 0) {
-    return;
-  }
-
-  orientsec_grpc_split_to_vec(std::string(group_conf), g_consumer_service_group,
-                              ORIENTSEC_GRPC_GROUP_SEPARATOR_STR);
-  std::vector<std::string> service_group;
-  if (g_consumer_service_group.size() == 0) {
-    return;
-  }
-  
-  grpc_service_group_isinit = true;
-  // add debug log
-
-  for (int i = 0; i < g_consumer_service_group.size(); i++) {
-    std::cout << "init g_consumer_service_group[" << i
-              << "]:" << g_consumer_service_group[i]
-              << std::endl;
-
-  }
-
-}
+//void orientsec_grpc_service_group_init() {
+//  //保证只执行一次初始化
+//  if (grpc_service_group_isinit) {
+//    return;
+//  }
+//
+//  //解析字符串放入map对象
+//  char* group_conf = orientsec_grpc_consumer_service_group_get();
+//  if (group_conf == NULL || strlen(group_conf) == 0) {
+//    return;
+//  }
+//
+//  orientsec_grpc_split_to_vec(std::string(group_conf), g_consumer_service_group,
+//                              ORIENTSEC_GRPC_GROUP_SEPARATOR_STR);
+//  std::vector<std::string> service_group;
+//  if (g_consumer_service_group.size() == 0) {
+//    return;
+//  }
+//  
+//  grpc_service_group_isinit = true;
+//  // add debug log
+//
+//  for (int i = 0; i < g_consumer_service_group.size(); i++) {
+//    std::cout << "init g_consumer_service_group[" << i
+//              << "]:" << g_consumer_service_group[i]
+//              << std::endl;
+//
+//  }
+//
+//}

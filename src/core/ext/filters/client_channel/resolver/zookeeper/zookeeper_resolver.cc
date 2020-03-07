@@ -43,6 +43,8 @@
 #include "src/core/lib/iomgr/timer.h"
 #include "src/core/lib/iomgr/zk_resolve_address.h"
 #include "orientsec_consumer_intf.h"
+//#include "src/core/lib/iomgr/pollset_set.h"
+//typedef struct grpc_pollset_set grpc_pollset_set;
 
 #define GRPC_ZK_INITIAL_CONNECT_BACKOFF_SECONDS 1
 #define GRPC_ZK_RECONNECT_BACKOFF_MULTIPLIER 1.6
@@ -68,11 +70,15 @@ class ZookeeperResolver : public Resolver {
 
   void ShutdownLocked() override;
 
- void Resetting() override;
+  void Resetting() override;
 
-    //----begin----
+  //----begin----
 
-  //char* get_hash() const { return hasharg; }
+  void set_hash(char* input) { hasharg = gpr_strdup(input); }
+  void set_meth_name(char* input) { method_name = gpr_strdup(input); }
+
+  char* get_hash() const { return hasharg; }
+  char* get_meth_name() const { return method_name; }
 
   //----end----
  private:
@@ -154,6 +160,9 @@ ZookeeperResolver::~ZookeeperResolver() {
   if (resolved_result_ != nullptr) {
     grpc_channel_args_destroy(resolved_result_);
   }
+  if (hasharg != nullptr) gpr_free(hasharg);
+  if (method_name != nullptr) gpr_free(method_name);
+
   grpc_pollset_set_destroy(interested_parties_);
   gpr_free(name_to_resolve_);
   grpc_channel_args_destroy(channel_args_);
@@ -191,6 +200,7 @@ void ZookeeperResolver::Resetting() {
     //GRPC_CLOSURE_SCHED(next_completion_, GRPC_ERROR_CREATE_FROM_STATIC_STRING(
      //                                        "Resolver reset"));
     next_completion_ = nullptr;
+    *target_result_ = nullptr;
    } 
   if (resolved_version_ != 0) 
      resolved_version_ = 0;
@@ -204,12 +214,15 @@ void ZookeeperResolver::Resetting() {
    }
    published_version_ = 0;
    
-   grpc_pollset_set_destroy(interested_parties_);
-   //gpr_free(name_to_resolve_);
+   if (interested_parties_ != nullptr) {
+     grpc_pollset_set_destroy(interested_parties_);
+   }
+   /*if (name_to_resolve_ != nullptr)
+      gpr_free(name_to_resolve_);*/
    //name_to_resolve_ = nullptr;
    //channel_args_ = nullptr;
    //grpc_channel_args_destroy(channel_args_);
-   target_result_ = nullptr;
+   
 
 }
 void ZookeeperResolver::ShutdownLocked() {

@@ -26,7 +26,7 @@
 #include "grpc/impl/codegen/atm.h"
 #include<map>
 #include<vector>
-#include<string>
+#include<cstring>
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,9 +38,9 @@ private:
 	//连续多少次请求出错，自动切换到提供相同服务的新服务器
 	int m_switch_threshold;
 
-	//服务提供者不可用时的惩罚时间，即多次请求出错的服务提供者一段时间内不再去请求
-	//单位为豪秒,缺省值为60000
-	int m_punish_time;
+	//服务端节点调用失败被移除请求列表后，经过多长时间将该服务端节点重新添加回服务端候选列表
+	//单位为毫秒,缺省值为600000ms，10mins
+	int m_recovery_time;
 
         //zookeeper算法里backoff算法里max backoff参数取值
         int max_backoff_time;
@@ -59,11 +59,15 @@ private:
 public:
 	failover_utils();
 	~failover_utils();
+        void recover_provider_list(const std::string& consumerid,
+                                   const std::string& providerid);
 	void set_switch_threshold(int _switch_threshold);
-	void set_punish_time(int _punishtime);
+        void set_recovery_time(int _recoverytime);
         void set_max_backoff_time(int _max_backoff_time);
         int get_max_backoff_time();
         void record_provider_failure(char* consumerid, char* providerid,char* methods);
+        void reset_provider_failure(char* consumerid, char* providerid,
+                                    const char* methods);
 	void update_failing_providers(char* consumerid, char* providerid);
         int update_fail_times(char* consumerid, char* providerid,
                               int64_t lasttime_stamp, int64_t currenttime_stamp,

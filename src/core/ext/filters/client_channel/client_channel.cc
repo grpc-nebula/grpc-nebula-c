@@ -63,7 +63,7 @@
 #include "src/core/lib/transport/service_config.h"
 #include "src/core/lib/transport/static_metadata.h"
 #include "src/core/lib/transport/status_metadata.h"
-//add by liumin 
+// add by liumin
 #include "orientsec_consumer_intf.h"
 #include "orientsec_grpc_consumer_control_version.h"
 #include "registry_utils.h"
@@ -89,8 +89,8 @@ using grpc_core::internal::ServerRetryThrottleData;
 grpc_core::TraceFlag grpc_client_channel_trace(false, "client_channel");
 
 /*************************************************************************
- * CHANNEL-WIDE FUNCTIONS
- */
+* CHANNEL-WIDE FUNCTIONS
+*/
 
 struct external_connectivity_watcher;
 
@@ -321,15 +321,14 @@ static void request_reresolution_locked(void* arg, grpc_error* error) {
 
 //  处理重建subchannel时候，resovler 和 lb 不为空的情况
 static void process_resolver_shutdown_locked(channel_data* chand) {
-  //grpc_error* error = NULL;
+  // grpc_error* error = NULL;
   if (chand->lb_policy != nullptr) {
-  
     grpc_pollset_set_del_pollset_set(chand->lb_policy->interested_parties(),
                                      chand->interested_parties);
-    //chand->lb_policy.reset();
+    // chand->lb_policy.reset();
     chand->lb_policy = nullptr;
   }
-  //if (chand->resolver != nullptr) {
+  // if (chand->resolver != nullptr) {
 
   //  chand->resolver.reset();
   //  set_channel_connectivity_state_locked(
@@ -338,16 +337,14 @@ static void process_resolver_shutdown_locked(channel_data* chand) {
   //          "Resolver spontaneous shutdown", &error, 1),
   //      "resolver_spontaneous_shutdown");
   //}
-  //grpc_closure_list_fail_all(&chand->waiting_for_resolver_result_closures,
+  // grpc_closure_list_fail_all(&chand->waiting_for_resolver_result_closures,
   //                           GRPC_ERROR_CREATE_REFERENCING_FROM_STATIC_STRING(
   //                               "Channel disconnected", &error, 1));
-  //GRPC_CLOSURE_LIST_SCHED(&chand->waiting_for_resolver_result_closures);
-  //GRPC_CHANNEL_STACK_UNREF(chand->owning_stack, "resolver");
+  // GRPC_CLOSURE_LIST_SCHED(&chand->waiting_for_resolver_result_closures);
+  // GRPC_CHANNEL_STACK_UNREF(chand->owning_stack, "resolver");
   grpc_channel_args_destroy(chand->resolver_result);
   chand->resolver_result = nullptr;
- 
 }
-
 
 using TraceStringVector = grpc_core::InlinedVector<char*, 3>;
 
@@ -3137,7 +3134,7 @@ static void start_pick_locked(void* arg, grpc_error* ignored) {
   //----begin----
   grpc_call* channel_call = grpc_get_call_from_top_elem(elem);
   char* hash_value = orientsec_grpc_getcall_hashinfo(channel_call);
-  
+
   char* meth_name = orientsec_grpc_getcall_methodname(channel_call);
   //----end----
 
@@ -3186,28 +3183,32 @@ static void start_pick_locked(void* arg, grpc_error* ignored) {
             // grpc_lb_policy_clear_invalid_lb_subchannel_locked(
             //   exec_ctx, lb_policy, NULL, 0);
             free(service_name);
-            //need_to_recreat_policy = true;
+            // need_to_recreat_policy = true;
           }
         } else {
           gpr_log(GPR_DEBUG, "=========invalid servername, target=%s", target);
         }
       }
-    } /*else{ //connection mode 
-      if (GPR_UNLIKELY(chand->started_resolving)&&orientsec_grpc_version_changed_conn()) {
-        orientsec_reset_grpc_version_changed_conn();
-        //chand->lb_policy = nullptr;
-        chand->started_resolving = false;
-        chand->resolver->Setting();
-        process_resolver_shutdown_locked(chand);
-        //start_resolving_locked(chand);
+    } else {  // connection mode
+      // check elapse time equal 10min?
+      check_elapse_time_reach_setting();
+    }
+    /*if
+  (GPR_UNLIKELY(chand->started_resolving)&&orientsec_grpc_version_changed_conn())
+  { orientsec_reset_grpc_version_changed_conn();
+      //chand->lb_policy = nullptr;
+      chand->started_resolving = false;
+      chand->resolver->Setting();
+      process_resolver_shutdown_locked(chand);
+      //start_resolving_locked(chand);
 
-        grpc_core::New<grpc_core::ResolverResultWaiter>(elem);
-        maybe_add_call_to_channel_interested_parties_locked(elem);
-        return;
-        
-      }
+      grpc_core::New<grpc_core::ResolverResultWaiter>(elem);
+      maybe_add_call_to_channel_interested_parties_locked(elem);
+      return;
 
-    }*/
+    }
+
+  }*/
     //----begin- 用于容错处理时信息的保存
     lb_policy->elem = elem;
     // 把获取负载均衡选取的ip放入channel对象
@@ -3224,13 +3225,13 @@ static void start_pick_locked(void* arg, grpc_error* ignored) {
   } else {
     // We do not yet have an LB policy, so wait for a resolver result.
     if (GPR_UNLIKELY(!chand->started_resolving)) {
-      if (hash_value != NULL && strlen(hash_value)!=0) {
+      if (hash_value != NULL && strlen(hash_value) != 0) {
         chand->resolver->set_hash(hash_value);
       }
       if (meth_name != NULL && strlen(meth_name) != 0) {
         chand->resolver->set_meth_name(meth_name);
       }
-       start_resolving_locked(chand);
+      start_resolving_locked(chand);
     } else {
       // Normally, we want to do this check in
       // process_service_config_and_start_lb_pick_locked(), so that we
@@ -3273,50 +3274,50 @@ static void cc_start_transport_stream_op_batch(
     grpc_transport_stream_op_batch_finish_with_failure(
         batch, GRPC_ERROR_REF(calld->cancel_error), calld->call_combiner);
     return;
-  } 
-    /////add by liumin
-    int have_no_provider = 0;
-    grpc_call* channel_call = grpc_get_call_from_top_elem(elem);
-    char* target = grpc_get_call_target(channel_call);
-    if (target) {
-      char* service_name = orientsec_grpc_get_sn_from_target(target);
-      //----debug 按时关闭流控及黑白名单控制
-      if (service_name) {
-        if (orientsec_need_resolved()) {
-          orientsec_need_resolved_reset();
+  }
+  /////add by liumin
+  int have_no_provider = 0;
+  grpc_call* channel_call = grpc_get_call_from_top_elem(elem);
+  char* target = grpc_get_call_target(channel_call);
+  if (target) {
+    char* service_name = orientsec_grpc_get_sn_from_target(target);
+    //----debug 按时关闭流控及黑白名单控制
+    if (service_name) {
+      if (orientsec_need_resolved()) {
+        orientsec_need_resolved_reset();
+        batch->payload->cancel_stream.cancel_error =
+            GRPC_ERROR_CREATE_FROM_STATIC_STRING("resolving is running.");
+        calld->cancel_error =
+            GRPC_ERROR_REF(batch->payload->cancel_stream.cancel_error);
+        chand->started_resolving = false;
+        have_no_provider = 1;
+        // chand->resolver->Resetting();
+        // process_resolver_shutdown_locked(chand);
+      }
+      //黑白名单，没有有效的provider，
+      int provider_count = get_consumer_lb_providers_acount(service_name);
+      if (0 == provider_count) {
+        //校验是否有可用服务
+        if (0 == get_consumer_providers_acount(service_name)) {
+          batch->payload->cancel_stream.cancel_error = GRPC_ERROR_CANCELLED;
+          // batch->cancel_error = GRPC_ERROR_CANCELLED;
+          // op->cancel_error = GRPC_ERROR_CREATE("There are no providers in
+          // registry center,please check the service name");
+        } else {
           batch->payload->cancel_stream.cancel_error =
-              GRPC_ERROR_CREATE_FROM_STATIC_STRING("resolving is running.");
+              GRPC_ERROR_CREATE_FROM_STATIC_STRING(
+                  "The provider is being forbid for this client,or provider "
+                  "has go away");
           calld->cancel_error =
               GRPC_ERROR_REF(batch->payload->cancel_stream.cancel_error);
-          chand->started_resolving = false;
-          have_no_provider = 1;
-          //chand->resolver->Resetting();
-          //process_resolver_shutdown_locked(chand);
         }
-        //黑白名单，没有有效的provider，
-        int provider_count = get_consumer_lb_providers_acount(service_name);
-        if (0 == provider_count) {
-          //校验是否有可用服务
-          if (0 == get_consumer_providers_acount(service_name)) {
-            batch->payload->cancel_stream.cancel_error = GRPC_ERROR_CANCELLED;
-            // batch->cancel_error = GRPC_ERROR_CANCELLED;
-            // op->cancel_error = GRPC_ERROR_CREATE("There are no providers in
-            // registry center,please check the service name");
-          } else {
-            batch->payload->cancel_stream
-                .cancel_error = GRPC_ERROR_CREATE_FROM_STATIC_STRING(
-                "The provider is being forbid for this client,or provider has go away");
-            calld->cancel_error =
-                GRPC_ERROR_REF(batch->payload->cancel_stream.cancel_error);
-          }
-          chand->started_resolving = false;
-          have_no_provider = 1;
-        } else {
-     
-          // 服务版本检测
+        chand->started_resolving = false;
+        have_no_provider = 1;
+      } else {
+        // 服务版本检测
         int provider_num = provider_num_after_service_check(service_name);
-          // 如果没有可用的服务版本,调用直接cancel，不做域名解析
-        if ( 0 == provider_num ) {
+        // 如果没有可用的服务版本,调用直接cancel，不做域名解析
+        if (0 == provider_num) {
           batch->payload->cancel_stream.cancel_error =
               GRPC_ERROR_CREATE_FROM_STATIC_STRING(
                   "There is no appropriate service version online");
@@ -3326,7 +3327,7 @@ static void cc_start_transport_stream_op_batch(
           chand->started_resolving = false;
           have_no_provider = 1;
         } else {
-          if (orientsec_grpc_version_changed_conn()) {   // connetcion mode
+          if (orientsec_grpc_version_changed_conn()) {  // connetcion mode
             // reset flag
             orientsec_reset_grpc_version_changed_conn();
             batch->payload->cancel_stream.cancel_error =
@@ -3350,7 +3351,7 @@ static void cc_start_transport_stream_op_batch(
             chand->resolver->Resetting();
             process_resolver_shutdown_locked(chand);
           }
-          
+
           // 检测是否group属性发生变化
           if (orientsec_group_grade_changed()) {
             orientsec_group_grade_reset();
@@ -3369,31 +3370,42 @@ static void cc_start_transport_stream_op_batch(
           gpr_log(GPR_DEBUG, "provider active_num = %d", active_num);
           // 如果没有active provider,standby server online
           if (0 == active_num) {
-           //  重置provider online 属性
+            //  重置provider online 属性
             provider_active_standby_setting(service_name, false);
             printf("provider active_num = %d", active_num);
-          } 
-         
-            // 服务主备属性发生变化
-            if (orientsec_active_standby_changed()) {
-              orientsec_active_standby_reset();
-              if (provider_num_active_check(service_name)) {
-                // 存在master
-                 provider_active_standby_setting(service_name, true);
-              }else {
-                // 只有standby
-                 provider_active_standby_setting(service_name, false);
-              }               
-              batch->payload->cancel_stream.cancel_error =
-                  GRPC_ERROR_CREATE_FROM_STATIC_STRING(
-                      "provider active/standby switching...");
-              calld->cancel_error =
-                  GRPC_ERROR_REF(batch->payload->cancel_stream.cancel_error);
-              chand->started_resolving = false;
-              chand->resolver->Resetting();
-              process_resolver_shutdown_locked(chand);
+          }
+
+          // 服务主备属性发生变化
+          if (orientsec_active_standby_changed()) {
+            orientsec_active_standby_reset();
+            if (provider_num_active_check(service_name)) {
+              // 存在master
+              provider_active_standby_setting(service_name, true);
+            } else {
+              // 只有standby
+              provider_active_standby_setting(service_name, false);
             }
-          
+            batch->payload->cancel_stream.cancel_error =
+                GRPC_ERROR_CREATE_FROM_STATIC_STRING(
+                    "provider active/standby switching...");
+            calld->cancel_error =
+                GRPC_ERROR_REF(batch->payload->cancel_stream.cancel_error);
+            chand->started_resolving = false;
+            chand->resolver->Resetting();
+            process_resolver_shutdown_locked(chand);
+          }
+          // add switch provider check when connection mode
+          if (orientsec_switch_when_connection_resolved()) {
+            orientsec_switch_when_connection_resolved_reset();
+            batch->payload->cancel_stream.cancel_error =
+                GRPC_ERROR_CREATE_FROM_STATIC_STRING(
+                    "provider was switching since connection mode limit...");
+            calld->cancel_error =
+                GRPC_ERROR_REF(batch->payload->cancel_stream.cancel_error);
+            chand->started_resolving = false;
+            chand->resolver->Resetting();
+            process_resolver_shutdown_locked(chand);
+          }
         }
       }
       // 释放service_name指针

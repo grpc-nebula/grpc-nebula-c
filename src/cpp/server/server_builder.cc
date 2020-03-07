@@ -418,6 +418,9 @@ std::unique_ptr<Server> ServerBuilder::BuildAndStart() {
   std::getline(ss, addr, ':');
   port = atoi(addr.c_str());
 
+  std::string version;
+  args.GetVersion(version);
+
   while (serviceIt != servicesMap.end())
   {
     std::string serviceName = serviceIt->first;
@@ -429,7 +432,8 @@ std::unique_ptr<Server> ServerBuilder::BuildAndStart() {
       }
       methods += *it;
     }
-    provider_registry(ports_.empty() ? 0 : port, serviceName.c_str(), methods.c_str());
+    // Asynchorously provider registry
+    provider_registry(ports_.empty() ? 0 : port, serviceName.c_str(), methods.c_str(),version.c_str());
     serviceIt++;
   }
 

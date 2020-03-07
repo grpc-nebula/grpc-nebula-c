@@ -272,7 +272,10 @@ void RoundRobin::TransferArgIpToProviderIP(const grpc_channel_args& args) {
       static_cast<grpc_lb_addresses*>(arg->value.pointer.p);
   grpc_resolved_address* addrs = &addresses->addresses[0].address;
   // write ip info into lb in format:"ipv4:ip:port"
-  sprintf(provider_addr, "%s", grpc_sockaddr_to_uri(addrs));
+  char* uri_str = grpc_sockaddr_to_uri(addrs);
+  sprintf(provider_addr, "%s", uri_str);
+  uri_str = nullptr;
+  //gpr_free(uri_str);
 }
 //----end----
 void RoundRobin::HandOffPendingPicksLocked(LoadBalancingPolicy* new_policy) {

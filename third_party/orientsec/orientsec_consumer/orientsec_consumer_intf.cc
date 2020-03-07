@@ -20,6 +20,7 @@
  *    2017/07/11
  *    version 0.0.9
  *    consumer项目提供的接口函数实现
+ *    Modified: Jianbin Yang
  */
 
 #include "orientsec_consumer_intf.h"
@@ -30,12 +31,16 @@
 #include <map>
 #include <set>
 #include <string>
+#include <thread>
 #include <vector>
+#include <chrono>
+#include <limits.h>
 
 #include <grpc/support/alloc.h>
 #include <grpc/support/log.h>
 #include <grpc/support/sync.h>
 #include <src/core/lib/gpr/spinlock.h>
+#include "src/core/lib/gpr/host_port.h"
 #include "orientsec_grpc_properties_constants.h"
 #include "orientsec_grpc_properties_tools.h"
 #include "orientsec_grpc_registy_intf.h"
@@ -44,6 +49,7 @@
 #include "registry_contants.h"
 #include "registry_utils.h"
 #include "url.h"
+#include "zk_registry_service.h"
 
 #include "condition_router.h"
 #include "consistent_hash_lb.h"
@@ -95,7 +101,16 @@ static bool g_active_standby = false;
 
 static bool g_group_grading = false;
 
+static bool g_subscribe_provider_once = false;
+
+/* used in failover,resolve when connection mode*/
 static bool g_need_resolve = false;
+
+/* switch provider when elapse time reach to setting in connection mode*/
+static bool g_switch_provider_when_connection = false;
+// record the time point of last called
+static std::chrono::system_clock::time_point last_call_point =
+    std::chrono::system_clock::now();
 
 /* Protects provider_queue */
 static gpr_mu g_providers_mu;
@@ -112,6 +127,18 @@ static bool g_initialized = false;
 static bool g_isrequest_lb_mode = false;  //默认是连接负载均衡
 // 是否基于方法的负载均衡
 static bool g_method_lb = false;
+// 负载均衡模式为connection时，设置连接自动切换的时间(mins)
+static int g_conn_switch_time = 0;
+
+const int GROUP_INFO_MAX = 256;
+static char group_service[GROUP_INFO_MAX] = {0};
+
+// global failure called retry times
+static int failure_retry_times = 0;
+// detect every 10s, times whole day
+const int TIMES_PER_DAY = 8640;
+// detect every 3s, times 3 days
+const int TIMES_MAX_TRY = 86400;
 
 static orientsec_grpc_loadbalance* pfLB = new pickfirst_lb();
 static orientsec_grpc_loadbalance* rrLB = new round_robin_lb();
@@ -169,10 +196,10 @@ void init_providers_list() {
       memset(buf, 0, ORIENTSEC_GRPC_PROPERTY_KEY_MAX_LEN);
     }
     if (0 == orientsec_grpc_properties_get_value(
-                 ORIENTSEC_GRPC_PROPERTIES_C_CONSUMER_PUNISH_TIME, NULL, buf)) {
+            ORIENTSEC_GRPC_PROPERTIES_C_CONSUMER_SERVICE_RECOVERY, NULL, buf)) {
       value = atoi(buf);
       if (value > 0) {
-        g_failover_utils.set_punish_time(value * 1000);
+        g_failover_utils.set_recovery_time(value);
       }
     }
     memset(buf, 0, ORIENTSEC_GRPC_PROPERTY_KEY_MAX_LEN);
@@ -182,6 +209,18 @@ void init_providers_list() {
         g_isrequest_lb_mode = true;
       } else {
         g_isrequest_lb_mode = false;
+      }
+    }
+    // read connection switch time from config file
+    memset(buf, 0, ORIENTSEC_GRPC_PROPERTY_KEY_MAX_LEN);
+    if (0 == orientsec_grpc_properties_get_value(
+                 ORIENTSEC_GRPC_PROPERTIES_C_CONSUMER_CONNECTION_SWITCH_TIME,
+                 NULL, buf)) {
+      value = atoi(buf);
+      if (value < INT_MAX/60000 && value > 0) {
+        g_conn_switch_time = value;
+      } else {
+        g_conn_switch_time = 10;
       }
     }
     // add by liumin
@@ -429,8 +468,12 @@ void consumer_providers_callback(url_t* urls, int url_num) {
     //重新计算黑白名单标记 ----debug 调试临时关闭
     revoker_providers_list_process(urls[0].path);
 
-    // zookeeper provider list changed
-    g_active_standby = true;
+    if (g_subscribe_provider_once) {
+      // zookeeper provider list changed
+      g_active_standby = true;
+    } else {
+      g_subscribe_provider_once = true;
+    }
   }
 }
 
@@ -583,10 +626,10 @@ void consumer_configurators_callback(url_t* urls, int url_num) {
             }
           }
           // 更新服务分组
-          param = url_get_parameter_v2(urlVec[i],
-                                       ORIENTSEC_GRPC_REGISTRY_KEY_GROUP, NULL);
+          param = url_get_parameter_v2(
+              urlVec[i], ORIENTSEC_GRPC_REGISTRY_KEY_INVOKE_GROUP, NULL);
           if (param) {
-            if (0 != strcmp(provider_lst_iter->second[j].group, param)){
+            if (0 != strcmp(provider_lst_iter->second[j].group, param)) {
               // group 属性发生改变时，触发resolve
               g_group_grading = true;
               strcpy(provider_lst_iter->second[j].group, param);
@@ -742,6 +785,7 @@ void get_all_providers_by_name(const char* service_name) {
   }
 
   int provider_nums = 0;
+  int pri = 0;
 
   strcat(query_str, ORIENTSEC_GRPC_REGISTRY_KEY_GRPC);
   strcat(query_str, "://0.0.0.0/");
@@ -759,7 +803,7 @@ void get_all_providers_by_name(const char* service_name) {
 
   url_t* query_url = url_parse(query_str);
 
-  url_t* provider_urls = lookup(query_url, &provider_nums);
+  url_t* provider_urls = lookup(query_url, &provider_nums, &pri);
   if (provider_urls) {
     updateProvidersCache(service_name, provider_urls, provider_nums, 1);
     for (size_t i = 0; i < provider_nums; i++) {
@@ -858,34 +902,35 @@ static bool method_check(provider_t* provider, char* method_name,
 // 算法：对每个分组进行匹配，如果有provider，则返回对应的provider
 //       如果没有则循环到下一分组。
 static provider_t* orientsec_grpc_consumer_control_group_filter(
-    provider_t* providers, int *num) {
+    provider_t* providers, int* num) {
   // 获取consumer group information
   std::vector<std::string> group_info;
-  int grade_count = 0; // 统计各个分组里面的provider数量
+  int grade_count = 0;      // 统计各个分组里面的provider数量
   provider_t* prov = NULL;  // 用于返回堆上的provider list
-  
+
   std::vector<std::string> tmp;
   std::vector<std::string> temp;
 
-  char* group_conf = orientsec_grpc_consumer_service_group_get();
-  if (group_conf == NULL || strlen(group_conf) == 0) {
+  // 判断分组信息
+  if (group_service == NULL || strlen(group_service) == 0) {
     return prov;
   }
   // 字符串分解成字符vector
-  orientsec_grpc_split_to_vec(std::string(group_conf), group_info, ";");
+  orientsec_grpc_split_to_vec(std::string(group_service), group_info, ";");
   int grade = group_info.size();
 
   for (int index = 0; index < grade; index++) {
-    std::string str= group_info[index];
+    std::string str = group_info[index];
     orientsec_grpc_split_to_vec(str, tmp, ",");
     grade_count = 0;
     for (int in = 0; in < tmp.size(); in++) {
       // 取高优先级的provider
       for (int pro = 0; pro < *num; pro++) {
-        if (0 == strcmp(providers[pro].group,tmp[in].c_str()))
-          grade_count ++;
+        if (0 == strcmp(providers[pro].group, tmp[in].c_str())) grade_count++;
       }
     }
+    // tmp清零
+    tmp.clear();
     // 对每个分组的count进行处理
     if (grade_count > 0) break;
   }
@@ -896,7 +941,7 @@ static provider_t* orientsec_grpc_consumer_control_group_filter(
   }
 
   // 取出对应分组的provider
-  prov= (provider_t*)gpr_zalloc(sizeof(provider_t) * grade_count);
+  prov = (provider_t*)gpr_zalloc(sizeof(provider_t) * grade_count);
   int j = 0;
   for (int index = 0; index < grade; index++) {
     std::string str = group_info[index];
@@ -905,7 +950,7 @@ static provider_t* orientsec_grpc_consumer_control_group_filter(
     for (int in = 0; in < temp.size(); in++) {
       // 取高优先级的provider
       for (int pro = 0; pro < *num; pro++) {
-        if (0 == strcmp(providers[pro].group, temp[in].c_str())){
+        if (0 == strcmp(providers[pro].group, temp[in].c_str())) {
           grade_count++;
           strcpy(prov[j].host, providers[pro].host);
           prov[j].port = providers[pro].port;
@@ -915,12 +960,40 @@ static provider_t* orientsec_grpc_consumer_control_group_filter(
         }
       }
     }
+    temp.clear();
     // 对每个分组的count进行处理
     if (grade_count > 0) break;
   }
   gpr_free(providers);
   *num = grade_count;
   return prov;
+}
+
+// init and set global failure retry times
+static void grpc_retry_times_init(const char* service_name, const char* method_name) {
+  // read from config file and calculate retry times
+  failure_retry_times =
+      obtain_retries_based_service_or_method(service_name, method_name);
+  return;
+}
+
+// inner interface: get retry times for every call
+int orientsec_get_failure_retry_times(){ return failure_retry_times; }
+
+// init and set global grouping info
+static void grpc_group_grading_init(const char* sname) {
+  char* group_info = obtain_invoke_group_based_service(sname);
+  strcpy(group_service, group_info);
+  gpr_free(group_info);
+  return;
+}
+
+// 判断是否配置服务分组信息
+static bool is_group_grading() {
+  if (strlen(group_service) == 0) {
+    return false;
+  }
+  return true;
 }
 
 // query valid provider and write ip:port information into policy for
@@ -941,7 +1014,7 @@ provider_t* consumer_query_providers_write_point_policy(
   }
   int provider_nums = 0;
   provider_t* providers = NULL;
-  //provider_t* providers_trans = NULL;
+  // provider_t* providers_trans = NULL;
 
   // 计算负载均衡算法
   std::string strLbStragry = ORIENTSEC_GRPC_DEFAULT_LB_TYPE;
@@ -1038,16 +1111,16 @@ provider_t* consumer_query_providers_write_point_policy(
   } else {
     // 进行服务分组的校验
     if (is_group) {
-      providers = orientsec_grpc_consumer_control_group_filter(
-          providers, &provider_nums);
+      providers = orientsec_grpc_consumer_control_group_filter(providers,
+                                                               &provider_nums);
       *nums = provider_nums;
     }
   }
-  //printf("REQ valid provider_num = %d\n", provider_nums);
+  // printf("REQ valid provider_num = %d\n", provider_nums);
   // add by yang
   char* hash_info = lb_policy->hash_lb;
-  int index = get_index_from_lb_aglorithm(
-      service_name, providers, nums, hash_info,
+  int index =
+      get_index_from_lb_aglorithm(service_name, providers, nums, hash_info,
                                   strLbStragry.c_str());  // provider为一个列表
   sprintf(lb_policy->provider_addr, "ipv4:%s:%d", providers[index].host,
           providers[index].port);
@@ -1088,6 +1161,7 @@ provider_t* consumer_query_providers(const char* service_name, int* nums,
   char query_str[ORIENTSEC_GRPC_PATH_MAX_LEN] = {0};
   size_t i = 0;
   size_t ind = 0;
+  size_t pro_size = 0;
   int standby_count = 0;
   int j = 0;
   if (!service_name) {
@@ -1098,7 +1172,7 @@ provider_t* consumer_query_providers(const char* service_name, int* nums,
   int cache_providers_num = orientsec_grpc_cache_provider_count_get();
   int provider_nums = 0;
   provider_t* providers = NULL;
-  //provider_t* providers_trans = NULL;
+  // provider_t* providers_trans = NULL;
 
   // 计算负载均衡模式
   std::string strLbMode = ORIENTSEC_GRPC_LB_MODE_CONNECT;
@@ -1123,8 +1197,11 @@ provider_t* consumer_query_providers(const char* service_name, int* nums,
     is_method_level = true;
   }
 
-  // 是否开启服务分组
+  // 获得分组信息并判断是否开启服务分组
+  grpc_group_grading_init(service_name);
   bool is_group = is_group_grading();
+  // get the retry times from config file and store it
+  grpc_retry_times_init(service_name, method_name);
 
   GRPC_PROVIDERS_LIST_LOCK_START
   //*nums = 0;
@@ -1136,7 +1213,8 @@ provider_t* consumer_query_providers(const char* service_name, int* nums,
     for (ind = 0; ind < cache_providers_num; ind++) {
       provider_t* provider = &provider_lst_iter->second[ind];
       // 备服务或者 下线的主服务
-      if ((!provider->is_master)||(provider->is_master&&provider->flag_invalid)) {
+      if ((!provider->is_master) ||
+          (provider->is_master && provider->flag_invalid)) {
         standby_count++;
       }
     }
@@ -1161,7 +1239,6 @@ provider_t* consumer_query_providers(const char* service_name, int* nums,
       } else {
         provider->online = 1;
       }
-
     }
 
     //首先统计合法的provider个数
@@ -1197,7 +1274,9 @@ provider_t* consumer_query_providers(const char* service_name, int* nums,
       }
     }
     if (provider_nums != 0) {
-      providers = (provider_t*)gpr_zalloc(sizeof(provider_t) * provider_nums);
+      // memory alignment
+      pro_size = sizeof(provider_t) + (64 - sizeof(provider_t) % 64);
+      providers = (provider_t*)gpr_zalloc(pro_size * provider_nums);
 
       for (int k = 0; k < cache_providers_num; k++) {
         provider_t* provider = &provider_lst_iter->second[k];
@@ -1265,8 +1344,8 @@ provider_t* consumer_query_providers(const char* service_name, int* nums,
   } else {
     // 进行服务分组的校验
     if (is_group) {
-      providers = orientsec_grpc_consumer_control_group_filter(
-          providers, &provider_nums);
+      providers = orientsec_grpc_consumer_control_group_filter(providers,
+                                                               &provider_nums);
       // 重新赋值nums
       *nums = provider_nums;
     }
@@ -1277,7 +1356,7 @@ provider_t* consumer_query_providers(const char* service_name, int* nums,
     printf("after grouping query provider_nums=%d  !!!\n", provider_nums);
     GRPC_PROVIDERS_LIST_LOCK_END
     return providers;
-  } 
+  }
   printf("Resolved valid provider_num = %d\n", provider_nums);
 
   if (is_req) {  // request 情况下
@@ -1343,6 +1422,154 @@ provider_t* consumer_query_providers_all(const char* service_name, int* nums) {
   return NULL;
 }
 
+static void init_provider_by_host_port(provider_t* provider, const char* host, const char* port) {
+  if (!provider) return;
+  size_t len;
+  if (host) {
+    len = strlen(host);
+    snprintf(provider->host, len < HOST_MAX_LEN ? (len + 1) : HOST_MAX_LEN,
+             "%s",host);
+  }
+  provider->weight = 0;
+  provider->port = atoi(port);
+  provider->flag_invalid = 0;  //有效标记
+  provider->flag_invalid_timestamp = 0;
+  provider->flag_call_failover = 0;  //未发生调用出错。
+  provider->flag_in_blklist = 0;     //不在黑名单
+  provider->flag_subchannel_close = 0;
+  provider->time_subchannel_close = 0;
+  provider->is_master = true;
+  provider->online = 1;
+}
+
+// initialize provider list by appointed list configured in config file
+static void init_provider_from_appointed_list(const char* service_name,
+                                       const char* appointed_list) {
+  if (appointed_list == NULL && strlen(appointed_list) == 0) return;
+  std::vector<std::string> appoint_list;
+  char* host = NULL;
+  char* port = NULL;
+  orientsec_grpc_split_to_vec(appointed_list, appoint_list, ",");
+  auto it = appoint_list.begin();
+  size_t length = appoint_list.size();
+  int ind;
+  int cache_num = orientsec_grpc_cache_provider_count_get();
+  provider_t* providers =
+      (provider_t*)gpr_zalloc(sizeof(provider_t) * cache_num);
+  for (ind = 0; ind < cache_num && ind < length; ind++) {
+    gpr_split_host_port((*it).c_str(), &host, &port);
+    init_provider_by_host_port(&providers[ind], host, port);
+    g_cache_providers.insert(std::pair<std::string, provider_t*>(
+        std::string(service_name), providers));
+    gpr_free(host);
+    gpr_free(port);
+  }
+  return;
+}
+
+static void common_consumer_register_operation(url_t* url) {
+  url_update_parameter(url, (char*)ORIENTSEC_GRPC_CATEGORY_KEY,
+                       (char*)ORIENTSEC_GRPC_CONSUMERS_CATEGORY);
+  registry(url);
+}
+
+static void common_consumer_subscribe_operation(url_t* url) {
+  //消费者订阅providers目录
+  url_update_parameter(url, (char*)ORIENTSEC_GRPC_CATEGORY_KEY,
+                       (char*)ORIENTSEC_GRPC_PROVIDERS_CATEGORY);
+  subscribe(url, consumer_providers_callback);
+
+  //消费者订阅routers目录
+  url_update_parameter(url, (char*)ORIENTSEC_GRPC_CATEGORY_KEY,
+                       (char*)ORIENTSEC_GRPC_ROUTERS_CATEGORY);
+  subscribe(url, consumer_routers_callback);
+
+  //消费者订阅configurators目录
+  url_update_parameter(url, (char*)ORIENTSEC_GRPC_CATEGORY_KEY,
+                       (char*)ORIENTSEC_GRPC_CONFIGURATORS_CATEGORY);
+  subscribe(url, consumer_configurators_callback);
+}
+static void common_operation(url_t* url) {
+  // common operation
+  common_consumer_register_operation(url);
+  common_consumer_subscribe_operation(url);
+}
+
+// new thread for consumer registry with zookeeper offline
+static void grpc_consumer_zk_registry_bg(url_t* url_clone) {
+  int last_time = 0;
+  int now = 0;
+  int times = 0;
+  while (times < TIMES_MAX_TRY) {
+    now = clock() / CLOCKS_PER_SEC;
+    // try every 3 seconds
+    if (now - last_time > 3) {
+      // initial zookeeper registry factory
+      orientsec_grpc_registry_zk_intf_init();
+
+      common_operation(url_clone);
+
+      if (!zk_get_create_node_flag()) {  // not register successfully
+        gpr_log(GPR_ERROR, "Registry in next 3 seconds...\n");
+        // increase times
+        last_time = now;
+        times++;
+        continue;
+      }
+      // registre successfully, free memory, return and end of thread
+      url_full_free(&url_clone);
+      gpr_log(GPR_ERROR, "Register successfully......thread exit...\n");
+      return;
+    }
+  }
+  // thread returns safely
+  if (TIMES_MAX_TRY == times)
+    gpr_log(GPR_ERROR,
+            "Consumer could not registered in corressponding zookeeper.\n");
+  url_full_free(&url_clone);
+  gpr_log(GPR_ERROR, "Register failed.time was over......Thread exit...\n");
+  return;
+}
+
+//  new thread for consumer registry with zookeeper online
+static void grpc_lookup_registry_center(url_t* url) {
+  url_t* u = NULL;
+  int num = 0;  //用来返回公有注册中心的提供服务的provider number
+  int pn = 0;  //用来返回私有注册中心的提供服务的provider number
+  url_update_parameter(url, (char*)ORIENTSEC_GRPC_CATEGORY_KEY,
+                       (char*)ORIENTSEC_GRPC_PROVIDERS_CATEGORY);
+
+  int last_time = 0;
+  int now = 0;
+  int times = 0;
+  while (times < TIMES_PER_DAY) {
+    now = clock() / CLOCKS_PER_SEC;
+    if (now - last_time > 10) {
+      u = lookup(url, &num, &pn);
+      if (num > 0) {
+        // 修改zk_reg的属性为公有注册
+        set_cons_reg_scheme(PUBLIC_REG);
+        common_operation(url);
+        break;
+
+      } else if (pn > 0) {
+        // 修改zk_reg属性为私有属性
+        set_cons_reg_scheme(PRIVATE_REG);
+        common_operation(url);
+        break;
+      }
+      last_time = now;
+      times++;
+    }
+  }
+  // 线程安全返回
+  if (TIMES_PER_DAY == times)
+    gpr_log(GPR_ERROR,
+            "Consumer could not find corressponding registry center");
+  url_full_free(&url);
+  return;
+}
+
 // consumer注册。
 // 1、解析fullmethod 获取conf文件配置信息、拼接consumer
 // url串，调用接口写入向zk写入url串、
@@ -1351,12 +1578,12 @@ provider_t* consumer_query_providers_all(const char* service_name, int* nums) {
 //  a.消费者订阅providers目录
 //  b.消费者订阅routers目录
 //  c.消费者订阅configurators目录
-char* orientsec_grpc_consumer_register(const char* fullmethod) {
+char* orientsec_grpc_consumer_register(const char* fullmethod,
+                                       const char* frameversion) {
   init_providers_list();
   //未加锁
-  char* consumerurl = orientsec_grpc_consumer_url(fullmethod);
+  char* consumerurl = orientsec_grpc_consumer_url(fullmethod, frameversion);
   url_t* url = url_parse(consumerurl);
-  registry(url);
 
   //缓存该客户端信息
   GRPC_CONSUMERS_LIST_LOCK_START
@@ -1373,7 +1600,6 @@ char* orientsec_grpc_consumer_register(const char* fullmethod) {
   } else {
     consumerIter->second.push_back(consumerUrl);
   }
-  GRPC_CONSUMERS_LIST_LOCK_END
 
   //更新loadbalance配置
   std::map<std::string, std::string>::iterator lbIter =
@@ -1400,22 +1626,86 @@ char* orientsec_grpc_consumer_register(const char* fullmethod) {
     // g_method_lbalgorithem.insert(std::pair<std::string,
     // std::string>("CreateBook", ORIENTSEC_GRPC_LB_TYPE_PF));
   }
-  //消费者订阅providers目录
-  url_update_parameter(url, (char*)ORIENTSEC_GRPC_CATEGORY_KEY,
-                       (char*)ORIENTSEC_GRPC_PROVIDERS_CATEGORY);
-  subscribe(url, consumer_providers_callback);
+  GRPC_CONSUMERS_LIST_LOCK_END
 
-  //消费者订阅routers目录
-  url_update_parameter(url, (char*)ORIENTSEC_GRPC_CATEGORY_KEY,
-                       (char*)ORIENTSEC_GRPC_ROUTERS_CATEGORY);
-  subscribe(url, consumer_routers_callback);
+  // check whether exist appointed provider ip and port
+  // if configured, return without registered and subscribed
+  char* appo_prov_info = obtain_appointed_provider_list(fullmethod);
+  if (strlen(appo_prov_info) > 0) {
+    // update global provider list
+    init_provider_from_appointed_list(fullmethod,appo_prov_info);
+    // release memory and return directly
+    gpr_free(appo_prov_info);
+    url_full_free(&url);
+    return consumerurl;
+  } else  {
+    gpr_free(appo_prov_info);
+  }
 
-  //消费者订阅configurators目录
-  url_update_parameter(url, (char*)ORIENTSEC_GRPC_CATEGORY_KEY,
-                       (char*)ORIENTSEC_GRPC_CONFIGURATORS_CATEGORY);
-  subscribe(url, consumer_configurators_callback);
 
-  url_full_free(&url);
+  // differentiated inside and outside service
+  zookeeper_reg zk_center = PUBLIC_REG;
+  // 先进行zk连接并query provider，条件是公有和私有中心都配置的情况下
+  orientsec_grpc_registry_zk_intf_init();
+  char* pub = get_pub_reg_center();
+  char* pri = get_pri_reg_center();
+  if ((strlen(pri) > 0) || strlen(pub) == 0) zk_center = PRIVATE_REG;
+  if ((strlen(pri) > 0) && strlen(pub) > 0) zk_center = HYBRID_REG;
+  gpr_free(pub);
+  gpr_free(pri);
+  // registry when public/private registry mode
+  if (zk_center == PUBLIC_REG || zk_center == PRIVATE_REG) {
+    // common operation
+    common_operation(url);
+
+    // register okay or not，if not， create new thread do work background
+    if (!zk_get_create_node_flag()) {
+      // url clone
+      url_t* cons_url = (url_t*)gpr_zalloc(sizeof(url_t));
+      url_init(cons_url);
+      url_clone(url, cons_url);
+      std::thread zk_registry_agent_thread(grpc_consumer_zk_registry_bg,
+                                           cons_url);
+      gpr_log(GPR_ERROR,
+              "zookeeper register failed, New thread[%ld] for consumer was "
+              "created\n",
+              std::this_thread::get_id());
+      // zk_registry_agent_thread.detach();
+      zk_registry_agent_thread.detach();
+    }
+    url_full_free(&url);
+
+  } else {  // for hybrid register center
+    // 1. first check the corresponding provider
+    // 调用一下zk lookup
+    url_t* u = NULL;
+    int num = 0;  //用来返回公有注册中心的提供服务的provider number
+    int pn = 0;  //用来返回私有注册中心的提供服务的provider number
+    url_update_parameter(url, (char*)ORIENTSEC_GRPC_CATEGORY_KEY,
+                         (char*)ORIENTSEC_GRPC_PROVIDERS_CATEGORY);
+    u = lookup(url, &num, &pn);
+    if (num > 0) {
+      // 修改zk_reg的属性为公有注册
+      set_cons_reg_scheme(PUBLIC_REG);
+      common_operation(url);
+
+    } else if (pn > 0) {
+      //  修改zk_reg属性为私有属性
+      set_cons_reg_scheme(PRIVATE_REG);
+      common_operation(url);
+
+    } else {
+      // 公有或者私有注册中心均无相关provider可调用
+      //  启动一个新线程，监控
+      // allocting one url on heap to transfer， since detach
+      url_t* reg_url = (url_t*)gpr_zalloc(sizeof(url_t));
+      url_init(reg_url);
+      url_clone(url, reg_url);
+      std::thread th_agent(grpc_lookup_registry_center, reg_url);
+      th_agent.detach();
+    }
+    url_full_free(&url);
+  }
   return consumerurl;
 }
 
@@ -1471,9 +1761,13 @@ int orientsec_grpc_consumer_unregister(char* reginfo) {
       return 0;
 }
 
-void record_provider_failure(char* clientId, char* providerId,char* methods) {
-  g_failover_utils.record_provider_failure(
-      clientId, providerId,methods);  //使用实例对象调用静态方法
+void record_provider_failure(char* clientId, char* providerId, char* methods) {
+  g_failover_utils.record_provider_failure(clientId, providerId,
+                                           methods);  //使用实例对象调用静态方法
+}
+
+void reset_provider_failure(char* clientId, char* providerId, const char* methods) {
+  g_failover_utils.reset_provider_failure(clientId, providerId,methods);  //使用实例对象调用静态方法
 }
 
 int get_max_backoff_time() {
@@ -1519,7 +1813,6 @@ void provider_active_standby_setting(char* service_name, bool have_active) {
         // 无主服务器时，备服务器上线
         provider->online = (have_active ? 0 : 1);
       }
-
     }
   }
   return;
@@ -1567,7 +1860,7 @@ int get_valid_providers_acount(char* service_name, char* method_name) {
   int provider_nums = 0;
   int cache_providers_num = orientsec_grpc_cache_provider_count_get();
   bool is_method_level = false;
-    // 计算负载均衡算法
+  // 计算负载均衡算法
   std::string strLbStragry = ORIENTSEC_GRPC_DEFAULT_LB_TYPE;
   auto meth_iter = g_method_lbalgorithem.find(method_name);
   if (meth_iter != g_method_lbalgorithem.end()) {
@@ -1586,22 +1879,21 @@ int get_valid_providers_acount(char* service_name, char* method_name) {
           provider->flag_invalid == 0 && provider->flag_call_failover == 0 &&
           provider->online) {
         if (!is_method_level) {
-            if (orientsec_grpc_consumer_control_version_match(
-                    service_name, provider->version) == true)
-              provider_nums++;       
+          if (orientsec_grpc_consumer_control_version_match(
+                  service_name, provider->version) == true)
+            provider_nums++;
         } else {  // 方法级别的判断
           if (method_check(provider, method_name, cache_providers_num)) {
-
-              if (orientsec_grpc_consumer_control_version_match(
-                      service_name, provider->version) == true) {
-                provider_nums++;
-              }
+            if (orientsec_grpc_consumer_control_version_match(
+                    service_name, provider->version) == true) {
+              provider_nums++;
+            }
           }
         }
       }
     }
   }
-    return provider_nums;
+  return provider_nums;
 }
 
 //获取zk上某服务的provider数量
@@ -1656,7 +1948,7 @@ void set_or_clr_provider_failover_flag_inner(char* service_name,
       }
     }
   }
-  if (!is_req) //连接方式需要重新解析
+  if (!is_req)  //连接方式需要重新解析
     g_need_resolve = true;
   GRPC_PROVIDERS_LIST_LOCK_END
 }
@@ -1689,4 +1981,34 @@ void decrease_consumer_request_count(char* service_name) {
     return;
   }
   g_request_controller_utils.DecreaseRequest(service_name);
+}
+
+// check the time point when connection mode
+// if reach the set limit time，to set resovling flag
+void check_elapse_time_reach_setting() {
+  std::chrono::system_clock::time_point start =
+      std::chrono::system_clock::now();
+  std::chrono::seconds elapse =
+      std::chrono::time_point_cast<std::chrono::seconds>(start) -
+      std::chrono::time_point_cast<std::chrono::seconds>(last_call_point);
+  int limit = g_conn_switch_time * 60;
+  if (limit > 0) {
+    if (elapse.count() >= limit) {
+      g_switch_provider_when_connection = true;
+      last_call_point = start;
+      std::cout << "connection time reached switchover time ["
+                << g_conn_switch_time << "] minutes..." << std::endl;
+    }
+  }
+  
+}
+
+// read the global switchover flag when connection mode
+bool orientsec_switch_when_connection_resolved() {
+  return g_switch_provider_when_connection;
+}
+
+// reset the global switchover flag
+void orientsec_switch_when_connection_resolved_reset() {
+  g_switch_provider_when_connection = false;
 }
