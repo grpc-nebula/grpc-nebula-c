@@ -43,13 +43,14 @@ OR
 		git clone  https://github.com/grpc-nebula/grpc-nebula-c.git  //克隆主模块
 		git submodule  init    
 		git submodule  update          //克隆子模块
+
   - git 获取zookeeper库和第三方库
     
         //获取zookeeper库和grpc依赖第三方库
         https://github.com/grpc-nebula/grpc-nebula.git
      
 
-# 4 发布包SDK制作
+# 4 发布包SDK制作  
    grpc-c 源代码存放在D:\Repo\grpc下， zookeeper源代码存放在D:\Repo\zookeeper。第三方库保存在D:\Repo\third_part_sdk， 目录可更改，以上为示例。
 
 ## 4.1 grpc依赖库编译 

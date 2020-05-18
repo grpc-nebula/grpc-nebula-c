@@ -19,6 +19,14 @@ grpc是一个多语言、高性能、开源的通用远程过程调用(RPC)框�
 ### 公共
 - 基于Zookeeper的注册中心
 - 支持Zookeeper开启ACL
+- 主备切换
+- 服务分组、多机房支持
+- 区分内部外部服务
+- 注册中心容灾和降级  
+
+容灾：注册中心不可用时服务端和客户端可以正常启动，注册中心恢复后注册信息需要自动注册到注册中心。
+
+降级：可以端可以通过配置文件指定服务端地址，此时即使注册中心不可用，客户端也可以访问服务端；这种情况下，注册中心即使恢复，也不会再去访问注册中心获取最新的服务列表。
 
 ### Provider端(服务提供者)
 
@@ -30,7 +38,8 @@ grpc是一个多语言、高性能、开源的通用远程过程调用(RPC)框�
 5. 监听zk中的配置信息节点configurators，能够根据default.requests/default.connections参数的配置信息动态改变服务流控的行为。
 6. 当Provider端被调用时，根据配置文件中的deprecated参数（或者zk中的deprecated参数配置信息），判定是否打印告警日志、提示服务已经有新版本上线。
 7. provider端分组，将机房或者区域的相同服务的provider进行分组划分。
-8. 服务端主备属性，将provider划分为主服务provider和备provider。
+8. 服务端主备属性，将provider划分为主服务provider和备服务provider。、
+9. 服务端注册时，可以任意指定服务注册时使用的IP和端口
 
 
 ### Consumer端(服务消费者)
@@ -48,12 +57,16 @@ grpc是一个多语言、高性能、开源的通用远程过程调用(RPC)框�
    支持两种模式：一种是“请求负载均衡”，另一种是“连接负载均衡”。  
    “请求负载均衡”指的是每次调用服务端都调用负载均衡算法选择一台服务器。“连接负载均衡”指的是，创建通道(Channel)后第一次调用选择服务器之后，一直复用与之前已选定的服务器建立的连接。  
     默认情况下设置为“连接负载均衡”。通过参数loadbalance.mode来进行控制。
-8. 容错策略   
-(1)调用某个服务提供者，如果连续N次请求出错，自动切换到提供相同服务的新服务器。（N这个数值支持配置）    
-(2)调用某个服务提供者，如果连续N次请求出错，如果此时没有其他服务提供者，增加一个惩罚连接时间60s，而不是永远不连了（N与60s均可配）。
-9. 根据配置文件中provider.weight和zk中configurators/weight参数更新各provider的权重信息，负载均衡时会使用到该信息。
-10. 当Consumer端创建channel后，根据配置文件中consumers.loadbalance和zk中configurators/loadbalance更新负载均衡算法类型。以zk中的信息为准。
-11. 当Consumer端创建channel后，根据配置文件中的deprecated参数（或者zk中的deprecated参数配置信息），判定是否打印告警日志、提示服务已经有新版本上线。 
+8. 服务容错 
+  
+（1）基于累计错误次数： 一段时间内(10分钟)，如果客户端调用某个服务端累计出错5次，客户端自动切换到提供相同服务的新服务端。
+
+（2）熔断机制：在一个统计周期内，客户端调用某个服务端总请求次数达到设定的阈值，计算在该统计周期内错误百分比，如果超过设定的错误率阈值，打开熔断器，即将该服务端从客户端的备选服务端列表中删除。
+
+（3）服务调用出错后自动重试：支持通过配置consumer.default.retries、consumer.default.retries[服务名]、consumer.default.retries[服务+方法名]开启这个功能。  
+9. 根据配置文件中provider.weight和zk中configurators/weight参数更新各provider的权重信息，负载均衡时会使用到该信息。  
+10. 当Consumer端创建channel后，根据配置文件中consumers.loadbalance和zk中configurators/loadbalance更新负载均衡算法类型。以zk中的信息为准。  
+11. 当Consumer端创建channel后，根据配置文件中的deprecated参数（或者zk中的deprecated参数配置信息），判定是否打印告警日志、提示服务已经有新版本上线。   
 12. 客户端的流量控制  
    增加对客户端请求数控制的功能，可以控制客户端对某个服务的请求次数。  
    对客户端增加请求数控制的功能，通过在注册中心上动态增加参数配置。（不能通过在本地文件配置，因为一个客户端可能需要调用多个服务端）  
@@ -254,7 +267,51 @@ grpc是一个多语言、高性能、开源的通用远程过程调用(RPC)框�
 	
 	zookeeper.acl.password=9883c580ae8226f0dd8200620e4bc899
 	
-	# ------------ end of zookeeper config ------------
+	
+	# ----begin----区分内外部服务、私有注册中心配置----------------------
+
+    # 类型string，说明: 私有注册中心服务器列表，既支持单机，也支持集群
+    # 可选,zookeeper.host.server和zookeeper.private.host.server至少配置一个参数
+    # zookeeper.private.host.server=
+
+    # 可选，类型string，说明: 服务注册根路径，默认值/Application/grpc
+    # zookeeper.private.root=
+
+    # 可选，类型string，说明：私有注册中心digest模式ACL的用户名
+    # zookeeper.private.acl.username=
+
+    # 可选，类型string，说明：私有注册中心digest模式ACL的密码
+    # zookeeper.private.acl.password=
+
+    # 可选，类型string，说明：表示公共服务名称列表，多个服务名称之间以英文逗号分隔，如果不配置，表示所有服务都是公共服务
+    # 参数值示例 com.orientsec.hello.Greeter3,com.orientsec.hello.Greeter4
+    # 属性值过长可以在行末增加反斜杠\，然后在下一行继续配置其它属性值，注意反斜杠\后面不能有空格
+    # public.service.list=
+
+    # 可选，类型string，说明：表示私有服务名称列表，多个服务名称之间以英文逗号分隔，如果不配置，将公共服务名称列表之外的服务都视为私有服务
+    # 参数值示例 com.orientsec.hello.Greeter1,com.orientsec.hello.Greeter2
+    # 属性值过长可以在行末增加反斜杠\，然后在下一行继续配置其它属性值，注意反斜杠\后面不能有空格
+    # private.service.list=
+
+    #----end------区分内外部服务、私有注册中心配置----------------------
+
+
+    # ----begin----配置中心容灾降级----------------------
+
+    # 可选,类型string,说明：该参数用来手动指定提供服务的服务器地址列表。
+    # 使用场合: 在zookeeper注册中心不可用时，通过该参数指定服务器的地址；如果有多个服务，需要配置多个参数。
+    # 特别注意: 一旦配置该参数，客户端运行过程中，即使注册中心恢复可用，框架也不会访问注册中心。
+    #           如果需要从配置中心查找服务端信息，需要注释掉该参数，并重启客户端应用。
+    # xxx表示客户端调用的服务名称
+    # service.server.list[xxx]=10.45.0.100:50051
+    # service.server.list[xxx]=10.45.0.100:50051,10.45.0.101:50051,10.45.0.102:50051
+
+    # service.server.list[com.orientsec.hello.Greeter1]=10.45.0.100:50051,10.45.0.101:50051
+    # service.server.list[com.orientsec.hello.Greeter2]=10.45.0.100:50052,10.45.0.101:50052
+
+    # ----end------配置中心容灾降级----------------------
+
+    # ------------ end of zookeeper config ------------
 
     
 ### 3. 客户端调用的创新
