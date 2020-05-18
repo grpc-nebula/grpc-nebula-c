@@ -67,7 +67,7 @@ void failover_utils::recover_provider_list(const std::string& consumerid,
 
 // client需要用长连接
 void failover_utils::record_provider_failure(char* consumerid, char* providerid,
-                                             char* methods) {
+                                             const char* methods) {
   if (!consumerid || strlen(providerid) == 0 || providerid == NULL) {
     return;
   }
@@ -146,7 +146,7 @@ void failover_utils::update_failing_providers(char* consumerid,
 int failover_utils::update_fail_times(char* consumerid, char* providerid,
                                       int64_t lasttime_stamp,
                                       int64_t current_timestamp,
-                                      char* methods) {
+                                      const char* methods) {
   int result = 0;
   if (!consumerid || !providerid || strlen(providerid) == 0) {
     return result;

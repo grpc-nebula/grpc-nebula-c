@@ -24,5 +24,5 @@
 namespace grpc {
 //grpc::string Version() { return "1.17.1"; }
   // Microservice Governance Framework version
-grpc::string Version() { return "1.2.3"; }
+grpc::string Version() { return "1.2.4"; }
 }  // namespace grpc

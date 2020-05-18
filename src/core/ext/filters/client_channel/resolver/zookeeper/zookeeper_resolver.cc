@@ -170,6 +170,8 @@ ZookeeperResolver::~ZookeeperResolver() {
 
 void ZookeeperResolver::NextLocked(grpc_channel_args** result,
                                    grpc_closure* on_complete) {
+  if (next_completion_ != nullptr) 
+    next_completion_ = nullptr;
   GPR_ASSERT(next_completion_ == nullptr);
   next_completion_ = on_complete;
   target_result_ = result;

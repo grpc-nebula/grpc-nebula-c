@@ -65,13 +65,13 @@ public:
         void set_recovery_time(int _recoverytime);
         void set_max_backoff_time(int _max_backoff_time);
         int get_max_backoff_time();
-        void record_provider_failure(char* consumerid, char* providerid,char* methods);
+        void record_provider_failure(char* consumerid, char* providerid,const char* methods);
         void reset_provider_failure(char* consumerid, char* providerid,
                                     const char* methods);
 	void update_failing_providers(char* consumerid, char* providerid);
         int update_fail_times(char* consumerid, char* providerid,
                               int64_t lasttime_stamp, int64_t currenttime_stamp,
-                              char* methods);
+                              const char* methods);
 
 };
 

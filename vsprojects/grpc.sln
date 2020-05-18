@@ -22,6 +22,10 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "orientsec_provider", "..\third_party\orientsec\orientsec_provider\orientsec_provider.vcxproj", "{19CA6D2F-6CDB-44BE-865D-6DCF8AAF7395}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "orientsec_registry", "..\third_party\orientsec\orientsec_registry\orientsec_registry.vcxproj", "{F52E3E78-2DBE-4688-BB38-22CF5B8978BD}"
+	ProjectSection(ProjectDependencies) = postProject
+		{33D1C04C-A968-4E05-A76A-61BB2FCF17B9} = {33D1C04C-A968-4E05-A76A-61BB2FCF17B9}
+		{EA26F173-9593-3FA6-AA41-D8F319B8B643} = {EA26F173-9593-3FA6-AA41-D8F319B8B643}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -3290,9 +3290,9 @@ static void cc_start_transport_stream_op_batch(
         calld->cancel_error =
             GRPC_ERROR_REF(batch->payload->cancel_stream.cancel_error);
         chand->started_resolving = false;
-        have_no_provider = 1;
-        // chand->resolver->Resetting();
-        // process_resolver_shutdown_locked(chand);
+        //have_no_provider = 1;
+        chand->resolver->Resetting();
+        process_resolver_shutdown_locked(chand);
       }
       //黑白名单，没有有效的provider，
       int provider_count = get_consumer_lb_providers_acount(service_name);

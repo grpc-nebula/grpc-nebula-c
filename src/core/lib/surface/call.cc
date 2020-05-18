@@ -687,13 +687,13 @@ static void cancel_with_error(grpc_call* c, grpc_error* error) {
   }
 
   //----begin----
-  // dengjq add,客户端容错控制 非原生调用触发容错处理
-  if (c && c->is_client && !orientsec_grpc_channel_is_native(c->channel)) {
-    gpr_log(GPR_DEBUG, "terminate_with_error trigger failover... ");
-    record_provider_failure(grpc_get_channel_client_reginfo(c->channel),
-                            grpc_get_channel_provider_addr(c->channel),
-                            c->call_name);
-  }
+  // 客户端容错控制 非原生调用触发容错处理
+  //if (c && c->is_client && !orientsec_grpc_channel_is_native(c->channel)) {
+  //  gpr_log(GPR_DEBUG, "terminate_with_error trigger failover... ");
+  //  record_provider_failure(grpc_get_channel_client_reginfo(c->channel),
+  //                          grpc_get_channel_provider_addr(c->channel),
+  //                          c->call_name);
+  //}
   //-----end-----
   GRPC_CALL_INTERNAL_REF(c, "termination");
   // Inform the call combiner of the cancellation, so that it can cancel
@@ -2025,6 +2025,10 @@ char* grpc_get_call_target(grpc_call* channel_call) {
     return NULL;
   }
   return grpc_get_channel_target_addr(channel_call->channel);
+}
+
+grpc_channel* orientsec_grpc_call_get_channel(grpc_call* call) {
+  return call->channel;
 }
 
 char* orientsec_grpc_call_serverhost(grpc_call* call) {

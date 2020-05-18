@@ -133,3 +133,45 @@ bool orientsec_grpc_joint_hash_input(std::map<std::string, std::string> map_,
     hash_arg = map_.begin()->second;
   return true;
 }
+
+bool orientsec_grpc_split_to_map_by_equal(const std::string& str,
+                                 std::map<std::string, std::string>& ret_,
+                                 std::string sep) {
+  if (str.empty()) {
+    return true;
+  }
+
+  std::string tmp;
+  std::string::size_type pos_begin = str.find_first_not_of(sep);
+  std::string::size_type comma_pos = 0;
+  std::vector<std::string> vec_tmp;
+  std::string key;
+  std::string value;
+  std::string::size_type idx;
+
+  // Ñ­»··Ö¸î×Ö·û´®
+  while (pos_begin != std::string::npos) {
+    comma_pos = str.find(sep, pos_begin);
+    if (comma_pos != std::string::npos) {
+      tmp = str.substr(pos_begin, comma_pos - pos_begin);
+      pos_begin = comma_pos + sep.length();
+    } else {
+      tmp = str.substr(pos_begin);
+      pos_begin = comma_pos;
+    }
+
+    if (!tmp.empty()) {
+      idx = tmp.find("=");
+      if (idx != std::string::npos) {
+        if (orientsec_grpc_split_to_vec(tmp, vec_tmp, "=")) {
+          key = orientsec_grpc_trim(vec_tmp[0]);
+          value = orientsec_grpc_trim(vec_tmp[1]);
+          ret_.insert(std::pair<std::string, std::string>(key, value));
+          vec_tmp.clear();
+        }
+      }
+      tmp.clear();
+    }
+  }
+  return true;
+}

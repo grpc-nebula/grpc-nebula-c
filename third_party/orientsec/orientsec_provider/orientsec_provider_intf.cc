@@ -46,6 +46,9 @@
 // zookeeper register,detect every 3s, times 3 days
 const int TIMES_MAX_TRY = 86400;
 const int DAY_IN_MILLS = 86400000;
+
+static int reg_port = 0;
+
  // 声明
 void update_provider_is_master(bool, const char*, const char*);
 
@@ -199,7 +202,8 @@ void overrides_preprocess(url_t* urls, int url_num) {
     }
     if ((urls[i].host != NULL &&
          0 != strcmp(urls[i].host, ORIENTSEC_GRPC_ANY_HOST)) &&
-        (0 != strcmp(urls[i].host, local_ip))) {
+        (0 != strcmp(urls[i].host, local_ip)) &&
+        (reg_port != 0 && urls[i].port != reg_port)) {
       continue;
     }
     ORIENTSEC_GRPC_SET_BIT(urls[i].flag, ORIENTSEC_GRPC_URL_OVERRIDE_MATCH_POS);
@@ -265,8 +269,9 @@ void provider_configurators_callback(url_t* urls, int url_num) {
       continue;
     }
     // 针对ip 0.0.0.0 对所有provider起作用
-    if (urls[i].host != NULL &&
-        0 == strcmp(urls[i].host, ORIENTSEC_GRPC_ANY_HOST)) {
+    if ((urls[i].host != NULL &&
+         0 == strcmp(urls[i].host, ORIENTSEC_GRPC_ANY_HOST)) &&
+        (reg_port != 0 && urls[i].port == reg_port)) {
       param = url_get_parameter_v2(
           urls + i, ORIENTSEC_GRPC_REGISTRY_KEY_DEFAULT_CONNECTIONS, NULL);
       if (param) {
@@ -314,7 +319,8 @@ void provider_configurators_callback(url_t* urls, int url_num) {
     // 针对某个服务，指定ip的provider起作用
     intf = url_get_parameter_v2(urls + i, ORIENTSEC_GRPC_REGISTRY_KEY_INTERFACE,
                                 NULL);
-    if (intf && (urls[i].host != NULL && 0 == strcmp(urls[i].host, local_ip))) {
+    if (intf && (urls[i].host != NULL && 0 == strcmp(urls[i].host, local_ip)) &&
+        (reg_port != 0 && urls[i].port == reg_port)) {
       param = url_get_parameter_v2(
           urls + i, ORIENTSEC_GRPC_REGISTRY_KEY_DEFAULT_CONNECTIONS, NULL);
       if (param) {
@@ -469,11 +475,15 @@ static void grpc_provider_zk_registry_bg(url_t* url_clone, url_t* route_url,int 
   return;
 }
 
+static void update_local_port(int port) { reg_port = port; }
+
 //注册Provider，并订阅configurators目录
 void provider_registry(int port, const char* sIntf, const char* sMethods,
                        const char* grpc_verison) {
   provider_t* provider = init_and_cache_provider(port, sIntf, sMethods);
   url_t* provider_url = url_from_provider(provider);
+  // update provider port to local variable for compare
+  update_local_port(provider->port);
   orientsec_grpc_registry_zk_intf_init();
   // init zk public/private parameter when registry
   zk_prov_reg_init(provider_url->path);

@@ -62,8 +62,6 @@ int orientsec_grpc_consumer_unregister(char * reginfo);
 //com.orientsec.grpc.hello.greeter
 char* orientsec_grpc_get_sn_from_target(char* target);
 
-//标记clientId(注册时填写的信息)调用providerId(provider_ip:provider_port)失败信息
-void record_provider_failure(char* clientId, char* providerId,char* methods);
 
 //获取backoff算法参数
 int get_max_backoff_time() ;
@@ -81,7 +79,7 @@ void provider_active_standby_setting(char* service_name, bool have_active);
 int get_consumer_lb_providers_acount(char *service_name);
 
 //获取可以调用的provider数量，用于容错切换
-int get_valid_providers_acount(char* service_name, char* method_name);
+int get_valid_providers_acount(char* service_name, const char* method_name);
 
 //获取zk上某服务的provider数量
 int get_consumer_providers_acount(char* service_name);

@@ -59,8 +59,19 @@ char** spilt_char(const char* str, const char sep, int* size) {
     }
   }
   if (0 == count) {
-    size = 0;
-    return NULL;
+    if (strlen(str) > 0) {
+      char** ret = calloc(++count, sizeof(char*));
+      ret[0] = calloc(strlen(str)+1, sizeof(char));
+      memcpy(ret[0], str, strlen(str));
+      *size = 1;
+
+      return ret;
+
+    } else {
+      size = 0;
+      return NULL;
+    }
+
   }
   char** ret = calloc(++count, sizeof(char*));
 
@@ -134,9 +145,6 @@ void zk_prov_reg_init(char* service) {
         pub_flag = true;
         break;
       }
-      /*if (index == pub_size) {
-        pub_flag = FALSE;
-      }*/
     }
   }
   // 遍历私有服务列表
@@ -148,9 +156,6 @@ void zk_prov_reg_init(char* service) {
         pri_flag = true;
         break;
       }
-      // if (index == pri_size) {
-      //  pri_flag = false;
-      //}
     }
   }
   // 如果public list和private list都不配置，默认公有注册
@@ -165,9 +170,25 @@ void zk_prov_reg_init(char* service) {
       gpr_log(GPR_ERROR, "public and private zk center are not configured");
     }
   }
+  // 只配置了公共服务列表
+  if (pub_size && (!pri_size)) {
+    if (!pub_flag) pri_flag = true;
+
+  }
+  // 只配置了私有服务列表
+  if ((!pub_size) && pri_size) {
+    if (!pri_flag) pub_flag = true;
+  }
+  //如果public list和private list都配置,但是当前服务不在列表中,视为公共服务
+  if (pub_size && pri_size) {
+    if ((!pub_flag) && (!pri_flag)) pub_flag = true;
+  }
+
 
   if (pub_flag && pri_flag) {
-    zk_prov_reg = HYBRID_REG;
+    //zk_prov_reg = HYBRID_REG;
+    gpr_log(GPR_ERROR, "one service can not exist in public and private service list");
+    abort();
   } else if (pri_flag) {
     zk_prov_reg = PRIVATE_REG;
   } else

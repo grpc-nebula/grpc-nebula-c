@@ -150,8 +150,20 @@ class BlockingUnaryCallImpl {
         status_ = Status(StatusCode::UNIMPLEMENTED,
                          "No message returned for unary request");
       }
+      if (!ops.got_message || !status_.ok()) {
+        grpc_channel* chan_info = orientsec_grpc_call_get_channel(callobj);
+        /*if (callobj != nullptr && callobj->is_client &&*/
+        if (!orientsec_grpc_channel_is_native(chan_info)) {
+          gpr_log(GPR_DEBUG, "terminate_with_error trigger failover... ");
+          record_provider_failure(grpc_get_channel_client_reginfo(chan_info),
+                                  grpc_get_channel_provider_addr(chan_info),
+                                  method.name());
+        }
+      }
+
     } else {
       GPR_CODEGEN_ASSERT(!status_.ok());
+      
       last_call_status_ = Status(StatusCode::CANCELLED,"Last call not okay");
     }
     //  testing code

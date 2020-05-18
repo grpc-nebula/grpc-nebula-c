@@ -48,6 +48,10 @@ extern "C" {
  bool orientsec_grpc_joint_hash_input(std::map<std::string, std::string> map_,
                                std::vector<std::string>& vec_,
                                std::string& hash_arg);
+
+ bool orientsec_grpc_split_to_map_by_equal(
+     const std::string& str, std::map<std::string, std::string>& ret_,
+     std::string sep);
  //----end----
 
 

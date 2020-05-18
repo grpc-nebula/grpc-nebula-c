@@ -92,13 +92,7 @@ void grpc_set_channel_provider_addr(grpc_channel* channel,
                                     const char* provider_addr);
 char* grpc_get_channel_target_addr(grpc_channel* channel);
 
-//----begin----dengjq add
-char* grpc_get_channel_provider_addr(grpc_channel* channel);
-char* grpc_get_channel_client_reginfo(grpc_channel* channel);
-//-----end-----
 
-//校验是不是通过原生channel进行调用 1是原生channel 0 非原生channel
-int orientsec_grpc_channel_is_native(grpc_channel* chl);
 
 //-----end by liumin-----
 #endif /* GRPC_CORE_LIB_SURFACE_CHANNEL_H */

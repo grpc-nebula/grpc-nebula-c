@@ -46,6 +46,9 @@ extern "C" {
   //reset clientId(注册时填写的信息)调用providerId(provider_ip:provider_port)失败信息
   void reset_provider_failure(char* clientId, char* providerId,const char* methods);
 
+  //标记clientId(注册时填写的信息)调用providerId(provider_ip:provider_port)失败信息
+  void record_provider_failure(char* clientId, char* providerId, const char* methods);
+
   // obtain retry times to consumer call
   int orientsec_get_failure_retry_times();
 

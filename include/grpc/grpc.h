@@ -561,7 +561,18 @@ char* orientsec_grpc_getcall_hashinfo(grpc_call* call);
 void orientsec_grpc_setcall_methodname(grpc_call* call, const char* s);
 
 char* orientsec_grpc_getcall_methodname(grpc_call* call);
+
+grpc_channel* orientsec_grpc_call_get_channel(grpc_call* call);
 //-----end-----
+
+//校验是不是通过原生channel进行调用 1是原生channel 0 非原生channel
+int orientsec_grpc_channel_is_native(grpc_channel* chl);
+//----begin----
+char* grpc_get_channel_provider_addr(grpc_channel* channel);
+char* grpc_get_channel_client_reginfo(grpc_channel* channel);
+//-----end-----
+
+
 
 #ifdef __cplusplus
 }
