@@ -95,4 +95,6 @@ void gpr_sleep_until(gpr_timespec until) {
   }
 }
 
+void gpr_sleep(int64_t ms) { Sleep(ms); }
+
 #endif /* GPR_WINDOWS_TIME */

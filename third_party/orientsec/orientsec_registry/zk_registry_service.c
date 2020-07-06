@@ -158,7 +158,33 @@ void write_pri_addr(char* addr, size_t size) {
   strncpy(zk_private, addr, size);
   return;
 }
-bool isZkConnected(zk_connection_t* conn) {
+
+// zookeeper state string format
+static const char* state2String(int state) {
+  if (state == 0) return "CLOSED_STATE";
+  if (state == ZOO_CONNECTING_STATE) return "CONNECTING_STATE";
+  if (state == ZOO_ASSOCIATING_STATE) return "ASSOCIATING_STATE";
+  if (state == ZOO_CONNECTED_STATE) return "CONNECTED_STATE";
+  if (state == ZOO_EXPIRED_SESSION_STATE) return "EXPIRED_SESSION_STATE";
+  if (state == ZOO_AUTH_FAILED_STATE) return "AUTH_FAILED_STATE";
+
+  return "INVALID_STATE";
+}
+
+// zookeeper event type string format
+static const char* type2String(int state) {
+  if (state == ZOO_CREATED_EVENT) return "CREATED_EVENT";
+  if (state == ZOO_DELETED_EVENT) return "DELETED_EVENT";
+  if (state == ZOO_CHANGED_EVENT) return "CHANGED_EVENT";
+  if (state == ZOO_CHILD_EVENT) return "CHILD_EVENT";
+  if (state == ZOO_SESSION_EVENT) return "SESSION_EVENT";
+  if (state == ZOO_NOTWATCHING_EVENT) return "NOTWATCHING_EVENT";
+
+  return "UNKNOWN_EVENT_TYPE";
+}
+
+// check whether connected
+bool is_zk_connected(zk_connection_t * conn) {
   if (conn && ((ZK_CONNECTED == conn->connect_state) ||
                (ZK_RECONNECTED == conn->connect_state) ||
                (ZK_MANU_RECONNECTED == conn->connect_state))) {
@@ -681,7 +707,7 @@ char* zk_get_service_path(zk_connection_t* conn, url_t* url) {
              ORIENTSEC_GRPC_REGISTRY_SEPARATOR, intf);
   } else {
     buf = (char*)malloc(sizeof(char) * (root_len + sep_len + intf_len + 1));
-    printf("can not find the corresponding zk register center.");
+    gpr_log(GPR_ERROR, "can not find the corresponding zk register center.");
   } 
   
   FREE_PTR(intf);
@@ -752,15 +778,15 @@ char* zk_get_url_path(zk_connection_t* conn, url_t* url) {
 }
 
 // DES algorithm decrypt
-static char* get_des_plain(char* sourceData) {
+static char* get_des_plain(char* source) {
   uint8_t mi[32] = {0};
   int dest_size;
   char* p_key = "OrientZQ";
   char key[8];
-  StrToHex(mi, sourceData, 16);
+  StrToHex(mi, source, 16);
   memcpy(key, p_key, 8);
-  int sourceSize = strlen(sourceData) / 2;
-  char* dest = DES_Decrypt(mi, sourceSize, key, &dest_size);
+  int size = strlen(source) / 2;
+  char* dest = DES_Decrypt(mi, size, key, &dest_size);
   return dest;
 }
 
@@ -897,7 +923,8 @@ void zk_create_node(zk_connection_t* conn, char* path, bool dynamic) {
       } else if (ZNODEEXISTS == ret) {
         gpr_log(GPR_INFO, "root node %s exists", path);
       } else {
-        gpr_log(GPR_ERROR,
+        if (ZOPERATIONTIMEOUT != ret)
+          gpr_log(GPR_ERROR,
                 "create root node faild[%s],reason=[%s],error code=%d", path,
                 zerror(ret), ret);
       }
@@ -947,7 +974,8 @@ void zk_create_node(zk_connection_t* conn, char* path, bool dynamic) {
       } else if (ZNODEEXISTS == ret) {
         gpr_log(GPR_INFO, "zk acl node %s exists", path);
       } else {
-        gpr_log(GPR_ERROR,
+        if (ZOPERATIONTIMEOUT != ret)
+          gpr_log(GPR_ERROR,
                 "create zk acl node faild[%s],reason=[%s],error code=%d", path,
                 zerror(ret), ret);
       }
@@ -964,7 +992,8 @@ void zk_create_node(zk_connection_t* conn, char* path, bool dynamic) {
       } else if (ZNODEEXISTS == ret) {
         gpr_log(GPR_INFO, "zk node %s exists", path);
       } else {
-        gpr_log(GPR_ERROR, "create zk node faild[%s],reason=[%s],error code=%d",
+        if (ZOPERATIONTIMEOUT != ret)
+          gpr_log(GPR_ERROR, "create zk node faild[%s],reason=[%s],error code=%d",
                 path, zerror(ret), ret);
       }
     }
@@ -991,7 +1020,8 @@ void zk_create_node(zk_connection_t* conn, char* path, bool dynamic) {
       } else if (ZNODEEXISTS == ret) {
         gpr_log(GPR_INFO, "root node %s exists", path);
       } else {
-        gpr_log(GPR_ERROR,
+        if (ZOPERATIONTIMEOUT != ret)
+          gpr_log(GPR_ERROR,
                 "create root node faild[%s],reason=[%s],error code=%d", path,
                 zerror(ret), ret);
       }
@@ -1041,8 +1071,8 @@ void zk_create_node(zk_connection_t* conn, char* path, bool dynamic) {
       } else if (ZNODEEXISTS == ret) {
         gpr_log(GPR_INFO, "zk private acl node %s exists", path);
       } else {
-        gpr_log(
-            GPR_ERROR,
+        if (ZOPERATIONTIMEOUT != ret)
+          gpr_log(GPR_ERROR,
             "create private zk acl node faild[%s],reason=[%s],error code=%d",
             path, zerror(ret), ret);
       }
@@ -1059,14 +1089,16 @@ void zk_create_node(zk_connection_t* conn, char* path, bool dynamic) {
       } else if (ZNODEEXISTS == ret) {
         gpr_log(GPR_INFO, "private zk node %s exists", path);
       } else {
-        gpr_log(GPR_ERROR,
+        if (ZOPERATIONTIMEOUT != ret)
+          gpr_log(GPR_ERROR,
                 "create private zk node faild[%s],reason=[%s],error code=%d",
                 path, zerror(ret), ret);
       }
     }
 
   } else {
-    printf("can not find the corresponding zk registry center.");
+    gpr_log(GPR_ERROR,
+            "can not find the corresponding zookeeper register center.");
   }
   // free(zk_pub_addr);
   // free(zk_pri_addr);
@@ -1092,13 +1124,17 @@ void registy_recover(zk_connection_t* conn);
 // zk连接状态监控，重连时需要恢复注册和订阅
 void zk_conn_watcher_g(zhandle_t* zh, int type, int state, const char* path,
                        void* watcherCtx) {
-  // int timeout = 5000;  // 5000ms
   int local_max_times = conn_retry_times;
   char* host = NULL;
   char* key = NULL;
   char* p = NULL;
   int key_len = 0;
   zk_connection_t* conn = (zk_connection_t*)zoo_get_context(zh);
+
+  if (ZOO_EXPIRED_SESSION_STATE == state) {
+    gpr_log(GPR_ERROR, "connetting zookeeper state = %s\n",
+            state2String(state));
+  }
 
   if (ZOO_SESSION_EVENT == type && ZOO_CONNECTED_STATE == state) {
     if (ZK_RECONNECTING == conn->connect_state) {
@@ -1150,6 +1186,7 @@ void construct_empty_schema_url(const char* service_name, url_t* url) {
 }
 
 //节点监控函数
+//watcher if non - null,a watch will be set at the server to notify* the client if the node changes.
 void zk_node_watcher_g(zhandle_t* zh, int type, int state, const char* path,
                        void* watcherCtx) {
   zk_notify_node* p_notify_node = NULL;
@@ -1164,6 +1201,7 @@ void zk_node_watcher_g(zhandle_t* zh, int type, int state, const char* path,
   if (!conn || !p_listener_node) {
     return;
   }
+
   if (ZOO_CHILD_EVENT != type) {
     return;
   }
@@ -1175,7 +1213,7 @@ void zk_node_watcher_g(zhandle_t* zh, int type, int state, const char* path,
     int url_valid = childs.count;
     int url_curse = 0;
     urls_num = childs.count;
-    myurl = (url_t*)gpr_zalloc(1 * sizeof(url_t));
+    myurl = (url_t*)gpr_zalloc(sizeof(url_t));
     if (urls_num ==
         0)  //对于子节点为空的情形，返回一个empty://0.0.0.0/service_name格式url
     {
@@ -1322,7 +1360,10 @@ void start_zk_connect(zk_connection_t* conn, int keepSession) {
                                                NULL, buf)) {
     days = atoi(buf);
   }
-  if (timeout) conn_retry_times = 1000 * 60 * 60 * 24 * days / timeout;
+  // check value avoid overflowing 
+  if (timeout < 1000) timeout = 4000;
+  if (days > 30 || days < 0) days = 30;
+  if (timeout > 0) conn_retry_times = 24 * days *(3600000/timeout);
 
   if (0 != keepSession) {
     conn->zh = zookeeper_init(host, zk_conn_watcher_g, timeout, conn->clientid,
@@ -1371,6 +1412,7 @@ void zk_set_create_node_flag(bool flag) { g_create_node_success = flag; }
 //获取节点是否创建成功标识
 bool zk_get_create_node_flag() { return g_create_node_success; }
 
+// zookeeper register, call create node
 void zk_registe(registry_service_args_t* param, url_t* url) {
   zk_connection_t* conn = NULL;
   char* url_full_path = NULL;
@@ -1396,11 +1438,17 @@ void zk_registe(registry_service_args_t* param, url_t* url) {
     if (dynamic_str && 0 == orientsec_stricmp(dynamic_str, "false")) {
       dynamic = false;
     }
-    // create zookeeper node
-    zk_create_node(conn, url_full_path, dynamic);
-    // 判断node有没有成功创建
+
+    // create zookeeper node when connected state
+    gpr_sleep(30);
+    if (is_zk_connected(conn)) {
+      zk_create_node(conn, url_full_path, dynamic);
+    } else {
+      gpr_log(GPR_ERROR, "connection to %s timed out.\n",conn->zk_address);
+    }
+
+    // check whether node created successfully
     ret = zoo_exists(conn->zh, url_full_path, 0, stat);
-    // printf("zk_registe zoo_exists ret= %d !!!!!!!!!!\n", ret);
     if (ZOK == ret) {
       // set creating node successfully flag
       g_create_node_success = true;
@@ -1411,6 +1459,7 @@ void zk_registe(registry_service_args_t* param, url_t* url) {
   }
   FREE_PTR(url_full_path);
 }
+
 void zk_unregiste(registry_service_args_t* param, url_t* url) {
   zk_connection_t* conn = NULL;
   char* url_full_path = NULL;
@@ -1425,7 +1474,7 @@ void zk_unregiste(registry_service_args_t* param, url_t* url) {
     if (p_registry_url_node) {
       p_registry_url_node->live = 1;
     }
-    if (!isZkConnected(conn)) return;
+    if (!is_zk_connected(conn)) return;
     url_full_path = zk_get_url_path(conn, url);
     ret = zk_delete_node(conn, url_full_path);
     if (ZOK == ret) {
@@ -1498,7 +1547,7 @@ void zk_subscribe(registry_service_args_t* param, url_t* url,
         }
         for (i = 0; i < childs.count - url_valid; i++) {
           url_free(&urls[url_curse + i]);
-          printf("%s\n", urls[url_curse + i]);
+          gpr_log(GPR_ERROR, "%s\n", urls[url_curse + i]);
         }
       }
       urls_num = url_valid;

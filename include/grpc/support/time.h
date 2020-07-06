@@ -82,6 +82,7 @@ GPRAPI int gpr_time_similar(gpr_timespec a, gpr_timespec b,
 
 /** Sleep until at least 'until' - an absolute timeout */
 GPRAPI void gpr_sleep_until(gpr_timespec until);
+GPRAPI void gpr_sleep(int64_t dwMilliseconds);
 
 GPRAPI double gpr_timespec_to_micros(gpr_timespec t);
 

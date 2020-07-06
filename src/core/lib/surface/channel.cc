@@ -196,7 +196,7 @@ grpc_channel* grpc_channel_create_with_builder(
   //if (channel->is_client == 0) {
   //  orientsec_grpc_get_client_ip(optional_transport, channel->provider_addr);
   //}
-  // dengjq add,¿Í»§¶Ë×¢²á
+  // add for client register
   if (channel && (channel->is_client == 1)) {
     if (0 == strncmp(channel->target, "zookeeper", 9)) {
       char* sn = orientsec_grpc_get_sn_from_target(channel->target);

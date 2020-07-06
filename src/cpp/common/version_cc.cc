@@ -22,7 +22,8 @@
 #include <grpcpp/grpcpp.h>
 
 namespace grpc {
-//grpc::string Version() { return "1.17.1"; }
   // Microservice Governance Framework version
-grpc::string Version() { return "1.2.4"; }
+  // for log output enhance
+  // add zookeeper timeout bug fix
+  grpc::string Version() { return "1.2.5"; }
 }  // namespace grpc

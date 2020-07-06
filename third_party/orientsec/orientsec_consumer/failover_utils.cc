@@ -211,7 +211,7 @@ int failover_utils::update_fail_times(char* consumerid, char* providerid,
     }
     gpr_atm_rel_store(&request_failure_iter->second, 0);
   }
-  printf("Failed times = %Id,valid provider num= %d\n",
+  gpr_log(GPR_ERROR, "Failed times = %Id,valid provider num= %d\n",
          request_failure_iter->second, consumer_lb_provider_count);
 
   //获取可用provider数量

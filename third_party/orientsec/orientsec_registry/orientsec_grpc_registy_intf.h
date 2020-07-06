@@ -36,7 +36,7 @@ typedef enum { PUBLIC_REG = 0, PRIVATE_REG, HYBRID_REG} zookeeper_reg;
 
 // exposed for consumer select registry center
 // all used in internal module
-void orientsec_grpc_registry_zk_intf_init();
+bool orientsec_grpc_registry_zk_intf_init();
 
 void zk_prov_reg_init(char*);
 char* get_pub_reg_center();

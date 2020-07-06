@@ -398,7 +398,6 @@ std::unique_ptr<Server> ServerBuilder::BuildAndStart() {
       for (auto it = (*service)->service->methods_.begin(); it != (*service)->service->methods_.end(); it++)
       {
         std::string methods = (*it)->name();
-        std::cout << methods << std::endl;
         std::string serviceName, serviceMethod;
         std::stringstream ss(methods);
         std::getline(ss, serviceName, '/');

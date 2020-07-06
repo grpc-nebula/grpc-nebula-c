@@ -62,8 +62,8 @@ Status BlockingUnaryCall(ChannelInterface* channel, const RpcMethod& method,
       }       
     }while (--retries);
     if (retries == 0) {
-      std::cout << "Number of retries reached max times! return failure..."
-                << std::endl;
+      gpr_log(GPR_ERROR,
+              "Number of retries reached max times! return failure...\n");            
     }
   }
 

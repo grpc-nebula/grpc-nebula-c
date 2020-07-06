@@ -164,4 +164,6 @@ void gpr_sleep_until(gpr_timespec until) {
   }
 }
 
+void gpr_sleep(int64_t ms) { usleep(1000 * ms); }
+
 #endif /* GPR_POSIX_TIME */

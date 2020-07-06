@@ -106,9 +106,6 @@ extern "C" {
 // 可选, 类型string, 说明:服务负责人，填写负责人公司邮箱前缀
 #define ORIENTSEC_GRPC_CONF_PROVIDER_OWNER "provider.owner"
 
-// 可选, 类型int, 缺省值100, 说明:服务provider权重，是服务provider的容量，在负载均衡基于权重的选择算法中用到
-#define ORIENTSEC_GRPC_CONF_PROVIDER_WEIGHT  "provider.weight"
-
 // 可选, 类型string, 缺省值failover, 说明:集群方式，可选：failover / failfast / failback / forking
 #define ORIENTSEC_GRPC_CONF_PROVIDER_DEFAULT_CLUSTER "provider.default.cluster"
 

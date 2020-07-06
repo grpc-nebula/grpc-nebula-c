@@ -31,6 +31,7 @@
 void gpr_default_log(gpr_log_func_args* args);
 static gpr_atm g_log_func = (gpr_atm)gpr_default_log;
 static gpr_atm g_min_severity_to_print = GPR_LOG_VERBOSITY_UNSET;
+gpr_atm g_print_target = GPR_LOG_WIN_TO;
 
 const char* gpr_log_severity_string(gpr_log_severity severity) {
   switch (severity) {
@@ -69,6 +70,10 @@ void gpr_log_message(const char* file, int line, gpr_log_severity severity,
 void gpr_set_log_verbosity(gpr_log_severity min_severity_to_print) {
   gpr_atm_no_barrier_store(&g_min_severity_to_print,
                            (gpr_atm)min_severity_to_print);
+}
+
+void gpr_set_log_target(gpr_log_target target_to_print) {
+  gpr_atm_no_barrier_store(&g_print_target, (gpr_atm)target_to_print);
 }
 
 void gpr_log_verbosity_init() {

@@ -219,7 +219,7 @@ static void zk_cons_reg_init() {
   return;
 }
 
-void orientsec_grpc_registry_zk_intf_init() {
+bool orientsec_grpc_registry_zk_intf_init() {
   char* pPub = NULL;
   char* pPri = NULL;
   int data_len = 0;
@@ -277,17 +277,21 @@ void orientsec_grpc_registry_zk_intf_init() {
           factory->get_registry_service(zk_private_address);
       factory = NULL;
     }
-    // g_zk_registry_service = zk_all_registry_center();
+
+    // 调用consumer的registry的初始化
+    zk_cons_reg_init();
+    // add by yang, fix the memory leak during zk registry
+    free(pPub);
+    free(pPri);
     if ((g_zk_pub_registry_service != NULL) ||
         (g_zk_pri_registry_service != NULL)) {
       binit = true;
+      return true;
     }
-    // 调用consumer的registry的初始化
-    zk_cons_reg_init();
+    return false;
   }
-  // add by yang, fix the memory leak during zk registry
-  free(pPub);
-  free(pPri);
+  return true;
+
 }
 
 // 注册中心注册
