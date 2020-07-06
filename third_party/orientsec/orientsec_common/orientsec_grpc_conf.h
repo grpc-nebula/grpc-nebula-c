@@ -52,6 +52,10 @@ extern "C" {
 #define ORIENTSEC_GRPC_CONF_COMMON_OWNER "common.owner"
 #define ORIENTSEC_GRPC_CONF_COMMON_OWNER_DEFAULT "A0000"
 
+  // add for common.ops property by jianbin
+#define ORIENTSEC_GRPC_CONF_COMMON_OPS "common.ops"
+#define ORIENTSEC_GRPC_CONF_COMMON_OPS_DEFAULT "B0000"
+
 //可选, 类型string, 说明 : 服务注册根路径，默认值 / Application / grpc
 #define ORIENTSEC_GRPC_CONF_COMMON_ROOT_DIRECTORY "common.root"
 #define ORIENTSEC_GRPC_CONF_COMMON_ROOT_DIRECTORY_DEFAULT "/Application/grpc"

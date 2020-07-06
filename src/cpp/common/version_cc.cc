@@ -25,5 +25,5 @@ namespace grpc {
   // Microservice Governance Framework version
   // for log output enhance
   // add zookeeper timeout bug fix
-  grpc::string Version() { return "1.2.5"; }
+  grpc::string Version() { return "1.2.6"; }
 }  // namespace grpc

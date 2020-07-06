@@ -632,6 +632,7 @@ provider_t* new_provider() {
   provider->ext_data = NULL;
   provider->project = NULL;
   provider->comm_owner = NULL;
+  provider->comm_ops = NULL;
   provider->serv_type = NULL;
   provider->is_master = true;
   provider->online = true;
@@ -667,6 +668,14 @@ enum RegCode init_provider(provider_t* provider) {
   } else {
     provider->comm_owner = ORIENTSEC_GRPC_PROPERTIES_COMMON_OWNER_DEFAULT;
     return OWNR_NOT_CONF;
+  }
+
+  REINIT(buf);
+  if (0 == orientsec_grpc_properties_get_value(
+               ORIENTSEC_GRPC_PROPERTIES_COMMON_OPS, NULL, buf)) {
+    provider->comm_ops = gprc_strdup(buf);
+  } else {
+    provider->comm_ops = ORIENTSEC_GRPC_PROPERTIES_COMMON_OPS_DEFAULT;
   }
   REINIT(buf);
   // end by liumin

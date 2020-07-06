@@ -106,6 +106,7 @@ typedef struct _provider_t {
   void* ext_data;
   char* project;  // add by liumin //default=grpc-test-app
   char* comm_owner;
+  char* comm_ops;
   char* serv_type;
   bool is_master;  // add by yang, for active/standby server
   bool online;     // mark provider was online or offline

@@ -291,7 +291,6 @@ bool orientsec_grpc_registry_zk_intf_init() {
     return false;
   }
   return true;
-
 }
 
 // 注册中心注册

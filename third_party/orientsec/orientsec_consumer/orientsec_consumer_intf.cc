@@ -1939,7 +1939,7 @@ char* orientsec_grpc_consumer_register(const char* fullmethod,
                                            cons_url);
       gpr_log(GPR_ERROR,
               "zookeeper register failed, New thread[%ld] for consumer was "
-              "created\n",
+              "created.\n",
               std::this_thread::get_id());
       // zk_registry_agent_thread.detach();
       zk_registry_agent_thread.detach();

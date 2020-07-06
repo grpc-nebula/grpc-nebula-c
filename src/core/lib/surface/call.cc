@@ -76,6 +76,9 @@
 // Used to create arena for the first call.
 #define ESTIMATED_MDELEM_COUNT 16
 
+// Used for hash algo transfering
+#define MAX_COPY_LENGTH 64
+
 struct batch_control {
   batch_control() { gpr_ref_init(&steps_to_complete, 0); }
 
@@ -2051,14 +2054,14 @@ char* orientsec_grpc_call_get_reginfo(grpc_call* call) {
 
 void orientsec_grpc_setcall_hashinfo(grpc_call* call, const char* s) {
   // call->hash_info = (char *)s;
-  strcpy(call->hash_info, s);
+  strncpy(call->hash_info, s, MAX_COPY_LENGTH);
 }
 char* orientsec_grpc_getcall_hashinfo(grpc_call* call) {
   return call->hash_info;
 }
 
 void orientsec_grpc_setcall_methodname(grpc_call* call, const char* s) {
-  strcpy(call->call_name, s);
+  strncpy(call->call_name, s, MAX_COPY_LENGTH);
 }
 
 char* orientsec_grpc_getcall_methodname(grpc_call* call) {

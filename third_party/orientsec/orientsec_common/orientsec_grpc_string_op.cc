@@ -23,6 +23,8 @@
  */
 
 #include "orientsec_grpc_string_op.h"
+#include <ctime>
+#include <cstring>
 
 //删除空格
 std::string& orientsec_grpc_trim(std::string& s) {
@@ -114,6 +116,14 @@ bool orientsec_grpc_split_to_map(const std::string& str,
 bool orientsec_grpc_joint_hash_input(std::map<std::string, std::string> map_,
                                      std::vector<std::string>& vec_,
                                      std::string& hash_arg) {
+  if (map_.empty()) {
+    time_t nows = time(0);
+    char* ti = ctime(&nows);
+    ti[strlen(ti) - 1] = 0;  //remove \n
+    hash_arg = ti;   //set time[format : XX YY ZZ 11:59:05 2020] to hash argument
+    return true;
+  }
+    
   if (vec_.empty()) {
     // 哈希参数未配置参数值取第一个参数的参数值返回
     hash_arg = map_.begin()->second;

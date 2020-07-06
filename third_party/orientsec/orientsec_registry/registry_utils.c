@@ -338,6 +338,13 @@ url_t* url_from_provider(provider_t *provider) {
         sprintf(buf, "%s", provider->comm_owner);
         url->parameters[param_index].value = gprc_strdup(buf);
         param_index++;
+        // for owner operation executive
+        REINIT(buf);
+        url->parameters[param_index].key =
+            gprc_strdup(ORIENTSEC_GRPC_REGISTRY_KEY_COMM_OPS);
+        sprintf(buf, "%s", provider->comm_ops);
+        url->parameters[param_index].value = gprc_strdup(buf);
+        param_index++;
         //end by liumin
 	if (provider->side)
 	{

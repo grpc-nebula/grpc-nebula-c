@@ -73,6 +73,7 @@ extern "C" {
 // add by liumin
 #define ORIENTSEC_GRPC_REGISTRY_KEY_PROJECT "project"
 #define ORIENTSEC_GRPC_REGISTRY_KEY_COMM_OWNER "owner"
+#define ORIENTSEC_GRPC_REGISTRY_KEY_COMM_OPS "ops"
 
 // add for provider.master key in zookeeper registry
 #define ORIENTSEC_GRPC_REGISTRY_KEY_MASTER "master"

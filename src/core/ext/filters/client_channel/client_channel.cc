@@ -3306,8 +3306,8 @@ static void cc_start_transport_stream_op_batch(
         } else {
           batch->payload->cancel_stream.cancel_error =
               GRPC_ERROR_CREATE_FROM_STATIC_STRING(
-                  "The provider is being forbid for this client,or provider "
-                  "has go away");
+                  "The provider is being forbidden for this client,or provider "
+                  "has gone away");
           calld->cancel_error =
               GRPC_ERROR_REF(batch->payload->cancel_stream.cancel_error);
         }
@@ -3418,8 +3418,8 @@ static void cc_start_transport_stream_op_batch(
     if (calld->cancel_error == NULL) {
       batch->payload->cancel_stream.cancel_error =
           GRPC_ERROR_CREATE_FROM_STATIC_STRING(
-              "The provider is being forbid for this client,or provider has "
-              "go away");
+              "The provider is being forbidden for this client,or provider has "
+              "gone away");
       calld->cancel_error =
           GRPC_ERROR_REF(batch->payload->cancel_stream.cancel_error);
     }

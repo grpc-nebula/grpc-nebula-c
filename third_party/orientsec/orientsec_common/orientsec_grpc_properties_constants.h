@@ -38,6 +38,10 @@ extern "C" {
 #define ORIENTSEC_GRPC_PROPERTIES_COMMON_OWNER "common.owner"
 #define ORIENTSEC_GRPC_PROPERTIES_COMMON_OWNER_DEFAULT "A0000"
 
+// add for common.ops property for register
+#define ORIENTSEC_GRPC_PROPERTIES_COMMON_OPS "common.ops"
+#define ORIENTSEC_GRPC_PROPERTIES_COMMON_OPS_DEFAULT "B0000"
+
 #define ORIENTSEC_GRPC_PROPERTIES_COMMON_LOCALHOST_IP "common.localhost.ip"
  // add for nominal ip and port for provider
 #define ORIENTSEC_GRPC_PROPERTIES_COMMON_SERVICE_IP "common.service.ip"

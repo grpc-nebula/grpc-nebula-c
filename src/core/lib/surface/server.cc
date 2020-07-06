@@ -945,7 +945,7 @@ static void channel_connectivity_changed(void* cd, grpc_error* error) {
                          op);
   } else {
     gpr_mu_lock(&server->mu_global);
-    strcpy(client_addr, grpc_channel_get_client_addr(chand->channel));
+    strncpy(client_addr, grpc_channel_get_client_addr(chand->channel),32);
     destroy_channel(chand, GRPC_ERROR_REF(error));
     gpr_mu_unlock(&server->mu_global);
     GRPC_CHANNEL_INTERNAL_UNREF(chand->channel, "connectivity");
