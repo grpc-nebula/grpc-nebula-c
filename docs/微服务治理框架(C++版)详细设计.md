@@ -1136,5 +1136,47 @@ permission: zookeeper目前支持下面一些权限：
     新增 init_provider_by_host_port（）
     修改 orientsec_grpc_consumer_register（）
 
-## 9. 程序健壮性
+## 9. 打印log到指定文件
+- 9.1 功能描述  
+v1.2.5版本前gprc log默认输出到标准输入输出，即stderr,  1.2.5版本增加了log输出到指定文件。
+
+
+- 9.2 相关代码
+
+        /** Set global log target for windows */
+        GPRAPI void gpr_set_log_target(gpr_log_target target_to_print);
+
+- 9.3 使用方法  
+在client端调用全局api进行设置。
+  
+demo-sync-client.cpp:
+
+    int main(int argc, char** argv) {
+	// Instantiate the client. It requires a channel, out of    which the actual RPCs
+	// are created. This channel models a connection to an endpoint (in this case,
+	// localhost at port 50051). We indicate that the channel isn't authenticated
+	// (use of InsecureChannelCredentials()).
+	//gpr_set_log_verbosity(GPR_LOG_SEVERITY_INFO);
+	//gpr_set_log_verbosity(GPR_LOG_SEVERITY_ERROR);
+	//gpr_set_log_verbosity(GPR_LOG_SEVERITY_DEBUG);
+
+    // set log output target
+	gpr_set_log_target(GPR_LOG_WIN_TO_FILE);
+	
+	gpr_thd_id thd_id;
+	//开启n线程并发调用
+	for (int i = 0; i < 1; i++) {
+		gpr_thd_new(&thd_id, multiple, NULL, NULL);
+	}
+	getchar();
+
+	return 0;
+    }
+
+默认输出到std，即不调用上述API（gpr_set_log_target）.
+
+调用如上API，相当于打开log开关，默认会将error log 输出到  client.exe  同目录下 //logs//nebula.log 文件中，方便调查问题。
+
+
+## 10. 程序健壮性
 当服务端与zookeeper断开连接、服务注册信息丢失后，如果客户端与服务端连接正常，那么客户端与服务端依然可以正常通信。
