@@ -45,7 +45,9 @@ OR
 	7.使配置生效 source .bash_profile
 	8.启动ZK
 # 4 发布包制作
-   grpc-c 源代码存放/home/appadmin/下， zookeeper源代码存放在/home/appadmin/， redhat目录存放在/usr下
+   **首先阅读《BUILDING.md》做好准备工作**
+
+   假定 grpc-nebula-c 源代码存放/home/appadmin/下， zookeeper源代码存放在/home/appadmin/， redhat目录存放在/usr下
 ## 4.1 目录创建
 
     [root@zabbixserver usr]# mkdir -p redhat/config
@@ -59,9 +61,24 @@ OR
 	[root@zabbixserver usr]# mkdir -p redhat/include/orientsec/orientsec_consumer            
 
 ## 4.2 代码编译
-### 4.2.1 开发代码编译
+
+### 4.2.1 zookeeper库编译
+	#make zookeeper lib
+	# cd zookeeper dir
+	cd XXX
+	chmod 755 configure
+	./configure
+	make
+
+### 4.2.2 grpc-nebula-c库编译
+	#make grpc-nebula-c lib
+        cd grpc-nebula-c
+	ls
+	make 
+
+### 4.2.3 开发代码编译
 	[root@zabbixserver orientsec]# pwd
-	/home/appadmin/grpc-c/third_party/orientsec
+	/home/appadmin/grpc-nebula-c/third_party/orientsec
 	[root@zabbixserver orientsec]# ll
 	total 20
 	drwxr-xr-x 4 root root 4096 May 23 15:11 orientsec_common
@@ -113,29 +130,18 @@ OR
 	make
 	cd .. 
 
-### 4.2.2 zookeeper库编译
-	#make zookeeper lib
-	# cd zookeeper dir
-	cd XXX
-	chmod 755 configure
-	./configure
-	make
 
-### 4.2.3 grpc-c库编译
-	#make grpc-c lib
-	ls
-	make 
 
 ## 4.3 接口（头文件）拷贝
-### 4.3.1 grpc头文件拷贝
+### 4.3.1 grpc-nebula-c头文件拷贝
    grpc头文件位于./include/grpc,./include/grpcpp目录下：
 
 	#copy grpc include files to include dir
-	cp -rf  /home/appadmin/grpc-c/include/grpc  /usr/redhat/include/include
-	cp -rf  /home/appadmin/grpc-c/include/grpcpp  /usr/redhat/include/include
+	cp -rf  /home/appadmin/grpc-nebula-c/include/grpc  /usr/redhat/include/include
+	cp -rf  /home/appadmin/grpc-nebula-c/include/grpcpp  /usr/redhat/include/include
 
 ### 4.3.2 开发版头文件拷贝
-   将开发版头文件拷贝到orientsec 和 orientsec\_grpc目录下, 源文件位于/home/appadmin/grpc-c/third\_party/orientsec.
+   将开发版头文件拷贝到orientsec 和 orientsec\_grpc目录下, 源文件位于/home/appadmin/grpc-nebula-c/third\_party/orientsec.
 
 	[root@zabbixserver include]# pwd
 	/usr/redhat/include/
@@ -192,28 +198,28 @@ OR
 ### 4.4.1 开发库拷贝
 
 	[root@zabbixserver orientsec]# pwd
-	/home/appadmin/grpc-c/third_party/orientsec
+	/home/appadmin/grpc-nebula-c/third_party/orientsec
 	[root@zabbixserver orientsec]# cp -f orientsec_*/lib*.a  /usr/redhat/libs/lib/
 
 ### 4.4.2 原生库拷贝
 
 	[root@zabbixserver opt]# pwd
-	/home/appadmin/grpc-c/libs/opt
+	/home/appadmin/grpc-nebula-c/libs/opt
 	[root@zabbixserver opt]# cp -d * /usr/redhat/libs/opt/ -rf
 
 ### 4.4.3 protobuf库拷贝
 
 	[root@zabbixserver opt]# pwd
-	/home/appadmin/grpc-c/bins/opt
+	/home/appadmin/grpc-nebula-c/bins/opt
 	[root@zabbixserver opt]# cp -f grpc_cpp_plugin /usr/redhat/libs/protobuf/
 	[root@zabbixserver opt]# cd protobuf/
 	[root@zabbixserver protobuf]# pwd
-	/home/appadmin/grpc-c/bins/opt/protobuf
+	/home/appadmin/grpc-nebula-c/bins/opt/protobuf
 	[root@zabbixserver protobuf]# cp -f protoc /usr/redhat/libs/protobuf/
 
-	[root@zabbixserver protobuf]# cd /home/appadmin/grpc-c/libs/opt/protobuf	
+	[root@zabbixserver protobuf]# cd /home/appadmin/grpc-nebula-c/libs/opt/protobuf	
 	[root@zabbixserver protobuf]# pwd
-	/home/appadmin/grpc-c/libs/opt/protobuf
+	/home/appadmin/grpc-nebula-c/libs/opt/protobuf
 	[root@zabbixserver protobuf]# ll
 	total 186428
 	-rw-r--r-- 1 root root  79614074 May 23 16:08 libprotobuf.a
