@@ -457,7 +457,8 @@ static void grpc_provider_zk_registry_bg(url_t* url_clone, url_t* route_url,int 
       // registre successfully, free memory, return and end of thread
       url_full_free(&url_clone);
       gpr_free((void*)verison);
-      if (access && (route_url != NULL)) url_full_free(&route_url);
+      if (access && (route_url != NULL)) 
+        url_full_free(&route_url);
       gpr_log(GPR_ERROR, "Register successfully......thread exit....\n");
       return;
     } 
@@ -518,8 +519,8 @@ void provider_registry(int port, const char* sIntf, const char* sMethods,
     url_t* router_url = NULL;
     bool acc = false;
     if (provider->access_protected) {
-      url_t* router_url =
-          url_for_router_from_param(provider->host, provider->sInterface);
+      // fix redefined, remove url_t*
+      router_url = url_for_router_from_param(provider->host, provider->sInterface);
       acc = true;
     } 
     // transport char *
